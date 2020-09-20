@@ -1,5 +1,10 @@
 use actix::{Actor, Addr, Arbiter, Context, System, prelude::*};
 
+pub struct InfoBit<'a, T> {
+    name: &'static str,
+    val: &'a T,
+}
+
 #[actix_rt::main]
 async fn main() {
     let sys = System::new("test");

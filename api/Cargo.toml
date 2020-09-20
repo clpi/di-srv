@@ -14,12 +14,11 @@ actix-web="*"
 actix-http="*"
 chrono="*"
 tokio={version="*", features=["full"]}
-actix-web="*"
 serde={version="*", features=["derive"]}
 serde_json="*"
 
-[dev-dependencies]
-log="*"
+#[dev.dependencies]
+#log="*"
 
 #[lib]
 #name = "dia_lib"
