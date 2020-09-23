@@ -31,7 +31,7 @@ impl Api {
                 .allowed_methods(vec!["GET", "POST"])
                 .max_age(3600);
             App::new()
-                .data(web::Data::new(ctx))
+                //.data(web::Data::new(ctx))
                 .wrap(cors.finish())
                 .wrap(middleware::Logger::default())
                 .wrap(middleware::Logger::new("%a %{User-Agent}i"))
@@ -45,12 +45,6 @@ impl Api {
                         .content_type("text/plain")
                         .body("Not Found"))
                 )
-                /*.wrap(IdentityService::new(
-                    CookieIdentityPolicy::new(&private_key)
-                    .name("test")
-                    .secure(false)
-                ))
-                */
                 .configure(config_routes)
         })
             .bind(addr)?

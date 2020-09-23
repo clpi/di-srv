@@ -18,8 +18,12 @@ actix-rt="*"
 actix-web="*"
 actix-cors="*"
 actix-session="*"
+#actix-multipart="*"
 #actix-identity="*"
 #actix-service="*"
+#actix-protobuf="*"
+#actix-redis="*"
+#actix-web-httpauth="*"
 
 serde_json = "*"
 serde = { version = "*", features = [ "std", "derive" ] }

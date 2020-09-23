@@ -3,6 +3,7 @@ use actix_web::{
 };
 
 #[get("/all")]
-async fn get_all() -> HttpResponse {
+pub async fn get_all() -> HttpResponse {
     HttpResponse::Ok().body("all")
 }
+

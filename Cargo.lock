@@ -421,6 +421,7 @@ dependencies = [
  "chrono",
  "common",
  "db",
+ "rand",
  "serde",
  "serde_json",
  "uuid",

@@ -3,10 +3,11 @@ pub mod record;
 pub mod auth;
 
 use crate::context::Context;
+use crate::handlers;
 //use actix_session::{CookieSession, Session};
 use actix_web::{
     web, HttpResponse, HttpRequest, Responder, get, post, Either,
-    dev::RequestHead, guard::Guard, http,
+    dev::RequestHead, guard::Guard, http, guard,
 };
 
 pub struct Route {
@@ -18,7 +19,7 @@ fn test(_ctx: web::Data<Context>, _req: HttpRequest) -> &'static str {
 }
 
 #[get("/")]
-pub async fn index(data: web::Data<Context>, req: HttpRequest) -> impl Responder {
+pub async fn index(req: HttpRequest) -> impl Responder {
     println!("{:?}", req);
     HttpResponse::Ok().body("Hello!")
 }
@@ -34,14 +35,21 @@ pub async fn greet(req: HttpRequest) -> impl Responder {
     format!("Hello {}!", &name)
 }
 
-pub fn config_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::resource("/test")
-        .route(web::get().to(|| HttpResponse::Ok()))
-        .route(web::head().to(|| HttpResponse::MethodNotAllowed()))
-    )
-        .service(index)
-        .service(hello)
-        .service(greet);
+pub fn routes(cfg: &mut web::ServiceConfig) {
+    cfg
+        .route("/", web::get().to(index))
+        .service(web::scope("/user/")
+            .route("/all", web::get().to(handlers::user::get_all))
+            .route("/greet/{name}", web::get().to(handlers::user::greet))
+        )
+        .service(web::scope("/u/").configure(handlers::user::routes))
+        .service(web::scope("/auth/").configure(handlers::auth::routes)
+        .service(web::scope("/admin/")
+            .guard(guard::Header("content-type", "text/plain")
+        .service(web::scope("/rec/")
+        .service(web::scope("r")
+            .route("/test", web::get().to(|| HttpResponse::Ok().body("")))
+        );
 }
 
 pub fn register_route<T>(
