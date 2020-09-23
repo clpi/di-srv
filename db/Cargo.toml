@@ -4,6 +4,26 @@ version = "0.1.0"
 authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "db"
+path = "src/bin/main.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+common = { path = "../common/" }
+#sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "postgres", "json", "uuid", "chrono", "runtime-async-std", "macros" ] }
+#async-std = { version = "1.6.0", features = ["attributes"] }
+#tokio = { version = "*", features = ["full"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+chrono = { version = "*", features = ["serde"] }
+uuid = { version = "*", features = ["serde", "v4"] }
+#walkdir = "*"
+
+[dev-dependencies]
+dotenv="*"
+
