@@ -13,18 +13,25 @@ path = "src/lib.rs"
 db = { path = "../db/" }
 common = { path = "../common/" }
 
-#actix="*"
+actix="*"
 actix-rt="*"
 actix-web="*"
 actix-cors="*"
+actix-session="*"
+#actix-identity="*"
+#actix-service="*"
 
 serde_json = "*"
 serde = { version = "*", features = [ "std", "derive" ] }
 chrono= { version = "*", features = [ "serde", "clock", "std" ] }
 uuid = { version = "*", features = [ "serde", "v4", "std" ] }
 validator = { version = "0.11", features = [ "derive" ] }
+rand="*"
 #redis = { version = "0.16.0", default-features = false, features = ["tokio-rt-core"] }
 #bcrypt="*"
+#async-graphql = "=2.0.0-alpha.13"
+#async-graphql-actix-web = "=2.0.0-alpha.13"
+#futures="*"
 
 
 [dev-dependencies]
@@ -32,7 +39,14 @@ log="*"
 env_logger="*"
 dotenv="*"
 
-
 [[bin]]
 name="main"
 path="./src/bin/main.rs"
+
+[[bin]]
+name="dev"
+path="./src/bin/dev.rs"
+
+[[bin]]
+name="prod"
+path="./src/bin/prod.rs"

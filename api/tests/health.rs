@@ -1,6 +1,9 @@
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use std::net::TcpListener;
+//use crate::run_dev;
 
-async fn health_check(req: HttpRequest) -> impl Responder {
+#[actix_rt::test]
+async fn health_check_works(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok()
 }
 
