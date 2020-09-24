@@ -1,7 +1,4 @@
-pub mod user;
-pub mod record;
-pub mod auth;
-
+pub use handlers::{ user, record, admin, auth };
 use crate::context::Context;
 use crate::handlers;
 //use actix_session::{CookieSession, Session};
@@ -23,6 +20,21 @@ pub async fn index(req: HttpRequest) -> impl Responder {
 pub async fn hello(path: web::Path<String>) -> impl Responder {
     format!("Hello, {}", &path)
 }
+
+#[get("/{username}/{rec_name}")]
+pub async fn get_user_Record(
+    web::Path((username, rec_name)): web::Path<(String, String)>
+) -> impl Responder {
+    format!("User {} with record {}", username, rec_name)
+}
+
+#[get("/{username}/{rec_name}/{eeid}")]
+pub async fn get_user_record_entry(
+    web::Path((username, rec_name, eeid)): web::Path<(String, String, i32)>
+) -> impl Responder {
+    format!("User {} with record {} with entry {}", username, rec_name, eeid)
+}
+
 
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(path("/").to(index));

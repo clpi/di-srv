@@ -1,4 +1,5 @@
 use std::sync::Mutex;
+use actix::prelude::*;
 use crate::{
     context::Context, routes::config_routes,
 };
@@ -14,9 +15,24 @@ pub struct Api {
     ctx: Context,
 }
 
+pub struct ApiConfig {
+
+}
+
 impl Api {
 
-    pub async fn run() -> std::io::Result<()> {
+    pub async fn new() -> Self { Self }
+    
+    pub async fn run_with_address(host: &'static str, 
+        port: &'static str) -> std::io::Result<()> 
+    { Self::init(host: Some(host), port: Some(port))?.await?; }
+
+    pub async fn run() -> actix_web::Result<()> 
+    { Self::init(host: None, port: None)?.await?; }
+
+    pub async fn init(host: Option<&'static str>, 
+        port: Option<&'static str>) -> actix_web::Result<()>
+    {
         std::env::set_var("RUST_LOG", "actix_web=info");
         let system = actix::System::new("test");
         let addr = "127.0.0.1:7711";
@@ -62,10 +78,6 @@ impl Api {
     pub async fn init_db() -> () {
         db::Db::init();
     }
-
-    pub async fn run_dev() {}
-
-    pub async fn run_prod() {}
 
     pub async fn register_routes() {}
 }
