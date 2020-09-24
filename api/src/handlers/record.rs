@@ -1,14 +1,12 @@
 use crate::auth::verify;
 use actix_web::{
-    get, HttpResponse, web::{ self, Resource as ax_path }, Responder, guard
+    get, HttpResponse, web, Responder, guard
 };
 
 pub fn routes(cfg: &mut web::ServiceConfig) {
     use self::{user, admin};
     cfg.service(
         web::scope("/rec/")
-            // publicly viewable records
-            // User level services
             .scope("/user/")
                 .guard(guard::default())
                 .route(web::resource("/all"), web::get().to(user::all))
@@ -22,12 +20,13 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub mod user {
+    use super::*;
 
-    pub async fn all() -> HttpResponse {
+    pub async fn all() -> impl Responder {
         HttpResponse::Ok().body("user::all")
     }
 
-    pub async fn add() -> HttpResponse {
+    pub async fn add() -> impl Responder {
         HttpResponse::Ok().body("all")
     }
 

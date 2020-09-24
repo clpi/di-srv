@@ -1,22 +1,29 @@
 use crate::auth::is_logged_in;
 use actix_web::{
-    get, HttpResponse, web, Responder, guard, HttpRequest,
+    get, HttpResponse, web, Responder, guard, HttpRequest
 };
 
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/user")
-            .guard(guard::default())
-            .configure(public::routes)
-            .configure(logged_in::routes))
+        web::scope("/")
+            .configure(public::routes));
+            .guard(
+                guard::All(
+                    guard::Any(
+                        guard::Get() || guard::Post()
+                    ) && guard::Header("user", "username")
+    cfg.service(web::scope("/op").configure(private::routes));
+    cfg.service(
+        .configure(public::routes)
+        .configure(logged_in::routes)
+        .guard(guard::fn_guard(|req| true));
 }
 
 pub fn _routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/user")
-            .guard(guard::default())
-            .service(web::resource("/{username}"), web::get().to(user::get_user))
-            .route(web::resource("name"))
+    cfg.service()
+        web::scope("/user/")
+            .service(web::resource("/{username}").to(user::get_user_by_uname))
+            .route(web::resource("/{id}"), web::get().to(user::get_user_by_id))
             .route(web::resource("/all"), web::get().to(get_all))
             .route(web::resource("/greet/{name}"), web::get().to(greet)));
 }
@@ -24,22 +31,27 @@ pub fn _routes(cfg: &mut web::ServiceConfig) {
 pub mod public { //unprotected, publicly available
     use super::*;
 
-    pub async fn routes(ctx: &mut web::ServiceConfig) {
+    pub fn routes(cfg: &mut web::ServiceConfig) {
         cfg.service(
             web::resource("/all"), web::get().to(get_all))
-            .service(web::resource("/{username}"), web::get().to(get_user_by_uname))
-            .service(web::resource("/{id}"), web::get().to(get_user_by_uid));
+            .service(get_all)
+            .service(get_user_by_uname)
+            .service(get_user_by_uid);
     }
 
-    pub async fn get_all() -> impl Responder {
-        HttpResponse::Ok().body("all")
+    #[get("/all")]
+    pub  fn get_all() -> HttpResponse {
+        //HttpResponse::Ok().body("all")
+            "hello".to_string()
     }
 
-    pub async fn get_user_by_uname(username: web::Path<String>) -> impl Responder {
+    #[get("/{username}")]
+    pub  fn get_user_by_uname(username: web::Path<String>) -> impl Responder {
         HttpResponse::Ok().body(format!("{} user::user::get_user()", username))
     }
 
-    pub async fn get_user_by_uid(uid: web::Path<i32>) -> impl Responder {
+    #[get("/{uid}")]
+    pub  fn get_user_by_uid(uid: web::Path<i32>) -> impl Responder {
         HttpResponse::Ok().body(format!("{} user::user::get_user()", uid))
     }
 }
@@ -47,26 +59,37 @@ pub mod public { //unprotected, publicly available
 pub mod logged_in {
     use super::*;
 
-    pub async fn routes(ctx: &mut web::ServiceConfig) {
-        cfg
-            .service(web::resource("/ban"), web::get().to(ban_user))
+    pub  fn routes(cfg: &mut web::ServiceConfig) {
+        cfg.route(web::route().to)
+        cfg.service(web::resource("/ban").to(ban_user));
     }
 
-    pub async fn ban_user() - impl Responder {
+    pub  fn ban_user() -> impl Responder {
         HttpResponse::Ok().body("private route")
     }
 }
 
 //#[get("/all")]
-pub async fn get_all() -> impl Responder {
+pub  fn get_all() -> impl Responder {
     HttpResponse::Ok().body("all")
 }
 
-pub async fn greet(name: web::Path<String>) -> impl Responder {
+pub  fn greet(name: web::Path<String>) -> impl Responder {
     HttpResponse::Ok()
         .body(format!("Hello, {}", name))
 }
 
 pub fn check_token_exists(req: HttpRequest) -> bool {
     req.headers().contains_key("token")
+}
+
+pub fn logged_in_guard() -> impl guard::Guard { 
+    guard(guard::All(
+        guard::Any(
+            guard::Get() || guard::Post()
+        ) && (
+            guard::Header("user", "username")
+        )
+    ))
+
 }

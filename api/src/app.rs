@@ -2,6 +2,7 @@ use std::sync::Mutex;
 use crate::{
     context::Context, routes::config_routes,
 };
+use actix;
 use actix_web::{
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, middleware,
     dev::Server, http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT},
@@ -17,6 +18,7 @@ impl Api {
 
     pub async fn run() -> std::io::Result<()> {
         std::env::set_var("RUST_LOG", "actix_web=info");
+        let system = actix::System::new("test");
         let addr = "127.0.0.1:7711";
         let ctx = Context::new();
         HttpServer::new(move || {

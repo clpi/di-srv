@@ -3,23 +3,22 @@ use actix_web::{
 };
 
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/auth")
-            .route(web::resource("/login"), web::post().to(login))
-            .route(web::resource("/signup"), web::post().to(signup))
-            .service(web::get().to(get_all)));
+    cfg.service(web::post().to(signup));
+    cfg.service(web::post().to(login));
+    cfg.service(web::get().to(get_all));
 }
 
-#[get("/all")]
-pub async fn get_all() -> HttpResponse {
+//#[get("/all")]
+pub async fn get_all() -> impl Responder {
     HttpResponse::Ok().body("all")
 }
 
-#[post("/login")]
+//#[post("/login")]
 pub async fn login() -> HttpResponse {
     HttpResponse::Ok().body("all")
 }
 
+//#[post("/login")]
 pub async fn signup() -> HttpResponse {
     HttpResponse::Ok().body("all")
 }
