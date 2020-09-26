@@ -334,7 +334,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "db"
+name = "digest"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
+dependencies = [
+ "generic-array",
+]
+
+[[package]]
+name = "divdb"
 version = "0.1.0"
 dependencies = [
  "async-std",
@@ -345,15 +354,6 @@ dependencies = [
  "serde_json",
  "sqlx",
  "uuid",
-]
-
-[[package]]
-name = "digest"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
-dependencies = [
- "generic-array",
 ]
 
 [[package]]

@@ -1,10 +1,11 @@
 [package]
-name = "db"
+name = "divdb"
 version = "0.1.0"
 authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
 
 [lib]
+name="lib"
 path = "src/lib.rs"
 
 [features]

@@ -1,12 +1,12 @@
+pub mod db;
+pub use db::*;
+
+use serde::{Serialize, Deserialize};
 use sqlx::{
     prelude::*, Any, AnyPool,
 };
 use sqlx::{SqlitePool, sqlite::*};
-use sqlx::{PgPool, postgres::PgPoolOptions}; 
-
-#[cfg(feature="sqlite")]
-
-#[cfg(feature="pg")]
+use sqlx::{PgPool, postgres::{Postgres, PgPoolOptions, PgRow}}; 
 
 #[cfg(feature="sqlite")]
 pub async fn run_pg() -> () {}
@@ -14,19 +14,24 @@ pub async fn run_pg() -> () {}
 #[cfg(feature="pg")]
 pub async fn run_sqlite() -> () {}
 
-pub async fn init() -> Result<(), sqlx::Error> {
-    let db = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&dotenv::var("DATABASE_URL").unwrap()).await?;
-     
-    Ok(())
-}
 
-pub struct Db {
-}
+#[cfg(test)]
+pub mod test {
+    use super::*;
 
-impl Db {
+    fn can_insert_user() {
 
-    pub async fn init() -> () {}
+    }
 
+    fn can_delete_user() {
+
+    }
+
+    fn can_get_user() {
+
+    }
+
+    fn can_get_all_users() {
+
+    }
 }
