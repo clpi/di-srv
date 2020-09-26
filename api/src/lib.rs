@@ -4,6 +4,7 @@ pub mod context;
 pub mod app;
 pub mod types;
 pub mod handlers;
+pub mod errors;
 
 use app::Api;
 use std::net::TcpListener;

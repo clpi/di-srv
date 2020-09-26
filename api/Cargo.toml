@@ -90,6 +90,7 @@ pretty_env_logger="*"
 dotenv="*"
 anyhow="*"
 criterion="*"
+listenfd="*"
 
 [[bin]]
 name="main"

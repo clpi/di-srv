@@ -1,15 +1,14 @@
-use std::sync::Mutex;
-use actix::prelude::*;
-use crate::{
-    context::Context, routes::config_routes,
-};
-use actix;
+use std::{sync::Mutex, collections::HashMap};
+use actix::{ self, prelude::* };
+use listenfd::ListenFd;
+use crate::{ context::Context, routes::config_routes, };
 use actix_web::{
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, middleware,
     dev::Server, http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT},
 };
 use actix_cors::Cors;
 use actix_session::{CookieSession, Session};
+use actix_web_prom::PrometheusMetrics;
 
 pub struct Api {
     ctx: Context,
@@ -25,10 +24,16 @@ impl Api {
     
     pub async fn run_with_address(host: &'static str, 
         port: &'static str) -> std::io::Result<()> 
-    { Self::init(host: Some(host), port: Some(port))?.await?; }
+    { Self::init(host: Some(host), port: Some(port))?.await? }
 
     pub async fn run() -> actix_web::Result<()> 
-    { Self::init(host: None, port: None)?.await?; }
+    { Ok(Self::init(host: None, port: None).await) }
+
+    pub fn init_prometheus() -> PrometheusMetrics {
+        let mut labels = HashMap::new();
+        labels.insert("label1".to_string(), "value1".to_string());
+        PrometheusMetrics::new("api", Some("/metrics"), Some(labels));
+    }
 
     pub async fn init(host: Option<&'static str>, 
         port: Option<&'static str>) -> actix_web::Result<()>
@@ -37,7 +42,9 @@ impl Api {
         let system = actix::System::new("test");
         let addr = "127.0.0.1:7711";
         let ctx = Context::new();
-        HttpServer::new(move || {
+        let mut listenfd = ListenFd::from_env();
+        let mut server = HttpServer::new(move || {
+            let metrics = Self::init_prometheus();
             let cors = match std::env::var("FRONT_URL").ok() {
                 Some(ref url) => Cors::new()
                     .allowed_origin(url),
@@ -51,9 +58,14 @@ impl Api {
             App::new()
                 //.data(web::Data::new(ctx))
                 .wrap(cors.finish())
+                .wrap(metrics)
                 .wrap(middleware::Logger::default())
                 .wrap(middleware::Logger::new("%a %{User-Agent}i"))
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
+                .service(
+                    web::resource("/metrics")
+                        .to(||  HttpResponse::Ok().finish())
+                )
                 .service(
                     web::scope("/user")
                         .service(crate::routes::user::get_all)
@@ -65,7 +77,8 @@ impl Api {
                 )
                 .configure(config_routes)
         })
-            .bind(addr)?
+            .bind(addr)?;
+        server
             .run()
             .await
     }
