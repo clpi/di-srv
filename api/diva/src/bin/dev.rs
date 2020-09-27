@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpRequest, HttpServer, Responder, dev::Server};
-use api::app::Api;
+use diva::app::Api;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {

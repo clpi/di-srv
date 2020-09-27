@@ -1,30 +1,14 @@
+use std::marker::{Send, Unpin};
 use std::boxed::Box;
 use serde::{Serialize, Deserialize};
+use crate::models::{user::User, Model};
 use sqlx::{
-    prelude::*, Any, AnyPool,
-    types::chrono::{DateTime, Utc},
+    prelude::*, types::chrono::{DateTime, Utc},
+    postgres::{Postgres, PgPool, PgRow, PgPoolOptions},
+    FromRow,
 };
-use sqlx::{SqlitePool, sqlite::*};
-use sqlx::{PgPool, postgres::{Postgres, PgPoolOptions, PgRow}}; 
-use sqlx::postgres::*;
 
-pub async fn init() -> sqlx::Result<()> {
-    let db = Db::new().await?;
-    let user = User { 
-        id: None, 
-        username: "test".to_string(), 
-        password: "d".to_string(), 
-        email: "test@div.is".to_string(), 
-        created_at: Utc::now(),
-    };
-    add_user(&db.pool, user).await?;
-    let users: Vec<User> = get_all_users(&db.pool).await?;
-    for user in users.into_iter() {
-        println!("User: {}", user.username);
-    }
-    Ok(())
-}
-
+#[derive(Clone)]
 pub struct Db {
     pub pool: sqlx::postgres::PgPool,
 }
@@ -32,54 +16,56 @@ pub struct Db {
 impl Db {
 
     pub async fn new() -> sqlx::Result<Self> {
+        let dburl = &dotenv::var("DATABASE_URL").expect("DB URL not set");
         let pool = PgPoolOptions::new()
             .max_connections(5)
-            .connect(&dotenv::var("DATABASE_URL").unwrap()).await?;
+            .connect(dburl).await?;
         Ok( Self { pool } )
     }
-}
 
-pub struct BoxedModel<T>(T);
-impl<T: Model> BoxedModel<T> {
-    pub fn new(model: T) -> Box<T> { Box::new(model) }
-}
-pub trait QueryBuilder {
-    type Model1;
-    type Model2;
-}
-
-pub struct JoinQuery<T, U> {
-    pub model1: T,
-    pub model2: U,
-}
-
-impl<T, U> QueryBuilder for JoinQuery<T, U> 
-where T: Model, U: Model {
-    type Model1 = T;
-    type Model2 = U;
-    
-}
-
-pub trait Model: Sized+ Default{
-    //type Item;
-    fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Self> { 
-        Ok(Self::default()) 
+    pub async fn init(self) -> sqlx::Result<Self> {
+        (&self.pool).execute(include_str!("../sql/up.sql")).await?;
+        Ok(self)
     }
-    fn table() -> String { String::from("") }
-    fn create(db: &Db) -> sqlx::Result<u32> { Ok(0) }
-    fn get_all<T: Model>(&self, db: &Db, model: T) -> sqlx::Result<Vec<T>>;
+
+    pub async fn down(self) -> sqlx::Result<Self> {
+        (&self.pool).execute(include_str!("../sql/down.sql")).await?;
+        Ok(self)
+    }
+
+    pub async fn clear(self) -> sqlx::Result<Self> {
+        (&self.pool).execute(include_str!("../sql/clear.sql")).await?;
+        Ok(self)
+    }
+
+    pub async fn exec(self, query: &str) -> sqlx::Result<()> {
+        sqlx::query(query).execute(&self.pool).await?;
+        Ok(())
+    }
+
+    pub async fn clear_table(self, table: &str) -> sqlx::Result<()> {
+        sqlx::query("DELETE FROM ?;").bind(table).execute(&self.pool).await?;
+        Ok(())
+    }
+
+    pub async fn drop_table(self, table: &str) -> sqlx::Result<()> {
+        sqlx::query("DROP TABLE IF EXISTS ?;").bind(table).execute(&self.pool).await?;
+        Ok(())
+    }
+
+    pub async fn conn(self) -> sqlx::Result<sqlx::pool::PoolConnection<Postgres>> {
+        Ok(self.pool.acquire().await?)
+    }
+
+    pub async fn query<'r, T>(&self, qstr: String, model: T) -> sqlx::Result<()>
+    where T: 'r + Model + sqlx::FromRow<'r, PgRow> + Send + Unpin {
+        //let res: T = sqlx::query_as::<Postgres, T>(&qstr).fetch(&self.pool).await?;
+        Ok(())
+    }
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
-pub struct User {
-    id: Option<i32>,
-    email: String,
-    username: String,
-    password: String,
-    created_at: DateTime<Utc>,
-}
 
-async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
+pub async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
     let res = sqlx::query!(
         r#"
             INSERT INTO Users ( email, username, password )
@@ -93,10 +79,18 @@ async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
     Ok(res.id)
 }
 
-async fn get_all_users(pool: &PgPool) -> sqlx::Result<Vec<User>> {
+pub async fn get_all_users(pool: &PgPool) -> sqlx::Result<Vec<User>> {
     let res: Vec<User> = sqlx::query_as::<sqlx::Postgres, User>
         (r#"SELECT * FROM Users"#)
         .fetch_all(pool)
         .await?;
     Ok(res)
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    pub fn can_connect() {
+
+    }
 }

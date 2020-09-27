@@ -5,13 +5,8 @@ authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
 
 [lib]
-name="lib"
+name="divdb"
 path = "src/lib.rs"
-
-[features]
-default = ["sqlx/sqlite"]
-sqlite = ["sqlx/sqlite"]
-pg = ["sqlx/postgres"]
 
 [[bin]]
 name = "main"
@@ -20,16 +15,25 @@ path = "src/bin/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-common = { path = "../common/" }
-sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "any", "postgres", "json", "uuid", "chrono", "runtime-async-std", "macros" ] }
+com = { path = "./../com" }
 async-std = { version = "1.6.0", features = ["attributes"] }
-#tokio = { version = "*", features = ["full"] }
+async-trait = "*"
+async-sqlx-session = { version = "*", features = ["pg"] }
+futures = "0.3.1"
+#tokio = { version = "*", features = ["full"] , optional=true}
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 chrono = { version = "*", features = ["serde"] }
 uuid = { version = "*", features = ["serde", "v4"] }
+#async-graphql= {version="*", optional=true}
+#juniper="*"
 dotenv="*"
 #walkdir = "*"
+
+[dependencies.sqlx]
+version = "0.4.0-beta.1"
+default_features = false
+features = ["postgres", "json", "uuid", "chrono", "macros", "runtime-async-std", "tls"]
 
 [dev-dependencies]
 dotenv="*"

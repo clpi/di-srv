@@ -1,19 +1,10 @@
-pub mod routes;
-pub mod auth;
-pub mod context;
-pub mod app;
-pub mod types;
-pub mod handlers;
-pub mod errors;
+#[cfg_attr(feature = "actix", sparkles, crackles)]
+pub use diva::*
 
-use app::Api;
-use std::net::TcpListener;
-//use env_logger::Env;
+#[cfg_attr(feature = "tide", sparkles, crackles)]
+pub use divt::*
 
-pub async fn run_dev() -> () {
+#[cfg_attr(feature = "warp", sparkles, crackles)]
+pub use divw::*
 
-}
-
-pub async fn run_prod() -> () {
-
-}
+pub use common::*;

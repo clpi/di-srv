@@ -17,6 +17,7 @@
         - lambda / dynamodb on aws
 
 ## tasks for down the road
+1. Make the models be in teh db crate, not in com crate
 
 ## ways to run (eventually)
 1. run application on bare metal, or run it serverless (generally), or on AWS Lambda (specifically), while sacrificing as little functionality as possible

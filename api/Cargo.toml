@@ -6,100 +6,25 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
-db = { path = "../db/" }
-common = { path = "../common/" }
-futures="*"
-actix="*"
-actix-rt="*"
-actix-web="*"
-actix-cors="*"
-actix-session="*"
-actix-files="*"
-actix-identity="*"
-actix-web-validator="*"
-#actix-limitation="*"
-actix-service="*"
-actix-ratelimit="*"
-#actix-lambda="*"
-#actix-web-actors="*"
-#actix-taskqueue="*"
-#actix-casbin="*"
-#actix-redis-jobs = { version = "0.1" }
-#actix-casbin-auth="*"
-#actix-multipart="*"
-#actix-protobuf="*"
-#actix-redis="*"
-#actix-web-httpauth="*"
-#actix-web-actors="*"
-#actix-http="*"
-#actix-utils = "*"
-#actix-web-prom = "*"
-#actix-router="*"
-#actix-codec="*"
-#actix-threadpool="*"
-#actix-macros="*"
-#actix-derive="*"
-#actix-router="*"
-#actix-server="*"
-#actix-testing="*"
-#actix-tls="*"
-#actix-web-codegen="*"
-#paperclip-actix="*"
-#rabbithole-endpoint-actix="*"
-#coi-actix-web="*"
-#sse-actix-web="*"
-#async-graphql-actix-web="*"
-#actix-router="*"
-#actix-connect="*"
-#actix-postgres="*k"
+diva = { path="./diva", optional=true }
+divt = { path="./divt", optional=true }
+divw = { path="./divw", optional=true }
+common = { path="./common", optional=false }
 
-serde_json = "*"
-serde = { version = "*", features = [ "std", "derive" ] }
-chrono= { version = "*", features = [ "serde", "clock", "std" ] }
-uuid = { version = "*", features = [ "serde", "v4", "std" ] }
-validator = { version = "0.11", features = [ "derive" ] }
-tokio = {version="0.2", features=["full"]}
-derive_more="*"
-regex="*"
-anyhow="*"
-rand="*"
-reqwest="*"
-#toml = "*"
-#redis = { version = "0.16.0", default-features = false, features = ["tokio-rt-core"] }
-#bcrypt="*"
-#async-graphql = "=2.0.0-alpha.13"
-#async-graphql-actix-web = "=2.0.0-alpha.13"
-#juniper="*"
-# AWS
-#rusoto_core="*"
-#rusoto_s3="*"
-#futures-core="*"
-#futures-channel="*"
-#futures-sink="*"
-#futures-util="*"
-
-
-[dev-dependencies]
-log="*"
-env_logger="*"
-pretty_env_logger="*"
-dotenv="*"
-anyhow="*"
-criterion="*"
-listenfd="*"
+[features]
+actix = ["diva"]
+tide = ["divt"]
+warp = ["divw"]
 
 [[bin]]
-name="main"
-path="./src/bin/main.rs"
+name="diva" #dev
+path="./diva/src/bin/dev.rs"
 
 [[bin]]
-name="dev"
-path="./src/bin/dev.rs"
+name="divt"
+path="./divt/src/bin/main.rs"
 
 [[bin]]
-name="prod"
-path="./src/bin/prod.rs"
+name="divw"
+path="./divw/src/bin/main.rs"

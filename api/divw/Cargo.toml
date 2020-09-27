@@ -1,0 +1,32 @@
+[package]
+name = "divw"
+version = "0.1.0"
+authors = ["Chris P <chrisp1877@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "lib"
+path = "./src/lib.rs"
+
+[[bin]]
+name = "main"
+path = "./src/bin/main.rsk"
+
+[dependencies]
+common={path="../com/", optional=false}
+divdb={path="../db/", optional=false}
+warp={version="*", optional=false}
+
+tokio = { version = "0.2", features = ["full"] , optional=false}
+serde={version="*", features=["derive"], optional=false}
+serde_json={version="*", optional=false}
+chrono = {version="*", features=["serde"], optional=false}
+#oauth2 = { version = "3.0", features = ["futures-03"], default-features = false }
+#futures = "0.3"
+
+async-graphql-warp= {version="*", optional=true}
+async-graphql= {version="*", optional=true}
+
+[features]
+default=[]
+gql=["async-graphql", "async-graphql-warp"]
