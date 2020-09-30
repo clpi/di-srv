@@ -1,4 +1,5 @@
 pub mod db;
+pub mod config;
 pub mod query;
 pub mod util;
 pub mod models;

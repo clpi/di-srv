@@ -10,11 +10,11 @@ path = "./src/lib.rs"
 
 [[bin]]
 name = "main"
-path = "./src/bin/main.rsk"
+path = "./src/bin/main.rs"
 
 [dependencies]
-common={path="../com/", optional=false}
-divdb={path="../db/", optional=false}
+com={path="../../com/", optional=false}
+divdb={path="../../db/", optional=false}
 warp={version="*", optional=false}
 
 tokio = { version = "0.2", features = ["full"] , optional=false}

@@ -13,6 +13,8 @@ pub struct Db {
     pub pool: sqlx::postgres::PgPool,
 }
 
+pub async fn init() -> () {}
+
 impl Db {
 
     pub async fn new() -> sqlx::Result<Self> {
@@ -57,11 +59,11 @@ impl Db {
         Ok(self.pool.acquire().await?)
     }
 
-    pub async fn query<'r, T>(&self, qstr: String, model: T) -> sqlx::Result<()>
-    where T: 'r + Model + sqlx::FromRow<'r, PgRow> + Send + Unpin {
-        //let res: T = sqlx::query_as::<Postgres, T>(&qstr).fetch(&self.pool).await?;
-        Ok(())
-    }
+    //pub async fn query<'r, T>(&self, qstr: String, model: T) -> sqlx::Result<()>
+    //where T: Model + sqlx::FromRow<'r, PgRow> + Send + Unpin {
+        ////let res: T = sqlx::query_as::<Postgres, T>(&qstr).fetch(&self.pool).await?;
+        //Ok(())
+    //}
 }
 
 

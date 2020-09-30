@@ -29,13 +29,20 @@ uuid = { version = "*", features = ["serde", "v4"] }
 #juniper="*"
 dotenv="*"
 #walkdir = "*"
+#refinery = { version = "0.3.0", features = ["postgres"] }
+#barrel = { version = "0.6.5", features = ["pg"] }
 
 [dependencies.sqlx]
 version = "0.4.0-beta.1"
 default_features = false
 features = ["postgres", "json", "uuid", "chrono", "macros", "runtime-async-std", "tls"]
+#features = ["postgres", "json", "uuid", "chrono", "macros", "runtime-actix", "tls", "migrate"]
 
 [dev-dependencies]
 dotenv="*"
 #fake="*"
 #log="*"
+
+[alias]
+r = "run"
+bm =  "run --bin main"

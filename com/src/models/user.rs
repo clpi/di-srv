@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
 use sqlx::{types::chrono::{Utc, DateTime}, FromRow, Type};
 
+/*
 #[derive(Serialize, Deserialize)]
 pub struct UserLogin { pub username: String, pub password: String }
 
@@ -42,3 +43,4 @@ impl Default for User {
         }   
     }
 }
+*/
