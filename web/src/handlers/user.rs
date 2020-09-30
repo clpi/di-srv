@@ -93,8 +93,7 @@ pub async fn get_records(
 ///#[get("/user/id/{uid}/rec/{rid}")]
 pub async fn get_record(
     data: web::Data<Context>, 
-    uid: web::Path<i32>,
-    rid: web::Path<i32>,
+    path: web::Path<(i32, i32)>,
 ) -> HttpResponse {
     HttpResponse::Ok().body("get_record")
 }

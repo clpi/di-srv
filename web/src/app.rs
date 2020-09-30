@@ -1,6 +1,8 @@
 use std::time::Duration;
+use actix_files as fs;
 use serde::{Serialize, Deserialize};
 use divdb::db::Db;
+use actix_cors::Cors;
 use crate::{context::Context, handlers::{index, auth, user, record}};
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
@@ -11,6 +13,7 @@ use actix_identity::{Identity, IdentityService, CookieIdentityPolicy};
 pub async fn run_api(listener: std::net::TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
     let db = Db::new().await.unwrap();
+    //let db_act = actix::SyncArbiter::start().
     let ctx = Context { db };
     HttpServer::new(move ||
         App::new()
