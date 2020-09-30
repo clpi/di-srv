@@ -25,6 +25,15 @@ impl Db {
         Ok( Self { pool } )
     }
 
+    pub fn new_blocking() -> sqlx::Result<Self> {
+        let dburl = &dotenv::var("DATABASE_URL").expect("DB URL not set");
+        let pool = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(dburl);
+        let pool = async_std::task::block_on(pool);
+        Ok( Self { pool: pool.unwrap() } )
+    }
+
     pub async fn init(self) -> sqlx::Result<Self> {
         (&self.pool).execute(include_str!("../sql/up.sql")).await?;
         Ok(self)

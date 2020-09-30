@@ -1,30 +1,53 @@
 [package]
-name = "api"
+name = "divapi"
 version = "0.1.0"
 authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
+default-run = "main"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "main"
+path = "src/bin/main.rs"
+
+[[bin]]
+name = "gql"
+path = "src/bin/gql.rs"
+required-features= ["gql"]
 
 [dependencies]
-diva = { path="./diva", optional=true }
-divt = { path="./divt", optional=true }
-divw = { path="./divw", optional=true }
-common = { path="./common", optional=false }
+tokio = { version = "*", features = [ "full" ] }
+serde = { version = "*", features = [ "derive" ] }
+validator = { version = "*", features = [ "derive" ] }
+futures = "*"
+serde_json = "*"
+actix = "*"
+actix-rt = "*"
+actix-web = "*"
+actix-cors = "*"
+actix-files = "*"
+actix-identity = "*"
+#actix-web-actors = "*"
+#actix-session = "*"
+#actix-web-middleware-cognito = "*"
+
+async-graphql = { version = "*", optional= true }
+async-graphql-actix-web = { version = "*", optional = true }
+
+divdb = { path = "../db/" }
+com = { path = "../com/" }
+
+[dev-dependencies]
+log = "*"
+#listenfd = "*"
+#dotenv="*"
 
 [features]
-actix = ["diva"]
-tide = ["divt"]
-warp = ["divw"]
+default=[]
+graphql=["divdb/gql", "async-graphql", "async-graphql-actix-web"]
 
-[[bin]]
-name="diva" #dev
-path="./diva/src/bin/dev.rs"
-
-[[bin]]
-name="divt"
-path="./divt/src/bin/main.rs"
-
-[[bin]]
-name="divw"
-path="./divw/src/bin/main.rs"
+[alias]
+r = "run"
+b = "build"

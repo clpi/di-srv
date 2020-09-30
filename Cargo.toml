@@ -19,9 +19,3 @@ api= {path="./api", optional=false}
 divdb={path="./db/"}
 com={path="./com/"}
 log="*"
-
-[features]
-actix = ["api/actix"]
-tide = ["api/tide"]
-warp = ["api/warp"]
-

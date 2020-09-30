@@ -6,10 +6,10 @@ use sqlx::Postgres;
 use async_trait::async_trait;
 use super::Model;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserLogin { pub username: String, pub password: String }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserRegister { email: String, username: String, password: String }
 
 #[serde(rename_all="camelCase")]
@@ -35,13 +35,13 @@ impl User {
         }
     }
 
-    pub async fn insert(db: &Db, user: Self) -> sqlx::Result<u32> {
+    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
         let res: u32 = sqlx::query_scalar
             ("INSERT INTO Users (email, username, password, created_at)
               VALUES ($1, $2, $3, $4) RETURNING id") 
-            .bind(user.email)
-            .bind(user.username)
-            .bind(user.password)
+            .bind(self.email)
+            .bind(self.username)
+            .bind(self.password)
             .bind(Utc::now())
             .fetch_one(&db.pool).await?;
         Ok(res)

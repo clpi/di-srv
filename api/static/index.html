@@ -1,0 +1,21 @@
+<head><title>div.is api</title></head>
+  <body>
+      <h1>div.is api</h1>
+      <h3>welcome</h1>
+      <p><b>Here are a list of the routes</b> for this API:</p>
+      <ul>
+        <li><b>GET /index</b>: Index welcome string</li>
+        <li><b>GET /user</b>: JSON array of users</li>
+        <li><b>GET /user/{username}</b>: Get user with username {username}</li>
+        <li><b>GET /user/id/{uid}</b>: Get user with uid {uid}</li>
+        <li><b>POST /auth/login</b>: Login with JSON credentials</li>
+        <li><b>POST /auth/signup</b>: Signup with JSON credentials</li>
+        <li><b>POST /auth/refresh</b>: Refresh current auth session</li>
+      <form target="/" method="post" enctype="multipart/form-data" id="myForm" >
+          <input type="text"  id="text" name="text" value="test_text"/>    
+          <input type="number"  id="number" name="number" value="123123"/>    
+          <input type="button" value="Submit" onclick="myFunction()"></button>
+      </form>
+      <input type="file" multiple name="file" id="myFile"/>
+  </body>
+</html>"#;
