@@ -9,6 +9,9 @@ use super::Model;
 #[derive(Serialize, Deserialize)]
 pub struct UserLogin { pub username: String, pub password: String }
 
+#[derive(Serialize, Deserialize)]
+pub struct UserRegister { email: String, username: String, password: String }
+
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct User {
@@ -22,18 +25,42 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(
-        email: &str,
-        username: &str,
-        password: &str,
-    ) -> User {
+    pub fn new<T, U, V>(email: T, username: U, password: V,) -> User
+        where T: Into<String>, U: Into<String>, V: Into<String> {
         User { 
-            id: None, 
-            email: email.to_string(), 
-            username: username.to_string(), 
-            password: password.to_string(),
-            created_at: Utc::now(),
+            email: email.into(), 
+            username: username.into(), 
+            password: password.into(),
+            ..User::default()
         }
+    }
+
+    pub async fn insert(db: &Db, user: Self) -> sqlx::Result<u32> {
+        let res: u32 = sqlx::query_scalar
+            ("INSERT INTO Users (email, username, password, created_at)
+              VALUES ($1, $2, $3, $4) RETURNING id") 
+            .bind(user.email)
+            .bind(user.username)
+            .bind(user.password)
+            .bind(Utc::now())
+            .fetch_one(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<u32> {
+        let res: u32 = sqlx::query_scalar
+            ("DELETE FROM Users WHERE username=$1 RETURNING id")
+            .bind(username)
+            .fetch_one(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<u32> {
+        let res: u32 = sqlx::query_scalar
+            ("DELETE FROM Users WHERE id=$1 RETURNING id")
+            .bind(id)
+            .fetch_one(&db.pool).await?;
+        Ok(res)
     }
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<User>> {
@@ -48,6 +75,15 @@ impl User {
         let res: User = sqlx::query_as::<Postgres, User>
             ("SELECT * FROM Users WHERE id=$1") 
             .bind(id)
+            .fetch_one(&db.pool)
+            .await?;
+        Ok(res)
+    }
+
+    pub async fn get_by_username(db: &Db, username: String) -> sqlx::Result<User> {
+        let res: User = sqlx::query_as::<Postgres, User>
+            ("SELECT * FROM Users WHERE username=$1") 
+            .bind(username)
             .fetch_one(&db.pool)
             .await?;
         Ok(res)

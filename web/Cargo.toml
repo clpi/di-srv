@@ -16,6 +16,7 @@ path = "src/bin/main.rs"
 [dependencies]
 tokio = { version = "*", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
+validator = { version = "*", features = [ "derive" ] }
 serde_json = "*"
 reqwest = "*"
 actix = "*"
@@ -23,6 +24,13 @@ actix-rt = "*"
 actix-web = "*"
 actix-cors = "*"
 actix-files = "*"
+actix-web-actors = "*"
+#actix-session = "*"
+actix-identity = "*"
 #actix-web-actors = "*"
-divdb = { path = "../db/" }
 
+divdb = { path = "../db/" }
+com = { path = "../com/" }
+
+#[dev-dependencies]
+#listenfd = "*"

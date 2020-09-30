@@ -1,11 +1,14 @@
 pub mod user;
+pub mod record;
+
+pub use user::User;
+pub use record::Record;
 
 use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
 use std::marker::{Send, Unpin};
 use crate::db::Db;
 use sqlx::{types::chrono::{Utc, DateTime}, FromRow, Type, postgres::{Postgres, PgRow}, Decode};
-//use com::models::{user::User, record::Record};
 
 
 #[async_trait]
