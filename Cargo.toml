@@ -15,7 +15,7 @@ name = "dev"
 path = "src/bin/dev.rs"
 
 [dependencies]
-api= {path="./api", optional=false}
+divapi= {path="./api", optional=false}
 divdb={path="./db/"}
 com={path="./com/"}
 log="*"

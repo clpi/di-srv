@@ -35,16 +35,20 @@ impl User {
         }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
-        let res: u32 = sqlx::query_scalar
+    pub async fn insert(self, db: &Db) -> sqlx::Result<()> {
+        println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
+        let mut conn = db.pool.acquire().await?;
+        sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
-              VALUES ($1, $2, $3, $4) RETURNING id") 
+              VALUES ($1, $2, $3, $4);") 
             .bind(self.email)
             .bind(self.username)
             .bind(self.password)
             .bind(Utc::now())
-            .fetch_one(&db.pool).await?;
-        Ok(res)
+            .execute(&mut conn).await?;
+            //.fetch_one(&db.pool).await?;
+        conn.release();
+        Ok(())
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<u32> {

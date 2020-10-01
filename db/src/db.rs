@@ -76,8 +76,9 @@ impl Db {
 }
 
 
+/*
 pub async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
-    let res = sqlx::query!(
+    let res = sqlx::query(
         r#"
             INSERT INTO Users ( email, username, password )
             VALUES ( $1, $2, $3 )
@@ -97,6 +98,7 @@ pub async fn get_all_users(pool: &PgPool) -> sqlx::Result<Vec<User>> {
         .await?;
     Ok(res)
 }
+*/
 
 #[cfg(test)]
 pub mod tests {

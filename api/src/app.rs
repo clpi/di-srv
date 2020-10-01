@@ -1,14 +1,13 @@
-use std::{net::TcpListener, time::Duration, sync::mpsc};
-use actix_files as fs;
+use std::{net::TcpListener,  sync::mpsc};
 use serde::{Serialize, Deserialize};
 use divdb::db::Db;
 use actix_cors::Cors;
-use crate::{context::Context, handlers::{self, static_index, index, auth, user, record}};
+use crate::{context::Context, handlers::{self,  index, auth, user, record, admin}};
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
     middleware::Logger, http, get
 };
-use actix_identity::{Identity, IdentityService, CookieIdentityPolicy};
+use actix_identity::{IdentityService, CookieIdentityPolicy};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
@@ -25,6 +24,7 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
             .configure(handlers::routes)
             .configure(user::routes)
             .configure(auth::routes)
+            .configure(admin::routes)
     );
     srv
         .listen(listener)?
@@ -48,11 +48,19 @@ pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::i
             .configure(handlers::routes)
             .configure(user::routes)
             .configure(auth::routes)
+            .configure(admin::routes)
     )
         .listen(listener)?
         .run();
     let _ = tx.send(srv.clone());
     sys.block_on(srv)
+}
+
+pub fn get_cors() -> Cors {
+    Cors::new().allowed_origin("*")
+        .max_age(3600)
+        .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
+        .send_wildcard()
 }
 
 #[derive(Serialize, Deserialize)]

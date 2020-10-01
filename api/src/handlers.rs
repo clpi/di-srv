@@ -1,16 +1,18 @@
 pub mod user;
 pub mod auth;
 pub mod record;
+pub mod admin;
 
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
     web::ServiceConfig,
 };
+use actix_files::Files;
 use actix_identity::{Identity, IdentityService, CookieIdentityPolicy};
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        .route("/", web::get().to(static_index))
+        .route("/", web::get().to(static_ind))
         .route("/index", web::get().to(index));
 }
 
@@ -22,8 +24,9 @@ pub async fn index(id: Identity) -> impl Responder {
     HttpResponse::Ok().body(res)
 }
 
-pub async fn static_index(id: Identity) -> impl Responder {
-    let html = r#"<html>
+pub async fn static_ind(id: Identity) -> impl Responder {
+    let html = String::from_utf8(std::fs::read("static/index.html").unwrap()).unwrap();
+    let htm = r#"<html>
         <head><title>div.is api</title></head>
         <body>
             <h1>div.is api</h1>

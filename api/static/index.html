@@ -1,7 +1,81 @@
-<head><title>div.is api</title></head>
+<!DOCTYPE html>
+<head>
+  <title>div.is api</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="./index.js"></script>
+  <style>
+h1 {
+  font-size: 2rem;
+  font-weight: 300;
+  font-family: Cantarell;
+}
+body {
+  font-size: 1rem;
+  background-color: #272321;
+  color: #fefafb;
+  font-family: Cantarell;
+  font-weight: 350;
+  text-align: center;
+    display: inline;
+  margin: auto;
+  padding: auto;
+  text-shadow: 2px 2px 2px #000;
+  line-height: 30px;
+}
+.header {
+  margin-bottom: 40px;
+  margin: auto;
+  border-bottom: 3px solid #000;
+}
+.content {
+  padding-top: 5%;
+  padding-bottom: 5%;
+  background: #333;
+  margin: auto;
+    width: 100%;
+}
+.footer {
+  border-top: 3px solid #000;
+  color: #aeaaab;
+  font-weight: 400;
+  text-shadow: -2px -2px 2px #000;
+}
+  </style>
+  <script>
+    const get_all_users = async () => { 
+      const data = await fetch("http://localhost:7777/user",
+        { method: "GET" })
+        .then(res => res.json())
+        .catch(err => console.log(err));
+      document.getElementById("users").innerText(JSON.stringify(data));
+      localStorage.setItem("users", JSON.stringify(data));
+      return data;
+    }
+    const get_user_by_username = async (username) => {
+      const data = await fetch("http://localhost:7777/user/"+username)
+        .then(res => res.json())
+        .catch(err => console.log(err));
+      return data;
+    }
+    const signup = async (username, email, password) => {
+      const data = await fetch("http://localhost:7777/auth/signup/", {
+        method: "POST",
+        body: { "username": username, "email": email, "password": password },
+      })
+        .then(res => {
+          if (res.ok()) { console.log("signup successful")
+          } else { console.log("signup unsuccessful") } 
+        });
+    }   
+    document.getElementById("getUsers").onclick() = get_all_users();
+  </script>
+</head>
   <body>
+    <div class="header">
       <h1>div.is api</h1>
       <h3>welcome</h1>
+    </div>
+    <div class="content">
       <p><b>Here are a list of the routes</b> for this API:</p>
       <ul>
         <li><b>GET /index</b>: Index welcome string</li>
@@ -11,11 +85,17 @@
         <li><b>POST /auth/login</b>: Login with JSON credentials</li>
         <li><b>POST /auth/signup</b>: Signup with JSON credentials</li>
         <li><b>POST /auth/refresh</b>: Refresh current auth session</li>
+        <p>Get all users: <button id="getUsers">Get users</button></p>
+        <p id="users"></p>
       <form target="/" method="post" enctype="multipart/form-data" id="myForm" >
           <input type="text"  id="text" name="text" value="test_text"/>    
           <input type="number"  id="number" name="number" value="123123"/>    
           <input type="button" value="Submit" onclick="myFunction()"></button>
       </form>
       <input type="file" multiple name="file" id="myFile"/>
+    </div>
+    <div class="footer">
+      <p>This is footer text</p>
+    </div>
   </body>
 </html>"#;

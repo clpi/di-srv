@@ -33,44 +33,66 @@ pub async fn signup(
     let hashed_user = User {
         password: Auth::new().hash(&user.password).unwrap(), ..user 
     };
-    let db = data.db.clone();
-    let mut resp = match hashed_user.insert(&db).await {
-        Ok(uid) => { HttpResponse::Ok() },
-        Err(_) => { HttpResponse::NotAcceptable() },
-    };
-    resp.set_header("authorization", "true");
-    resp.finish()
+    match hashed_user.insert(&data.db).await {
+        Ok(_uid) => { 
+            let mut resp = HttpResponse::Ok();
+            resp.set_header("authorization", "true");
+            resp.body("User signed up")
+        },
+        Err(_) => { 
+            HttpResponse::NotAcceptable().body("Could not sign user up")
+        },
+    }
 }
 
 pub async fn login(
-    (req, user, data): (HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
 ) -> HttpResponse {
-    let mut resp = HttpResponse::Ok().body("login");
     let user = user.into_inner().clone();
-    let db = data.db.clone();
-    let mut resp = match User::get_by_username(&db, user.username).await {
+    match User::get_by_username(&data.db, user.username).await {
         Ok(db_user) => { 
             if Auth::new().verify(user.password, db_user.password).unwrap() {
-                HttpResponse::Ok()
+                id.remember(db_user.username);
+                let mut resp = HttpResponse::Ok();
+                resp.set_header("authorization", "true") 
+                    .cookie(Cookie::new("authorized", "true"));
+                resp.body("User {} signed in!")
             } else {
                 HttpResponse::NotFound()
+                    .body("User not signed in")
             }
         },
-        Err(_) => HttpResponse::NotFound(), //might be insecure, too specific
-    };
-    resp.set_header("authorization", "true") 
-        .cookie(Cookie::new("authorized", "true")); //I know this isn't how you do this
-    resp.finish()
+        Err(_) => HttpResponse::NotFound()
+            .body("User not signed in")
+    }
 }
 
 pub async fn logout(
-    (req, user, data): (HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
 ) -> HttpResponse {
-    HttpResponse::Ok().body("logout")
+    match id.identity() {
+        Some(_ident) => {
+            id.forget();
+            HttpResponse::Ok()
+                .set_header("authorization", "false")
+                .del_cookie(&Cookie::named("authorized"))
+                .body("User logged out")
+        },
+        None => HttpResponse::NotFound()
+            .body("No user to log out")
+    }
 }
 
 pub async fn refresh_login(
-    (req, user, data): (HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
 ) -> HttpResponse {
-    HttpResponse::Ok().body("refresh_login")
+    if id.identity().unwrap() == user.username {
+        return HttpResponse::Ok().body("User authenticated");
+    } else {
+        id.forget();
+        return HttpResponse::Gone()
+            .set_header("authorization", "false")
+            .del_cookie(&Cookie::named("authorized"))
+            .body("User logged out")
+    }
 }

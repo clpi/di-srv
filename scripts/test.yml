@@ -1,0 +1,7 @@
+---
+- name: test apb
+  hosts: io.div.is
+  remote_user: root
+  tasks:
+    - name: test
+      command: ls -a
