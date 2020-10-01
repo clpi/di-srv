@@ -1,0 +1,32 @@
+---
+- name: Deploy to io.div.is
+  hosts: io.div.is
+  remote_user: root
+  vars:
+    pg_user: user
+    pg_pass: pass
+    pg_db: db
+    host_port: 80
+    cont_port: 5005
+  tasks:
+    - name: Create app data dir
+      file:
+        path: /usr/src/div/data
+        state: directory
+    - name: Copy postgres files
+      synchronize:
+        src: ../data
+        dest: /usr/src/div/
+        mode: push
+    - name: Copy back end files
+      synchronize:
+        src: ../back
+        dest: /usr/src/div/
+        mode: push
+        rsync_opts:
+          - "--exclude=target"
+    - name: Build backend image
+      command: sudo podman build /usr/src/div/back -t divb
+    - name: Run backend image
+      command: sudo podman run --rm -dt -p 3001:3001 --name divb localhost/divb
+

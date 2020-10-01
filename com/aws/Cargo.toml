@@ -11,5 +11,6 @@ lambda_runtime="*"
 rusoto_core="*"
 rusoto_dynamodb="*"
 rusoto_s3="*"
+rusoto_cognito_identity="*"
 
 dynomite="*"

@@ -7,13 +7,11 @@
 a {
   color: #fea;
 }
-ul { list-style: none; }
 h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 300;
   font-family: Cantarell;
 }
-h3 { font-weight: 300; font-size: 1.8rem; }
 body {
   font-size: 1rem;
   background-color: #272321;
@@ -37,11 +35,9 @@ body {
   width: 15vw;
   overflow: auto;
 }
-.card { background: rgba(255,255,255,0.05); border-radius: 20px; }
 .nav ul { list-style-type: none; }
-.nav-h { top: 0; width: 100%; height: 100px; margin: auto;}
+.nav-h { top: 0; width: 100%; height: 100px; margin: auto; border-radius: 2px;}
 .nav-h ul {
-  border-radius: 4px;
   top: 0;
   position: sticky;
   position: -webkit-sticky; /* Safari */
@@ -105,6 +101,7 @@ li a:hover {
   <body>
     <div class="header">
       <h1>div.is api</h1>
+      <h3>welcome</h1>
     </div>
     <div class="nav-h">
       <ul>
@@ -126,7 +123,6 @@ li a:hover {
     </div>
     <div class="content">
     <br/><br/>
-      <h3>api routes</h3>
       <p><b>Here are a list of the routes</b> for this API:</p>
       <ul>
         <li><b>GET /index</b>: Index welcome string</li>
@@ -136,7 +132,6 @@ li a:hover {
         <li><b>POST /auth/login</b>: Login with JSON credentials</li>
         <li><b>POST /auth/signup</b>: Signup with JSON credentials</li>
         <li><b>POST /auth/refresh</b>: Refresh current auth session</li>
-      </ul>
         <p>Get all users: <button id="getUsers">Get users</button></p>
         <p id="users"></p>
       <form target="/" method="post" enctype="multipart/form-data" id="myForm" >
