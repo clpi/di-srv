@@ -1,7 +1,7 @@
 pub mod auth;
 
 use actix_cors::Cors;
-use actix_web::middleware::Logger;
+use actix_web::{middleware::Logger, client::Client};
 use actix_identity::{IdentityService, CookieIdentityPolicy};
 
 pub fn logger() -> Logger { 
@@ -22,3 +22,6 @@ pub fn identity_service() -> IdentityService<CookieIdentityPolicy> {
             .secure(false))
 }
 
+pub fn request_client() -> Client {
+    Client::default()
+}

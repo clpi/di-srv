@@ -1,11 +1,16 @@
 use std::{net::TcpListener,  sync::mpsc};
 use serde::{Serialize, Deserialize};
+use actix_service::ServiceFactory;
 use divdb::db::Db;
 use actix_cors::Cors;
-use crate::{state::{self, State}, handlers::{self,  index, auth, user, record, admin}, middleware};
+use crate::{
+    state::{self, State}, 
+    handlers::{self,  index, auth, user, record, admin}, middleware
+};
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
-    middleware::{Logger, DefaultHeaders}, http, get
+    middleware::{Logger, DefaultHeaders}, http, get,
+    body, Error,
 };
 use actix_identity::{IdentityService, CookieIdentityPolicy};
 
@@ -39,6 +44,21 @@ pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::i
     sys.block_on(srv)
 }
 
+pub fn create_app(state: &State) -> App<
+    impl ServiceFactory<
+        Config = (),
+        Request = dev::ServiceRequest,
+        Response = dev::ServiceResponse<body::Body>,
+        Error = Error,
+        InitError = (),
+    >, body::Body> {
+        App::new()
+            .data(state::state())
+            .wrap(middleware::cors().finish())
+            .wrap(middleware::identity_service())
+            .configure(handlers::routes)
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct TestEcho { num: i32, string: String }
 
@@ -50,19 +70,12 @@ pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResp
 
 #[cfg(test)]
 mod tests {
+    
     use super::*;
-    use actix_web::test::{init_service, TestRequest};
+    use actix_web::test::{self, init_service};
 
     #[actix_rt::test]
-    async fn test_route_can_echo() {
-        let mut app = init_service(App::new()
-            .service(web::resource("/").route(web::post().to(index))),
-        );
-        let req = TestRequest::get().uri("/")
-            .set_json(&TestEcho { num: 7, string: "Test".to_string(), })
-            .to_request();
-    }
+    async fn identity_service_works() {
 
-    async fn index_is_accessible() {
     }
 }

@@ -110,3 +110,24 @@ pub async fn delete_record(
     HttpResponse::Ok().body("delete_record")
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*; 
+    use actix_web::test::{TestRequest, self};
+
+    #[actix_rt::test]
+    async fn get_all_users_ok() {
+    
+    }
+
+    #[actix_rt::test]
+    async fn get_user_by_id_ok() {
+
+    }
+
+    #[actix_rt::test]
+    async fn get_user_by_username_ok() {
+
+    }
+}

@@ -1,14 +1,18 @@
-FROM rust:1.43.1 as build
-ENV PKG_CONFIG_ALLOW_CROSS=1
+FROM rust:1.45-slim
 
-WORKDIR /usr/src/divapi
+WORKDIR /usr/src/div/server
+
 COPY . .
 
-RUN cargo install --path .
+RUN apt-get update -y && apt-get upgrade -y && apt-get install clang llvm-dev libclang-dev pkg-config libssl-dev -y
 
-FROM gcr.io/distroless/cc-debian10
+RUN cargo build --release
 
-COPY --from=build /usr/local/cargo/bin/divapi /usr/local/bin/divapi
+RUN cargo install --path ./
 
-CMD ["divapi"]
+ENV HOST_PORT 80
+ENV ENVIRONMENT DEV
 
+EXPOSE 80
+
+CMD ["/usr/local/cargo/bin/div"]

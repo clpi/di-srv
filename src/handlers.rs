@@ -3,6 +3,7 @@ pub mod auth;
 pub mod record;
 pub mod admin;
 pub mod ws;
+pub mod sse;
 
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
@@ -49,4 +50,24 @@ pub async fn static_ind(id: Identity) -> impl Responder {
 
 pub async fn route_404(req: HttpRequest) -> impl Responder {
     HttpResponse::NotFound().body("No route here")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::test::{init_service, TestRequest};
+
+    #[actix_rt::test]
+    async fn test_route_can_echo() {
+        let mut app = init_service(App::new()
+            .service(web::resource("/").route(web::post().to(index))),
+        );
+    }
+
+    #[actix_rt::test]
+    async fn index_get_ok() {
+        let mut app = init_service(App::new()
+            .data(crate::state::state())
+            .configure(routes)).await;
+    }
 }
