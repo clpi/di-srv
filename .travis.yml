@@ -1,8 +1,27 @@
 language: rust
+cache: cargo
 rust:
   - stable
   - beta
   - nightly
+addons:
+  apt:
+    packages:
+      - build-essential
+      - libcurl4-openssl-dev
+      - libssl-dev
+env:
+  global:
+    - PROD="true"
+    - APP_NAME="div.is"
+    - TARGET="release"
 matrix:
   allow_failures:
     - rust: nightly
+jobs:
+  include:
+    - name: test
+      script: 
+        - cargo build --target $TARGET --verbose
+        = cargo test --target $TARGET --verbose
+      

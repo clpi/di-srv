@@ -2,6 +2,7 @@ pub mod user;
 pub mod auth;
 pub mod record;
 pub mod admin;
+pub mod ws;
 
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
@@ -14,6 +15,10 @@ pub fn routes(cfg: &mut ServiceConfig) {
     cfg
         .route("/", web::get().to(static_ind))
         .route("/index", web::get().to(index));
+    user::routes(cfg);
+    auth::routes(cfg);
+    record::routes(cfg);
+    admin::routes(cfg);
 }
 
 pub async fn index(id: Identity) -> impl Responder {
@@ -40,4 +45,8 @@ pub async fn static_ind(id: Identity) -> impl Responder {
         </body>
     </html>"#;
     HttpResponse::Ok().body(html)
+}
+
+pub async fn route_404(req: HttpRequest) -> impl Responder {
+    HttpResponse::NotFound().body("No route here")
 }

@@ -1,5 +1,12 @@
-use actix_web::{web::{Data, Path}, http, HttpResponse, HttpRequest};
-use crate::context::Context;
+use actix_web::{web::{Json, Data, Path},  http, HttpResponse, HttpRequest, client::{ClientResponse, Client},};
+use crate::state::State;
+
+pub async fn req_get(url: &str)  {
+    let mut client = Client::default();
+    let mut res = client.get(url)
+        .send().await
+        .unwrap();
+}
 
 #[macro_export]
 macro_rules! def_route {

@@ -1,5 +1,8 @@
 pub mod user;
 pub mod record;
+pub mod item;
+pub mod group;
+pub mod userinfo;
 
 pub use user::User;
 pub use record::Record;

@@ -2,29 +2,21 @@ use std::{net::TcpListener,  sync::mpsc};
 use serde::{Serialize, Deserialize};
 use divdb::db::Db;
 use actix_cors::Cors;
-use crate::{context::Context, handlers::{self,  index, auth, user, record, admin}};
+use crate::{state::{self, State}, handlers::{self,  index, auth, user, record, admin}, middleware};
 use actix_web::{
     HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
-    middleware::Logger, http, get
+    middleware::{Logger, DefaultHeaders}, http, get
 };
 use actix_identity::{IdentityService, CookieIdentityPolicy};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
-    let db = Db::new().await.unwrap();
-    let ctx = Context { db };
     let srv = HttpServer::new(move ||
         App::new()
-            .data(ctx.clone())
-            .wrap(Logger::default())
-            .wrap(IdentityService::new(
-                CookieIdentityPolicy::new(&[0; 32])
-                    .name("auth-cookie")
-                    .secure(false)))
+            .data(state::state())
+            .wrap(middleware::logger())
+            .wrap(middleware::identity_service())
             .configure(handlers::routes)
-            .configure(user::routes)
-            .configure(auth::routes)
-            .configure(admin::routes)
     );
     srv
         .listen(listener)?
@@ -34,33 +26,17 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
 
 pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::io::Result<()> {
     let mut sys = actix_rt::System::new("api");
-    let db = Db::new_blocking().unwrap();
-    let ctx = Context { db };
     let srv = HttpServer::new(move ||
         App::new()
-            .route("/", web::get().to(index))
-            .data(ctx.clone())
-            .wrap(Logger::default())
-            .wrap(IdentityService::new(
-                CookieIdentityPolicy::new(&[0; 32])
-                    .name("auth-cookie")
-                    .secure(false)))
+            .data(state::state())
+            .wrap(middleware::logger())
+            .wrap(middleware::identity_service())
             .configure(handlers::routes)
-            .configure(user::routes)
-            .configure(auth::routes)
-            .configure(admin::routes)
     )
         .listen(listener)?
         .run();
     let _ = tx.send(srv.clone());
     sys.block_on(srv)
-}
-
-pub fn get_cors() -> Cors {
-    Cors::new().allowed_origin("*")
-        .max_age(3600)
-        .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
-        .send_wildcard()
 }
 
 #[derive(Serialize, Deserialize)]

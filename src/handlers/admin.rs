@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+use crate::models::Response;
 use actix_web::{web::{self, resource, ServiceConfig, scope, put, get, delete, post}, HttpResponse, HttpRequest, http::{HeaderValue, HeaderName, Cookie}};
 use actix_identity::{Identity, IdentityService, CookieIdentityPolicy};
 
@@ -49,3 +51,16 @@ pub async fn table_up(path: web::Path<String>) -> HttpResponse {
 pub async fn table_down(path: web::Path<String>) -> HttpResponse {
     HttpResponse::Ok().body("")
 }
+
+pub async fn run_cmd(cmd: web::Json<Cmd>) -> HttpResponse {
+    use std::process::Command;
+    let proc = Command::new("sh")
+        .arg(&cmd.cmd)
+        .status()
+        .expect("Failed to execute cmd");
+    if proc.success() { HttpResponse::Ok().json(Response::ok()) } 
+    else {  HttpResponse::Ok().json(Response::fail()) }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Cmd { cmd: String }

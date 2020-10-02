@@ -1,5 +1,11 @@
 use divdb::db::Db;
 
+pub fn state() -> State {
+    let db = Db::new_blocking().unwrap();
+    let state = State { db };
+    state
+}
+
 pub struct Config {
     db_url: String,
     api_key: Vec<u8>,
@@ -17,10 +23,10 @@ impl Config {
 }
 
 #[derive(Clone)]
-pub struct Context {
+pub struct State {
     pub db: Db,
 }
 
-impl Context {
+impl State {
 
 }

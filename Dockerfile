@@ -1,24 +1,14 @@
-FROM rust:1-slim-buster AS base
+FROM rust:1.43.1 as build
+ENV PKG_CONFIG_ALLOW_CROSS=1
 
-ENV USER=root
+WORKDIR /usr/src/divapi
+COPY . .
 
-WORKDIR .
-RUN cargo init
-COPY Cargo.toml /code/Cargo.toml
-RUN cargo fetch
+RUN cargo install --path .
 
-COPY src /code/src
+FROM gcr.io/distroless/cc-debian10
 
-CMD [ "cargo", "test", "--offline" ]
+COPY --from=build /usr/local/cargo/bin/divapi /usr/local/bin/divapi
 
-FROM base AS builder
+CMD ["divapi"]
 
-RUN cargo build --release --offline
-
-FROM rust:1-slim-buster
-
-COPY --from=builder /code/target/release/docker_sample /usr/bin/docker_sample
-
-EXPOSE 5000
-
-ENTRYPOINT [ "/usr/bin/docker_sample" ]

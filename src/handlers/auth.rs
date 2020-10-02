@@ -1,4 +1,4 @@
-use crate::context::Context;
+use crate::state::State;
 use com::auth::Auth;
 use divdb::models::user::*;
 use actix_web::{web::{self, resource, ServiceConfig, scope, put, get, delete, post}, HttpResponse, HttpRequest, http::{HeaderValue, HeaderName, Cookie}};
@@ -27,7 +27,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
 } 
 
 pub async fn signup(
-    (req, user, data): (HttpRequest, web::Json<User>, web::Data<Context>)
+    (req, user, data): (HttpRequest, web::Json<User>, web::Data<State>)
 ) -> HttpResponse {
     let user = user.clone();
     let hashed_user = User {
@@ -46,7 +46,7 @@ pub async fn signup(
 }
 
 pub async fn login(
-    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<State>)
 ) -> HttpResponse {
     let user = user.into_inner().clone();
     match User::get_by_username(&data.db, user.username).await {
@@ -68,7 +68,7 @@ pub async fn login(
 }
 
 pub async fn logout(
-    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<State>)
 ) -> HttpResponse {
     match id.identity() {
         Some(_ident) => {
@@ -84,7 +84,7 @@ pub async fn logout(
 }
 
 pub async fn refresh_login(
-    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<Context>)
+    (id, req, user, data): (Identity, HttpRequest, web::Json<UserLogin>, web::Data<State>)
 ) -> HttpResponse {
     if id.identity().unwrap() == user.username {
         return HttpResponse::Ok().body("User authenticated");
