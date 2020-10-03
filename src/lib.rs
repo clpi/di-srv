@@ -1,8 +1,7 @@
-pub mod state;
-pub mod handlers;
 pub mod app;
 pub mod error;
-pub mod util;
-pub mod models;
+pub mod handlers;
 pub mod middleware;
-
+pub mod models;
+pub mod state;
+pub mod util;

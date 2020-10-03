@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-pub struct Test {  }
+pub struct Test {}
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
@@ -8,6 +8,10 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn ok() -> Self { Self { res: true } }
-    pub fn fail() -> Self { Self { res: false } }
+    pub fn ok() -> Self {
+        Self { res: true }
+    }
+    pub fn fail() -> Self {
+        Self { res: false }
+    }
 }

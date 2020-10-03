@@ -1,20 +1,19 @@
-pub mod user;
+pub mod admin;
 pub mod auth;
 pub mod record;
-pub mod admin;
-pub mod ws;
 pub mod sse;
+pub mod stat;
+pub mod user;
+pub mod ws;
 
-use actix_web::{
-    HttpServer, App, web, HttpRequest, HttpResponse, Responder, dev,
-    web::ServiceConfig,
-};
 use actix_files::Files;
-use actix_identity::{Identity, IdentityService, CookieIdentityPolicy};
+use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
+use actix_web::{
+    dev, web, web::ServiceConfig, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 
 pub fn routes(cfg: &mut ServiceConfig) {
-    cfg
-        .route("/", web::get().to(static_ind))
+    cfg.route("/", web::get().to(static_ind))
         .route("/index", web::get().to(index));
     user::routes(cfg);
     auth::routes(cfg);
@@ -25,7 +24,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
 pub async fn index(id: Identity) -> impl Responder {
     let res = match id.identity() {
         Some(id) => format!("Hello, {}", id),
-        None => "Welcome newcomer!".to_string()
+        None => "Welcome newcomer!".to_string(),
     };
     HttpResponse::Ok().body(res)
 }
@@ -59,15 +58,12 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_route_can_echo() {
-        let mut app = init_service(App::new()
-            .service(web::resource("/").route(web::post().to(index))),
-        );
+        let mut app =
+            init_service(App::new().service(web::resource("/").route(web::post().to(index))));
     }
 
     #[actix_rt::test]
     async fn index_get_ok() {
-        let mut app = init_service(App::new()
-            .data(crate::state::state())
-            .configure(routes)).await;
+        let mut app = init_service(App::new().data(crate::state::state()).configure(routes)).await;
     }
 }

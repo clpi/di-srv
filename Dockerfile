@@ -15,4 +15,4 @@ ENV ENVIRONMENT DEV
 
 EXPOSE 80
 
-CMD ["/usr/local/cargo/bin/div"]
+CMD ["/usr/local/cargo/bin/divapi"]

@@ -1,11 +1,14 @@
-use actix_web::{web::{Json, Data, Path},  http, HttpResponse, HttpRequest, client::{ClientResponse, Client},};
 use crate::state::State;
+use actix_web::{
+    client::{Client, ClientResponse},
+    http,
+    web::{Data, Json, Path},
+    HttpRequest, HttpResponse,
+};
 
-pub async fn req_get(url: &str)  {
+pub async fn req_get(url: &str) {
     let mut client = Client::default();
-    let mut res = client.get(url)
-        .send().await
-        .unwrap();
+    let mut res = client.get(url).send().await.unwrap();
 }
 
 #[macro_export]
@@ -13,11 +16,11 @@ macro_rules! def_route {
     ($($name:ident, $handler:ident, $path:literal),*) => {
         $(
             pub async fn $name(
-                data: Data<Context>, 
-                path: Path<String>, 
+                data: Data<Context>,
+                path: Path<String>,
                 req: HttpRequest
             ) -> HttpResponse {
-                HttpResponse::Ok().body("")    
+                HttpResponse::Ok().body("")
             }
         )*
         struct name {
@@ -28,5 +31,5 @@ macro_rules! def_route {
 
 #[macro_export]
 macro_rules! register_route {
-    ($name:ident) => {}
+    ($name:ident) => {};
 }

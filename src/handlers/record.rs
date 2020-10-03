@@ -1,3 +1,7 @@
-use actix_web::{web::{self, resource, ServiceConfig, scope, put, get, delete, post}, HttpResponse, HttpRequest, http::{HeaderValue, HeaderName, Cookie}};
+use actix_web::{
+    http::{Cookie, HeaderName, HeaderValue},
+    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
+    HttpRequest, HttpResponse,
+};
 
 pub fn routes(cfg: &mut ServiceConfig) {}

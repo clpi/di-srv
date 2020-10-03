@@ -1,8 +1,8 @@
-use actix::prelude::*;
 use crate::state::State;
-use actix_web::{HttpRequest, HttpResponse, web, Error};
-use std::time::{Instant, Duration};
+use actix::prelude::*;
+use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use std::time::{Duration, Instant};
 
 struct Websocket {
     hb: Instant,
@@ -28,7 +28,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Websocket {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         println!("WS: {:?}", msg);
         match msg {
-            Ok(ws::Message::Ping(msg)) => { 
+            Ok(ws::Message::Ping(msg)) => {
 
             },
             Ok(ws::Message::Pong(_)) => { self.hb = Instant::now() },

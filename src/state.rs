@@ -27,6 +27,4 @@ pub struct State {
     pub db: Db,
 }
 
-impl State {
-
-}
+impl State {}

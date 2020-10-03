@@ -20,7 +20,7 @@ required-features= ["gql"]
 [dependencies]
 tokio = { version = "*", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
-validator = { version = "*", features = [ "derive" ] }
+#validator = { version = "*", features = [ "derive" ] }
 futures = "*"
 serde_json = "*"
 actix-service = "*"
@@ -30,7 +30,6 @@ actix-web = "*"
 actix-cors = "*"
 actix-files = "*"
 actix-identity = "*"
-reqwest="*"
 actix-web-actors = "*"
 #actix-redis = "*"
 #actix-session = "*"
@@ -50,6 +49,12 @@ log = "*"
 [features]
 default=[]
 graphql=["divdb/gql", "async-graphql", "async-graphql-actix-web"]
+
+[profile.release]
+lto=true
+codegen-units=1
+#opt-level='z' #optimize for size
+panic='abort'
 
 [alias]
 r = "run"
