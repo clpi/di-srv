@@ -13,9 +13,34 @@ use std::marker::{Send, Unpin};
 use crate::db::Db;
 use sqlx::{types::chrono::{Utc, DateTime}, FromRow, Type, postgres::{Postgres, PgRow}, Decode};
 
+#[derive(sqlx::Type, Serialize, Deserialize, Clone)]
+#[repr(i32)]
+pub enum Status {
+    Active = 1,
+    Archived = 0,
+    Deleted = -1,
+}
+
+#[derive(sqlx::Type, Serialize, Deserialize, Clone)]
+#[repr(i32)]
+pub enum Visibility {
+    Private = 0,
+    FriendsOnly = 1,
+    Public = 2,
+}
+
+#[derive(sqlx::Type, Serialize, Deserialize, Clone)]
+#[repr(i32)]
+pub enum Priority {
+    Lowest = 0,
+    Low = 1,
+    Medium = 3,
+    High = 4,
+    Highest = 5,
+}
 
 #[async_trait]
-pub trait Model: Sized+ Default {
+pub trait Model: Sized + Default {
     //type Item;
     fn get_by_id(db: &Db, id: i32) -> sqlx::Result<()> { Ok(()) }
     fn by_id(id: i32) -> () {

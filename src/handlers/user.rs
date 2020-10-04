@@ -8,27 +8,30 @@ use divdb::models::{Record, User};
 //TODO implement query string route handlers for user ids
 
 pub fn routes(cfg: &mut ServiceConfig) {
-    cfg.service(
-        scope("/user")
-            .service(resource("").route(get().to(get_all)))
-            .service(scope("/id/{id}")
-                .service(resource("")
-                    .route(get().to(get_by_id))
-                    .route(delete().to(delete_by_id)),)
-                .service(resource("/rec")
-                    .route(get().to(get_records)))
-                .service(resource("/rec/{id}")
-                    .route(get().to(get_record))
-                    .route(put().to(update_record))
-                    .route(post().to(add_record))
-                    .route(delete().to(delete_record)),),
+    cfg.service(scope("/user")
+        .service(resource("")
+            .route(get().to(get_all))
+        )
+        .service(scope("/id/{id}")
+            .service(resource("")
+                .route(get().to(get_by_id))
+                .route(delete().to(delete_by_id))
             )
-            .service(
-                resource("/{username}")
-                    .route(get().to(get_by_username))
-                    .route(put().to(update_by_username))
-                    .route(delete().to(delete_by_username)),
-            ),
+            .service(resource("/rec")
+                .route(get().to(get_records))
+            )
+            .service(resource("/rec/{id}")
+                .route(get().to(get_record))
+                .route(put().to(update_record))
+                .route(post().to(add_record))
+                .route(delete().to(delete_record))
+            )
+        )
+        .service(resource("/{username}")
+            .route(get().to(get_by_username))
+            .route(put().to(update_by_username))
+            .route(delete().to(delete_by_username)),
+        ),
     );
 }
 

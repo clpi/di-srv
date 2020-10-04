@@ -1,6 +1,6 @@
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
 use serde::{Serialize, Deserialize};
-use crate::models::user::User;
+use crate::models::{user::User, Status, Visibility, Priority};
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
@@ -9,7 +9,8 @@ pub struct Record {
     pub id: Option<i32>,
     pub uid: i32,
     pub name: String,
-    pub active: i32,
+    pub status: Status,
+    pub private: Visibility,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -19,13 +20,26 @@ impl Record {
     pub fn new<T>(name: T, user: User) -> Self where T: Into<String> {
         Self { name: name.into(), ..Self::from(user) }
     }
+
 }
 
 impl Default for Record {
     fn default() -> Self {
         Self { 
-            id: None, uid: -1, name: String::new(), active: -1, created_at: Utc::now() 
+            id: None, 
+            uid: -1, 
+            name: String::new(), 
+            status: String::new(),
+            active: -1, 
+            private: true,
+            created_at: Utc::now(),
         } 
+    }
+}
+
+impl From<Option<i32>> for Record {
+    fn from(uid: Option<i32>) -> Self {
+        Record { uid: uid.unwrap(), ..Record::default() }
     }
 }
 
