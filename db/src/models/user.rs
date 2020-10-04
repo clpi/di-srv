@@ -1,7 +1,7 @@
 //pub use com::models::{user::User, record::Record};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
 use serde::{Serialize, Deserialize};
-use crate::db::Db;
+use crate::{db::Db, models::Record};
 use sqlx::Postgres;
 use async_trait::async_trait;
 use super::Model;
@@ -92,6 +92,14 @@ impl User {
             .await?;
         Ok(res)
     }
+
+    pub async fn get_all_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
+        let res: Vec<Record> = sqlx::query_as::<Postgres, Record>
+            ("WITH Users as u SELECT * FROM Records r WHERE r.uid = u.id AND u.id = $1")
+            .bind(self.id.expect("No id set"))
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
 }
 
 impl Default for User {
@@ -106,15 +114,8 @@ impl Default for User {
     }
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl Model for User {
     fn table() -> String { String::from("Users") }
-
-    async fn get_all(db: &Db) -> sqlx::Result<Vec<Self>> {
-        let res: Vec<User> = sqlx::query_as::<Postgres, User>("SELECT * FROM Users")
-            .fetch_all(&db.pool).await?;
-        Ok(res)
-    }
-
 }
 

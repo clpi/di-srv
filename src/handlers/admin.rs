@@ -1,4 +1,4 @@
-use crate::models::Response;
+use crate::{models::Response, state::State,};
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{
     http::{Cookie, HeaderName, HeaderValue},
@@ -30,12 +30,30 @@ pub fn routes(cfg: &mut ServiceConfig) {
     );
 }
 
-pub async fn db_up() -> HttpResponse {
-    HttpResponse::Ok().body("")
+pub async fn db_up(data: web::Data<State>) -> HttpResponse {
+    match &data.db.clone().init().await {
+        Ok(_) => HttpResponse::Ok().body("Success"),
+        Err(_) => HttpResponse::InternalServerError().body("Could not take down DB")
+    }
 }
 
-pub async fn db_down() -> HttpResponse {
-    HttpResponse::Ok().body("")
+pub async fn db_down(data: web::Data<State>) -> HttpResponse {
+    match &data.db.clone().down().await {
+        Ok(_) => HttpResponse::Ok().body("Success"),
+        Err(_) => HttpResponse::InternalServerError().body("Could not take down DB")
+    }
+}
+
+pub async fn db_reset(data: web::Data<State>) -> HttpResponse {
+    match &data.db.clone().down().await {
+        Ok(db) => { 
+            match db.clone().init().await {
+                Ok(_db) => HttpResponse::Ok().body(""),
+                Err(_) => HttpResponse::InternalServerError().body(""),
+            }
+        },
+        Err(_) => HttpResponse::InternalServerError().body("Could not take down DB")
+    }
 }
 
 pub async fn server_info() -> HttpResponse {

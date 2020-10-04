@@ -20,7 +20,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
             .service(resource("/rec")
                 .route(get().to(get_records))
             )
-            .service(resource("/rec/{id}")
+            .service(resource("/rec/{rid}")
                 .route(get().to(get_record))
                 .route(put().to(update_record))
                 .route(post().to(add_record))
@@ -81,16 +81,21 @@ pub async fn update_by_username(data: web::Data<State>) -> HttpResponse {
     HttpResponse::Ok().body("update_by_username")
 }
 
-pub async fn get_records(data: web::Data<State>) -> HttpResponse {
-    HttpResponse::Ok().body("get_records")
+pub async fn get_records(data: web::Data<State>, path: web::Path<i32>) -> HttpResponse {
+    match User::get_by_id(&data.db, path).await {
+        Ok(user) => match user.get_all_records(&data.db).await {
+            Ok(recs) => HttpResponse::Ok().json(recs),
+            Err(_) => HttpResponse::NotFound().body(""),
+        },
+        Err(_) => HttpResponse::NotFound().body(""),
+    }
 }
 
 pub async fn get_record(data: web::Data<State>, path: web::Path<(i32, i32)>) -> HttpResponse {
     HttpResponse::Ok().body("get_record")
 }
 
-pub async fn add_record(
-    data: web::Data<State>,
+pub async fn add_record(data: web::Data<State>,
     uid: web::Path<i32>,
     record: web::Json<Record>,
 ) -> HttpResponse {

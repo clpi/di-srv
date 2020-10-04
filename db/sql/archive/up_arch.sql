@@ -1,3 +1,37 @@
+-- TODO Handle timezones properly
+-- TODO actually use this enums as types (how do they play with sqlx?)
+
+CREATE TYPE status AS ENUM (
+    'active',
+    'archived',
+    'deleted',
+    'completed'
+);
+
+-- CREATE TYPE priority AS ENUM (
+    -- 'lowest',
+    -- 'low',
+    -- 'medium',
+    -- 'high',
+    -- 'highest'
+-- );
+
+CREATE TYPE visibility AS ENUM (
+    'private',
+    'invite_only',
+    'mutuals_only',
+    'public'
+);
+
+-- CREATE TYPE field_type AS ENUM (
+    -- 'dropdown',
+    -- 'textbox',
+    -- 'enum_select_one',
+    -- 'enum_select_mul',
+    -- 'boolean',
+    -- 'range'
+-- );
+
 CREATE TABLE IF NOT EXISTS Users (
     id          SERIAL NOT NULL PRIMARY KEY,
     email       TEXT NOT NULL UNIQUE,
@@ -25,15 +59,15 @@ CREATE TABLE IF NOT EXISTS Groups (
     id SERIAL PRIMARY KEY NOT NULL,
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     permission TEXT NOT NULL,
-    status TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS GroupInfo (
     id SERIAL PRIMARY KEY NOT NULL,
     description TEXT NOT NULL,
-    visibility TEXT NOT NULL,
-    status TEXT NOT NULL,
+    visibility TEXT NOT NULL DEFAULT "private",
+    status TEXT NOT NULL DEFAULT "active",
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,8 +75,8 @@ CREATE TABLE IF NOT EXISTS Records (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
-    status TEXT NOT NULL,
-    visibility TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
+    visibility TEXT NOT NULL DEFAULT "private",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -50,8 +84,8 @@ CREATE TABLE IF NOT EXISTS Items (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
-    status TEXT NOT NULL,
-    visibility TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
+    visibility TEXT NOT NULL DEFAULT "private",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -61,22 +95,29 @@ CREATE TABLE IF NOT EXISTS Fields (
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     typ TEXT NOT NULL,
     value BYTEA,
-    visibility TEXT NOT NULL,
+    visibility TEXT NOT NULL DEFAULT "private",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS EntryTypes (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
+    visibility TEXT NOT NULL DEFAULT "private",
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
-CREATE TABLE IF NOT EXISTS ItemEntries ( 
+CREATE TABLE IF NOT EXISTS EntryEntries( 
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     rid INTEGER NOT NULL REFERENCES Records(id),
-    iid INTEGER REFERENCES Items(id),
+    etid INTEGER REFERENCES EntryTypes(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS FieldEntries( 
     id SERIAL PRIMARY KEY NOT NULL,
-    iid INTEGER NOT NULL REFERENCES Items(id),
+    eeid INTEGER NOT NULL REFERENCES EntryTypes(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
     content TEXT
 );
@@ -86,7 +127,7 @@ CREATE TABLE IF NOT EXISTS Rules (
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     priority INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -100,7 +141,7 @@ CREATE TABLE IF NOT EXISTS Conditions (
     fid1 INTEGER NOT NULL REFERENCES Fields(id),
     fid2 INTEGER NOT NULL REFERENCES Fields(id),
     cond INTEGER NOT NULL,        
-    status TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -117,7 +158,7 @@ CREATE TABLE IF NOT EXISTS UserGroupLinks(
     uid INTEGER NOT NULL REFERENCES Users(id),
     gid INTEGER NOT NULL REFERENCES Groups(id),
     role TEXT NOT NULL,
-    status TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,7 +166,7 @@ CREATE TABLE IF NOT EXISTS RecordItemLinks(
     id SERIAL PRIMARY KEY NOT NULL,
     rid INTEGER NOT NULL REFERENCES Records(id),
     iid INTEGER NOT NULL REFERENCES Items(id),
-    status TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT "active",
     priority INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -135,6 +176,13 @@ CREATE TABLE IF NOT EXISTS ItemFieldLinks(
     iid INTEGER NOT NULL REFERENCES Items(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
     priority INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS FieldEntryLinks(
+    id SERIAL PRIMARY KEY NOT NULL,
+    fid INTEGER NOT NULL REFERENCES Fields(id),
+    etid INTEGER NOT NULL REFERENCES EntryTypes(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,3 +1,43 @@
+-- TODO Handle timezones properly
+-- TODO actually use this enums as types (how do they play with sqlx?)
+
+-- CREATE TYPE status AS ENUM (
+    -- 'active',
+    -- 'archived',
+    -- 'deleted',
+    -- 'completed'
+-- );
+
+-- CREATE TYPE priority AS ENUM (
+    -- 'lowest',
+    -- 'low',
+    -- 'medium',
+    -- 'high',
+    -- 'highest'
+-- );
+
+-- CREATE TYPE permission AS ENUM (
+    -- 'private',
+    -- 'invite_only',
+    -- 'mutuals_only',
+    -- 'public'
+-- );
+
+-- CREATE TYPE permission AS ENUM (
+    -- 'male',
+    -- 'female',
+    -- 'other'
+-- );
+
+-- CREATE TYPE field_type AS ENUM (
+    -- 'dropdown',
+    -- 'textbox',
+    -- 'enum_select_one',
+    -- 'enum_select_mul',
+    -- 'boolean',
+    -- 'range'
+-- );
+
 CREATE TABLE IF NOT EXISTS Users (
     id          SERIAL NOT NULL PRIMARY KEY,
     email       TEXT NOT NULL UNIQUE,
@@ -32,7 +72,7 @@ CREATE TABLE IF NOT EXISTS Groups (
 CREATE TABLE IF NOT EXISTS GroupInfo (
     id SERIAL PRIMARY KEY NOT NULL,
     description TEXT NOT NULL,
-    visibility TEXT NOT NULL,
+    private BOOLEAN NOT NULL DEFAULT TRUE,
     status TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -42,7 +82,7 @@ CREATE TABLE IF NOT EXISTS Records (
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     status TEXT NOT NULL,
-    visibility TEXT NOT NULL,
+    private BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -51,7 +91,7 @@ CREATE TABLE IF NOT EXISTS Items (
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     status TEXT NOT NULL,
-    visibility TEXT NOT NULL,
+    private BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,23 +100,30 @@ CREATE TABLE IF NOT EXISTS Fields (
     id SERIAL PRIMARY KEY NOT NULL,
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     typ TEXT NOT NULL,
-    value BYTEA,
-    visibility TEXT NOT NULL,
+    value TEXT,
+    private BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS EntryTypes (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
+    private BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
-CREATE TABLE IF NOT EXISTS ItemEntries ( 
+CREATE TABLE IF NOT EXISTS EntryEntries( 
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     rid INTEGER NOT NULL REFERENCES Records(id),
-    iid INTEGER REFERENCES Items(id),
+    etid INTEGER REFERENCES EntryTypes(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS FieldEntries( 
     id SERIAL PRIMARY KEY NOT NULL,
-    iid INTEGER NOT NULL REFERENCES Items(id),
+    eeid INTEGER NOT NULL REFERENCES EntryTypes(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
     content TEXT
 );
@@ -85,7 +132,7 @@ CREATE TABLE IF NOT EXISTS Rules (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
-    priority INTEGER NOT NULL DEFAULT 0,
+    priority TEXT,
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -126,7 +173,7 @@ CREATE TABLE IF NOT EXISTS RecordItemLinks(
     rid INTEGER NOT NULL REFERENCES Records(id),
     iid INTEGER NOT NULL REFERENCES Items(id),
     status TEXT NOT NULL,
-    priority INTEGER NOT NULL DEFAULT 0,
+    priority TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -134,7 +181,14 @@ CREATE TABLE IF NOT EXISTS ItemFieldLinks(
     id SERIAL PRIMARY KEY NOT NULL,
     iid INTEGER NOT NULL REFERENCES Items(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
-    priority INTEGER NOT NULL DEFAULT 0,
+    priority TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS FieldEntryLinks(
+    id SERIAL PRIMARY KEY NOT NULL,
+    fid INTEGER NOT NULL REFERENCES Fields(id),
+    etid INTEGER NOT NULL REFERENCES EntryTypes(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

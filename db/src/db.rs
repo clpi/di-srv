@@ -75,7 +75,6 @@ impl Db {
     //}
 }
 
-
 /*
 pub async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
     let res = sqlx::query(
