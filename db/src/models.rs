@@ -3,9 +3,16 @@ pub mod record;
 pub mod item;
 pub mod group;
 pub mod userinfo;
+pub mod links;
+pub mod field;
+pub mod relations;
+pub mod entity;
 
 pub use user::User;
 pub use record::Record;
+pub use item::Item;
+pub use field::Field;
+pub use links::*;
 
 use async_trait::async_trait;
 use serde::{Serialize, Deserialize};

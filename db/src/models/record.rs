@@ -1,6 +1,10 @@
+use std::rc::Weak;
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
 use serde::{Serialize, Deserialize};
-use crate::models::{user::User, Status, Visibility, Priority};
+use crate::{
+    db::Db,
+    models::{user::User, Status, Visibility, Priority,  item::Item,}
+};
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
@@ -15,12 +19,33 @@ pub struct Record {
     pub created_at: DateTime<Utc>,
 }
 
+pub struct RecordObj {
+    pub id: Option<i32>,
+    pub user: Weak<User>,
+    pub items: Vec<Weak<Item>>,
+}
+
 impl Record {
 
     pub fn new<T>(name: T, user: User) -> Self where T: Into<String> {
         Self { name: name.into(), ..Self::from(user) }
     }
+    
+    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+        Ok(0 as u32)
+    }
 
+    pub async fn delete(self, db: &Db) -> sqlx::Result<u32> {
+        Ok(0 as u32)
+    }
+
+    pub async fn update(self, db: &Db) -> sqlx::Result<u32> {
+        Ok(0 as u32)
+    }
+
+    pub async fn get_by_id(self, db: &Db) -> sqlx::Result<u32> {
+        Ok(0 as u32)
+    }
 }
 
 impl Default for Record {

@@ -1,6 +1,9 @@
-use super::{Status, Visibility};
 use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
+use crate::{
+    db::Db,
+    models::{user::User, record::Record, Status, Visibility, Priority}
+};
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
@@ -40,5 +43,26 @@ impl Default for Item {
             private: true,
             created_at: Utc::now(),
         }
+    }
+}
+
+///TODO implement
+impl From<Record> for Item {
+    fn from(record: Record) -> Self {
+        Self::default()
+    }
+}
+
+///TODO implement
+impl From<User> for Item {
+    fn from(user: User) -> Self {
+        Self::default()
+    }
+}
+
+///TODO implement
+impl From<(User, Record)> for Item {
+    fn from((user, record): (User, Record)) -> Self {
+        Self::default()
     }
 }
