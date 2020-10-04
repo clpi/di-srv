@@ -9,8 +9,8 @@ pub struct Record {
     pub id: Option<i32>,
     pub uid: i32,
     pub name: String,
-    pub status: Status,
-    pub private: Visibility,
+    pub status: String,
+    pub private: bool,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -29,8 +29,7 @@ impl Default for Record {
             id: None, 
             uid: -1, 
             name: String::new(), 
-            status: String::new(),
-            active: -1, 
+            status: String::from("active"),
             private: true,
             created_at: Utc::now(),
         } 

@@ -9,8 +9,8 @@ pub struct Item {
     pub id: Option<i32>,
     pub uid: i32,
     pub name: String,
-    pub status: i32,
-    pub visibility: i32,
+    pub status: String,
+    pub private: bool,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -20,12 +20,12 @@ impl Item {
         Self { uid, name, ..Self::default() }
     } 
 
-    pub fn with_visibility(&mut self, visibility: Visibility) -> Self {
-        Self { visibility: visibility as i32, ..self.to_owned() }
+    pub fn private(&mut self, private: bool) -> Self {
+        Self { private, ..self.to_owned() }
     }
 
-    pub fn with_status(&mut self, status: Status) -> Self {
-        Self { status: status as i32, ..self.to_owned() }
+    pub fn with_status(&mut self, status: String) -> Self {
+        Self { status, ..self.to_owned() }
     }
 
 }
@@ -36,8 +36,8 @@ impl Default for Item {
             id: None,
             uid: -1,
             name: String::new(),
-            status: Status::Active as i32,
-            visibility: Visibility::Private as i32,
+            status: "active".to_string(),
+            private: true,
             created_at: Utc::now(),
         }
     }
