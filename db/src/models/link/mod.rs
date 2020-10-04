@@ -1,6 +1,7 @@
 pub mod recorditem;
 pub mod itemfield;
 pub mod userrecord;
+pub mod usergroup;
 
 pub struct Link<T, U> {
     model1: T,
@@ -17,6 +18,7 @@ impl LinkInfo {
 pub use userrecord::UserRecordLink;
 pub use recorditem::RecordItemLink;
 pub use itemfield::ItemFieldLink;
+pub use usergroup::UserGroupLink;
 
 pub trait LinkModel : Default + Sized {}
 

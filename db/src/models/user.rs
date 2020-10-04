@@ -1,7 +1,12 @@
 //pub use com::models::{user::User, record::Record};
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
+use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*};
 use serde::{Serialize, Deserialize};
-use crate::{db::Db, models::Record};
+use crate::{
+    db::Db, 
+    models::{
+        Record, UserInfo, link::{UserRecordLink, UserGroupLink},
+    },
+};
 use sqlx::Postgres;
 use async_trait::async_trait;
 use super::Model;
@@ -35,20 +40,20 @@ impl User {
         }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<()> {
+    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
         let mut conn = db.pool.acquire().await?;
-        sqlx::query
+        let res: u32 = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
-              VALUES ($1, $2, $3, $4);") 
+              VALUES ($1, $2, $3, $4) RETURNING id") 
             .bind(self.email)
             .bind(self.username)
             .bind(self.password)
-            .bind(Utc::now())
-            .execute(&mut conn).await?;
-            //.fetch_one(&db.pool).await?;
+            .bind(&self.created_at)
+            .fetch_one(&mut conn).await?
+            .get("id");
         conn.release();
-        Ok(())
+        Ok(res)
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<u32> {

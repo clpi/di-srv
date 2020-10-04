@@ -11,13 +11,18 @@ pub fn routes(cfg: &mut ServiceConfig) {
         .service(scope("rec")
             .service(resource("/{rid}")
                 .route(get().to(get_by_id))
-            ))
+                .route(delete().to(get_by_id))
+            ));
 }
 
 pub async fn get_by_id(id: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match Record::get_by_id(&data.db, id).await {
-        Ok(rec) => HttpResponse::Ok().json(rec),
+    match Record::get_by_id(&data.db, *id).await {
+        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
 
+}
+
+pub async fn delete_by_id(id: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
+    HttpResponse::Ok().json("{}")
 }

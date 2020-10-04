@@ -1,3 +1,4 @@
+
 CREATE TABLE IF NOT EXISTS Users (
     id          SERIAL NOT NULL PRIMARY KEY,
     email       TEXT NOT NULL UNIQUE,
@@ -10,12 +11,17 @@ CREATE TABLE IF NOT EXISTS UserInfo (
     id           SERIAL PRIMARY KEY NOT NULL,
     uid          INTEGER NOT NULL REFERENCES Users(id),
     first_name   TEXT CHECK (CHAR_LENGTH(first_name) < 80),
+    mid_initial  CHAR,
     last_name    TEXT CHECK (CHAR_LENGTH(first_name) < 80),
     bio          TEXT,
     img_path     TEXT,
     gender       TEXT,
-    birth_date   INTEGER,
-    location     TEXT,
+    birth_date   DATE CHECK (birth_date > '1900-01-01'),
+    city         TEXT,
+    zip_code     TEXT,
+    state        TEXT,
+    country      TEXT,
+    social_links JSON,
     experience   INTEGER NOT NULL,
     user_type    INTEGER NOT NULL,
     updated_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -23,8 +29,9 @@ CREATE TABLE IF NOT EXISTS UserInfo (
 
 CREATE TABLE IF NOT EXISTS Groups (
     id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
-    permission TEXT NOT NULL,
+    visibility TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,7 +66,7 @@ CREATE TABLE IF NOT EXISTS Items (
 CREATE TABLE IF NOT EXISTS Fields (
     id SERIAL PRIMARY KEY NOT NULL,
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
-    typ TEXT NOT NULL,
+    field_type TEXT NOT NULL,
     value BYTEA,
     visibility TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -74,11 +81,12 @@ CREATE TABLE IF NOT EXISTS ItemEntries (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS FieldEntries( 
+CREATE TABLE IF NOT EXISTS FieldEntries (  
     id SERIAL PRIMARY KEY NOT NULL,
     iid INTEGER NOT NULL REFERENCES Items(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
-    content TEXT
+    content BYTEA,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS Rules ( 
@@ -116,7 +124,7 @@ CREATE TABLE IF NOT EXISTS UserGroupLinks(
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     gid INTEGER NOT NULL REFERENCES Groups(id),
-    role TEXT NOT NULL,
+    group_role TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -171,3 +179,8 @@ CREATE TABLE IF NOT EXISTS ItemRelations(
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE VIEW UserRecords AS
+SELECT r.id, r.uid, r.name, r.status, r.visibility, r.created_at
+FROM Records r, Users u
+WHERE r.uid = u.id;

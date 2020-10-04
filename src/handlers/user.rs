@@ -82,7 +82,7 @@ pub async fn update_by_username(data: web::Data<State>) -> HttpResponse {
 }
 
 pub async fn get_records(data: web::Data<State>, path: web::Path<i32>) -> HttpResponse {
-    match User::get_by_id(&data.db, path).await {
+    match User::get_by_id(&data.db, *path).await {
         Ok(user) => match user.get_all_records(&data.db).await {
             Ok(recs) => HttpResponse::Ok().json(recs),
             Err(_) => HttpResponse::NotFound().body(""),

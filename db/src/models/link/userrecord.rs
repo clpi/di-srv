@@ -5,10 +5,6 @@ use crate::{
     Db,
 };
 
-impl Link<User, Record> {
-
-}
-
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct UserRecordLink {
@@ -47,4 +43,8 @@ impl From<UserRecordLink> for Link<User, Record> {
             info: LinkInfo::new(),
         }
     }
+}
+
+impl Link<User, Record> {
+
 }

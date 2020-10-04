@@ -1,8 +1,7 @@
 use serde::{Serialize, Deserialize};
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*};
+use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use crate::{
-    db::Db,
-    models::{Model, user::User, record::Record, Status, Visibility, Priority, link::{RecordItemLink, ItemFieldLink},
+    Db, models::{Model, user::User, record::Record, Status, Visibility, Priority, link::{RecordItemLink, ItemFieldLink},
 }};
 
 #[serde(rename_all="camelCase")]
@@ -33,7 +32,7 @@ impl Item {
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
-        let res = sqlx::query(
+        let res: u32 = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -41,10 +40,19 @@ impl Item {
             .bind(&self.status)
             .bind(&self.visibility)
             .bind(&self.created_at)
-            .execute(&db.pool).await?;
-        Ok(res.rows_affected() as u32)
+            .fetch_one(&db.pool).await?
+            .get("id");
+        Ok(res)
     }
 
+    pub async fn add_to_record(self, db: &Db, rid: i32) -> sqlx::Result<u32> {
+        Ok(0)
+    }
+
+}
+
+pub struct ItemEntry {
+    pub id: Option<i32>,
 }
 
 impl Default for Item {
