@@ -3,7 +3,7 @@ use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*, Postgres};
 use serde::{Serialize, Deserialize};
 use crate::{Db, 
     models::{Model, User, Status, Visibility, Priority, Item,
-        link::{LinkModel, Link, RecordItemLink, UserRecordLink}
+        link::{LinkModel, Link, recorditem::RecordItemLink, UserRecordLink}
     },
 };
 
@@ -31,7 +31,7 @@ pub struct RecordObj {
 impl Record {
 
     pub fn new<T, U>(uid: T, name: U) -> Self 
-    where T: Into<String>, U: Into<i32> {
+    where T: Into<i32>, U: Into<String> {
         Self { 
             name: name.into(),  
             uid: uid.into(),
@@ -72,11 +72,8 @@ impl Record {
         Ok(res)
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
-        let link = UserRecordLink::from(
-            (self.uid, self.id.expect("No record ID set"))
-        );
-        let res: u32 = sqlx::query(
+    pub async fn insert(mut self, db: &Db) -> sqlx::Result<i32> {
+        let res = sqlx::query(
             "INSERT INTO Records (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -84,14 +81,15 @@ impl Record {
             .bind(&self.status)
             .bind(&self.visibility)
             .bind(&self.created_at)
-            .fetch_one(&db.pool);
-        match res.await {
-            Ok(res) => match link.insert(db).await {
-                Ok(link) => Ok(res.get("id")),
-                Err(_) => Err("Could not insert UserRecordLink")
-            },
-            Err(_) => Err("Could not insert Record"),
-        }
+            .fetch_one(&db.pool).await?;
+        let id: i32 = res.get("id");
+        self.id = Some(id);
+        let link = UserRecordLink::from(
+            (self.uid, self.id.expect("No record ID set")));
+        link
+            .insert(&db)
+            .await?;
+        Ok(id)
     }
 
     pub async fn get_linked_users(self, db: &Db) -> sqlx::Result<Vec<User>> {
@@ -127,7 +125,7 @@ impl Record {
         }
     }
 
-    pub async fn associate_item<T: Into<Item>>(self, db: &Db, item: T)
+    pub async fn add_existing_item<T: Into<Item>>(self, db: &Db, item: T)
         -> sqlx::Result<Self> 
     {
         let link = RecordItemLink::from((self, item.into()));
@@ -179,10 +177,5 @@ impl From<User> for Record {
 #[async_trait::async_trait]
 impl Model for Record {
     fn table() -> String { String::from("Records") }
-
-    async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
-        self.insert(db).await?;
-        Ok(self)
-    }
 }
 

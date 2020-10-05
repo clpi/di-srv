@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use chrono::Duration;
 use sqlx::{
     types::chrono::{Utc, DateTime, NaiveDateTime, NaiveDate, NaiveTime}, 
-    FromRow, Type, postgres::{Postgres, PgRow}, Decode
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
 };
 
 #[serde(rename_all="camelCase")]
@@ -17,7 +17,7 @@ pub struct Field {
     #[serde(default="FieldType::default")]
     pub field_type: FieldType,
     pub value: Vec<u8>,
-    #[serde(default="Visibility::private")]
+    #[serde(default="Visibility::default")]
     pub visibility: Visibility,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
@@ -49,36 +49,30 @@ impl Field {
         Self {  field_type, ..self.to_owned() }
     }
 
-    /// Inserts a new field into the database
-    /// ASSOCIATED with 1 user, UNASSOCIATED with any items
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
         let res = sqlx::query(
             "INSERT INTO Fields 
             (name, field_type, value, visibility, created_at) 
             VALUES ($1, $2, $3, $4, $5)")
-            .bind(self.name)
-            .bind(self.field_type)
-            .bind(self.value)
-            .bind(self.visibility)
-            .bind(self.created_at);
-        match res.fetch_one(&db.pool).await {
-            Ok(res) => Ok(res.get("id") as u32),
-            Err(_) => Err("Could not insert field"),
-        }
+            .bind(&self.name)
+            .bind(&self.field_type)
+            .bind(&self.value)
+            .bind(&self.visibility)
+            .bind(&self.created_at)
+            .fetch_one(&db.pool).await?;
+        self.id = res.get("id");
+        Ok(self.to_owned())
     }
 
     pub async fn add_to_item(self, db: &Db, iid: i32) -> sqlx::Result<u32> {
-        if !self.is_in_db() { self.insert(db).await?; }
-        let link = ItemFieldLink::from((self.id.expect("Item ID not set"), iid));
-        match link.insert(db).await {
-            Ok(id) => Ok(id),
-            Err(_) => Err("Could not add field to item"),
-        }
-
-    }
-
-    pub fn set_field_type(&mut self, field_type: FieldType) -> Self {
-
+        let field = match self.id {
+            Some(id) => self.clone(),
+            None => self.insert(db).await?,
+        };
+        let link = ItemFieldLink::from(
+            (field.id.expect("Item ID not set"), iid))
+            .insert(db).await?;
+        Ok(link)
     }
 
     pub fn is_in_db(self) -> bool { self.id.is_some() }

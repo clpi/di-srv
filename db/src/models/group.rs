@@ -42,6 +42,10 @@ impl Group {
             .fetch_one(&db.pool).await?;
         Ok(res)
     }
+
+    pub async fn add_user(self, user: User, role: GroupRole) -> sqlx::Result<u32> {
+        Ok(0)
+    }
 }
 
 impl Default for Group {

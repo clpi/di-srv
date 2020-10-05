@@ -23,7 +23,7 @@ pub struct Id<M>{
     model: std::rc::Weak<M>,
 }
 
-#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
 #[sqlx(rename_all="snake_case")]
 pub enum Status  {
     Active,
@@ -33,7 +33,7 @@ pub enum Status  {
     Paused,
 }
 
-#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
 #[sqlx(rename_all="snake_case")]
 pub enum Visibility {
     Private,
@@ -42,7 +42,7 @@ pub enum Visibility {
     Public,
 }
 
-#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
 #[repr(i32)]
 pub enum Priority {
     Unset = 0,

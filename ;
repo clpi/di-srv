@@ -29,50 +29,40 @@ impl Item {
     } 
 
     pub fn private(&mut self, visibility: Visibility) -> Self {
-        Self { visibility, ..self.to_owned() }
+        Self { visibility: visibility as i32, ..self.to_owned() }
     }
 
     pub fn with_status(&mut self, status: Status) -> Self {
-        Self { status, ..self.to_owned() }
+        Self { status: status as i32, ..self.to_owned() }
     }
 
-    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
-        let res = sqlx::query(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+        let link = RecordItemLink::from((
+            self.rid, self.id.expect("Item ID not set"))
+        );
+        let res: u32 = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
             .bind(&self.name)
             .bind(&self.status)
             .bind(&self.visibility)
-            .bind(&self.created_at)
-            .fetch_one(&db.pool).await?;
-        self.id = res.get("id");
+            .bind(&self.created_at);
+            .fetch_one(&db.pool).await {
+            Ok(res) => match link.insert(db).await {
+                Ok(link) => Ok(res.get("id")),
+                Err(_) => Err("Could not insert RecordItemLink"),
+            },
+            Err(_) => Err("Could not insert Item")
+        }
+    }
+
+    pub async fn add_new_field(self, db: &Db, field_name: String, field_type: FieldType) -> sqlx::Result<Self> {
+        let field = Field::new(self.uid, field_name);
+    }
+
+    pub async fn add_existing_field(self, db: &Db, field: Field) -> sqlx::Result<Self> {
         Ok(self)
-    }
-
-    pub async fn add_new_field(
-        self, db: &Db, field_name: String, field_type: FieldType
-    ) -> sqlx::Result<u32> 
-    {
-        let res = match self.id {
-            Some(id) => self.clone(),
-            None => self.insert(db).await?,
-        };
-        let field = Field::new(res.uid, field_name)
-            .insert(db).await?;
-        let link = ItemFieldLink::from((res, field))
-            .insert(db).await?;
-        Ok(link)
-    }
-
-    pub async fn add_existing_field(self, db: &Db, field: Field) -> sqlx::Result<u32> {
-        let field = match field.id { //Checks if field has ID retrieved from DB
-            Some(id) => field.clone(),
-            None => field.insert(db).await?,
-        };
-        let link = ItemFieldLink::from((self, field))
-            .insert(db).await?;
-        Ok(link)
     }
 
     pub async fn add_to_record(self, db: &Db, rid: i32) -> sqlx::Result<u32> {

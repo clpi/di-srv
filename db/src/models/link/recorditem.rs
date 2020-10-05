@@ -46,15 +46,13 @@ impl RecordItemLink {
     }
 
     pub async fn items_linked_to_record(self, db: &Db, rid: i32) -> sqlx::Result<Vec<Item>> {
-        let res: Vec<Item> = sqlx::query_as::<Postgres, Record>(
+        let res: Vec<Item> = sqlx::query_as::<Postgres, Item>(
            "SELECT i.id, i.name, i.uid, i.status, i.visibility, i.created_at
             FROM Items i INNER JOIN RecordItemLinks ri ON i.id=ri.iid
             INNER JOIN Records r ON ri.rid=r.id AND r.id=$1")
-            .bind(rid);
-        match res.fetch_all(&db.pool).await {
-            Ok(res) => Ok(res),
-            Err(_) => Err("Couldn't access RecordItemLinks")
-        }
+            .bind(rid)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
     }
 
     pub async fn records_linked_to_item(self, db: &Db, iid: i32) -> sqlx::Result<Vec<Record>> {
@@ -62,11 +60,9 @@ impl RecordItemLink {
            "SELECT r.id, r.name, r.uid, r.status, r.visibility, r.created_at
             FROM Records r INNER JOIN RecordItemLinks ri ON r.id=ri.rid
             INNER JOIN Items i ON i.id=ri.iid AND i.id=$1")
-            .bind(iid);
-        match res.fetch_all(&db.pool).await {
-            Ok(res) => Ok(res),
-            Err(_) => Err("Couldn't access RecordItemLinks")
-        }
+            .bind(iid)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
     }
 
     pub fn add_attribute<T: Attrib>(self, attribute: T) -> () {}
