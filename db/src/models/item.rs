@@ -1,7 +1,10 @@
 use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use crate::{
-    Db, models::{Model, user::User, record::Record, Status, Visibility, Priority, link::{RecordItemLink, ItemFieldLink},
+    Db, 
+    models::{Model, User, Record, Status, Visibility, Priority, Field, 
+        link::{RecordItemLink, ItemFieldLink},
+        types::{FieldType, FieldDisplay},
 }};
 
 #[serde(rename_all="camelCase")]
@@ -11,8 +14,10 @@ pub struct Item {
     pub id: Option<i32>,
     pub uid: i32,
     pub name: String,
-    pub status: i32,
-    pub visibility: i32,
+    #[serde(default="Status::default")]
+    pub status: Status,
+    #[serde(default="Visibility::default")]
+    pub visibility: Visibility,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -32,6 +37,9 @@ impl Item {
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+        let link = RecordItemLink::from((
+            self.rid, self.id.expect("Item ID not set"))
+        );
         let res: u32 = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
@@ -39,10 +47,22 @@ impl Item {
             .bind(&self.name)
             .bind(&self.status)
             .bind(&self.visibility)
-            .bind(&self.created_at)
-            .fetch_one(&db.pool).await?
-            .get("id");
-        Ok(res)
+            .bind(&self.created_at);
+        match res.fetch_one(&db.pool).await {
+            Ok(res) => match link.insert(db).await {
+                Ok(link) => Ok(res.get("id")),
+                Err(_) => Err("Could not insert RecordItemLink"),
+            },
+            Err(_) => Err("Could not insert Item")
+        }
+    }
+
+    pub async fn add_new_field(self, db: &Db, field_name: String, field_type: FieldType) -> sqlx::Result<Self> {
+        let field = Field::new(self.uid, field_name);
+    }
+
+    pub async fn associate_field(self, db: &Db, field: String) -> sqlx::Result<Self> {
+        Ok(self)
     }
 
     pub async fn add_to_record(self, db: &Db, rid: i32) -> sqlx::Result<u32> {
@@ -84,4 +104,9 @@ impl From<User> for Item {
 #[async_trait::async_trait]
 impl Model for Item {
     fn table() -> String { String::from("Items") }
+
+    async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
+        self.insert(db).await?;
+        Ok(self)
+    }
 }

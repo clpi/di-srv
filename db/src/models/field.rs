@@ -1,5 +1,5 @@
 use std::fs::File;
-use crate::models::{Visibility, Item};
+use crate::{models::{Visibility, Item, link::ItemFieldLink}, Db};
 use serde::{Serialize, Deserialize};
 use chrono::Duration;
 use sqlx::{
@@ -13,11 +13,79 @@ pub struct Field {
     #[serde(skip_serializing_if="Option::is_none")]
     pub id: Option<i32>,
     pub uid: i32,
+    pub name: String,
+    #[serde(default="FieldType::default")]
     pub field_type: FieldType,
     pub value: Vec<u8>,
+    #[serde(default="Visibility::private")]
     pub visibility: Visibility,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
+}
+
+impl Field {
+
+    pub fn build<T, U>(uid: T, name: U) -> Field 
+    where T: Into<i32>, U: Into<String> {
+        Field { uid:  uid.into(), name: name.into(), ..Self::default() }
+    }
+
+    pub fn new<T, U> (uid: T, name: U) 
+        -> Field where T: Into<i32>, U: Into<String>
+    {
+        Field { 
+            uid:  uid.into(), 
+            name: name.into(), 
+            field_type: FieldType::Text,
+            visibility: Visibility::Private,
+            ..Self::default() }
+    }
+
+    pub fn with_visibility<T: Into<Visibility>>(&mut self, visibility: T) -> Self {
+        Self { visibility: visibility.into(), ..self.to_owned() }
+    }
+
+    pub fn with_field_type(&mut self, field_type: FieldType) -> Self {
+        Self {  field_type, ..self.to_owned() }
+    }
+
+    /// Inserts a new field into the database
+    /// ASSOCIATED with 1 user, UNASSOCIATED with any items
+    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+        let res = sqlx::query(
+            "INSERT INTO Fields 
+            (name, field_type, value, visibility, created_at) 
+            VALUES ($1, $2, $3, $4, $5)")
+            .bind(self.name)
+            .bind(self.field_type)
+            .bind(self.value)
+            .bind(self.visibility)
+            .bind(self.created_at);
+        match res.fetch_one(&db.pool).await {
+            Ok(res) => Ok(res.get("id") as u32),
+            Err(_) => Err("Could not insert field"),
+        }
+    }
+
+    pub async fn add_to_item(self, db: &Db, iid: i32) -> sqlx::Result<u32> {
+        if !self.is_in_db() { self.insert(db).await?; }
+        let link = ItemFieldLink::from((self.id.expect("Item ID not set"), iid));
+        match link.insert(db).await {
+            Ok(id) => Ok(id),
+            Err(_) => Err("Could not add field to item"),
+        }
+
+    }
+
+    pub fn set_field_type(&mut self, field_type: FieldType) -> Self {
+
+    }
+
+    pub fn is_in_db(self) -> bool { self.id.is_some() }
+}
+
+pub struct FieldBuilder {
+
 }
 
 pub struct FieldEntry {
@@ -29,6 +97,7 @@ impl Default for Field {
         Self {
             id: None,
             uid: -1,
+            name: String::new(),
             field_type: FieldType::default(),
             value: Vec::new(),
             visibility: Visibility::Private,

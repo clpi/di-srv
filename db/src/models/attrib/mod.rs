@@ -3,9 +3,13 @@ pub mod item_item;
 pub mod record_item;
 pub mod user_user;
 
-pub trait Attribute {
+pub struct Attribute;
+
+pub trait Attrib {
 
 }
+
+
 
 pub trait RelationAttrib {
 

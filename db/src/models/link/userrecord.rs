@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}};
 use crate::{
-    models::{User, Record, Model, link::{Link, LinkInfo}},
+    models::{User, Record, Model, link::{Link, LinkInfo, LinkModel}},
     Db,
 };
 
@@ -48,3 +48,5 @@ impl From<UserRecordLink> for Link<User, Record> {
 impl Link<User, Record> {
 
 }
+
+impl LinkModel for UserRecordLink {}

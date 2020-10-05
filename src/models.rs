@@ -1,3 +1,9 @@
+pub mod request;
+pub mod response;
+
+pub use request::ReqData;
+pub use response::*;
+
 use serde::{Deserialize, Serialize};
 
 pub struct Test {}

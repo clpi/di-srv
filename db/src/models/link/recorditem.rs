@@ -4,10 +4,8 @@ use sqlx::{
     prelude::*, postgres::{PgRow, Postgres}
 };
 use crate::{ Db,
-    models::{
-        attrib::Attribute,
-        Record, Item
-    }, Db};
+    models::{ attrib::Attrib, Record, Item }, 
+};
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
@@ -47,7 +45,31 @@ impl RecordItemLink {
         Ok(res)
     }
 
-    pub fn add_attribute<T: Attribute>(self, attribute: T) -> () {}
+    pub async fn items_linked_to_record(self, db: &Db, rid: i32) -> sqlx::Result<Vec<Item>> {
+        let res: Vec<Item> = sqlx::query_as::<Postgres, Record>(
+           "SELECT i.id, i.name, i.uid, i.status, i.visibility, i.created_at
+            FROM Items i INNER JOIN RecordItemLinks ri ON i.id=ri.iid
+            INNER JOIN Records r ON ri.rid=r.id AND r.id=$1")
+            .bind(rid);
+        match res.fetch_all(&db.pool).await {
+            Ok(res) => Ok(res),
+            Err(_) => Err("Couldn't access RecordItemLinks")
+        }
+    }
+
+    pub async fn records_linked_to_item(self, db: &Db, iid: i32) -> sqlx::Result<Vec<Record>> {
+        let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
+           "SELECT r.id, r.name, r.uid, r.status, r.visibility, r.created_at
+            FROM Records r INNER JOIN RecordItemLinks ri ON r.id=ri.rid
+            INNER JOIN Items i ON i.id=ri.iid AND i.id=$1")
+            .bind(iid);
+        match res.fetch_all(&db.pool).await {
+            Ok(res) => Ok(res),
+            Err(_) => Err("Couldn't access RecordItemLinks")
+        }
+    }
+
+    pub fn add_attribute<T: Attrib>(self, attribute: T) -> () {}
 }
 
 impl Default for RecordItemLink {
@@ -76,3 +98,4 @@ impl From<(i32, i32)> for RecordItemLink {
         Self { rid, iid, ..Self::default() }
     }
 }
+

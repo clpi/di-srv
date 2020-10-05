@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS UserInfo (
     first_name   TEXT CHECK (CHAR_LENGTH(first_name) < 80),
     mid_initial  CHAR,
     last_name    TEXT CHECK (CHAR_LENGTH(first_name) < 80),
+    phone_number TEXT CHECK (CHAR_LENGTH(phone_number) < 10),
+    occupation   TEXT,
     bio          TEXT,
     img_path     TEXT,
     gender       TEXT,

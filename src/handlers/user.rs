@@ -8,29 +8,52 @@ use divdb::models::{Record, User};
 //TODO implement query string route handlers for user ids
 
 pub fn routes(cfg: &mut ServiceConfig) {
+    /// -------------- /user ------------------------- ///
     cfg.service(scope("/user")
         .service(resource("")
             .route(get().to(get_all))
         )
-        .service(scope("/id/{id}")
+        /// -------------- /user/{uid} --------------------///
+        .service(scope("/{uid}")
             .service(resource("")
                 .route(get().to(get_by_id))
                 .route(delete().to(delete_by_id))
             )
-            .service(resource("/rec")
-                .route(get().to(get_records))
-            )
-            .service(resource("/rec/{rid}")
-                .route(get().to(get_record))
-                .route(put().to(update_record))
-                .route(post().to(add_record))
-                .route(delete().to(delete_record))
+            /// ------------ /user/{uid}/info/ -------- ///
+            .service(resource("/info")
+                .route(get().to(get_user_info))
+                .route(put().to(update_user_info))
             )
         )
-        .service(resource("/{username}")
-            .route(get().to(get_by_username))
-            .route(put().to(update_by_username))
-            .route(delete().to(delete_by_username)),
+        /// -------------- /user/{uid} --------------------///
+    )
+    /// -------------- /u ------------------------- ///
+    .service(scope("/u")
+        /// -------------- /u/{username} --------------------///
+        .service(scope("/{username}")
+            .service(resource("")
+                .route(get().to(get_by_username))
+                .route(put().to(update_by_username))
+                .route(delete().to(delete_by_username)),
+            )
+            /// ------------ /u/{username}/feed/ -------- ///
+            .service(scope("/feed")
+                .service(resource("")
+                    .route(get().to(get_user_feed))
+                )
+                /// ------------ /u/{username}/feed/items -------- ///
+                .service(resource("/items")
+                    .route(get().to(|| HttpResponse::Ok().body("")))
+                )
+                /// ------------ /u/{username}/feed/entities -------- ///
+                .service(resource("/entities")
+                    .route(get().to(|| HttpResponse::Ok().body("")))
+                )
+                /// ------------ /u/{username}/feed/records -------- ///
+                .service(resource("/records")
+                    .route(get().to(|| HttpResponse::Ok().body("")))
+                )
+            )
         ),
     );
 }
@@ -91,21 +114,14 @@ pub async fn get_records(data: web::Data<State>, path: web::Path<i32>) -> HttpRe
     }
 }
 
-pub async fn get_record(data: web::Data<State>, path: web::Path<(i32, i32)>) -> HttpResponse {
-    HttpResponse::Ok().body("get_record")
+pub async fn get_user_info(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+    HttpResponse::Ok().body("delete_record")
 }
 
-pub async fn add_record(data: web::Data<State>,
-    uid: web::Path<i32>,
-    record: web::Json<Record>,
-) -> HttpResponse {
-    HttpResponse::Ok().body("add_record")
+pub async fn update_user_info(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+    HttpResponse::Ok().body("delete_record")
 }
 
-pub async fn update_record(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
-    HttpResponse::Ok().body("update_record")
-}
-
-pub async fn delete_record(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+pub async fn get_user_feed(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")
 }

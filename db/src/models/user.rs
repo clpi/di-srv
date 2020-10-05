@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use crate::{
     db::Db, 
     models::{
-        Record, UserInfo, link::{UserRecordLink, UserGroupLink},
+        Record, UserInfo, Item, link::{UserRecordLink, UserGroupLink},
     },
 };
 use sqlx::Postgres;
@@ -89,6 +89,7 @@ impl User {
         Ok(res)
     }
 
+    /// Get a user by username
     pub async fn get_by_username(db: &Db, username: String) -> sqlx::Result<User> {
         let res: User = sqlx::query_as::<Postgres, User>
             ("SELECT * FROM Users WHERE username=$1") 
@@ -98,12 +99,58 @@ impl User {
         Ok(res)
     }
 
+    /// Get all records created by user
     pub async fn get_all_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>
             ("WITH Users as u SELECT * FROM Records r WHERE r.uid = u.id AND u.id = $1")
             .bind(self.id.expect("No id set"))
             .fetch_all(&db.pool).await?;
         Ok(res)
+    }
+
+    pub async fn get_linked_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
+        let res = sqlx::query_as::<Postgres, Record>
+            ("SELECT r.id, r.name, r.status, r.visibility, r.created_at
+              FROM Records r INNER JOIN UserRecordLinks ur ON r.id = ur.rid
+                   INNER JOIN Users u on ur.uid = u.id
+                   AND u.id = $1")
+            .bind(&self.id.expect("User ID not set"))
+            .fetch_all(&db.pool)
+            .await?;
+        Ok(res)
+    }
+
+    /// Insert Record with given name into DB for user
+    pub async fn add_new_record<T: Into<String>>(
+        self, db: &Db, rec_name: T,
+    ) -> sqlx::Result<Self> {
+        let rec: Record = Record::new(
+            self.id.expect("User ID not set"), rec_name
+        );
+        match rec.insert(db).await {
+            Ok(res) => Ok(res),
+            Err(_) => Err("Could not add record for user"),
+        }
+    }
+
+    pub async fn associate_record(self, db: &Db, rec: Record) 
+        -> sqlx::Result<Self> 
+    {
+        match rec.insert(db).await {
+            Ok(res) => Ok(res),
+            Err(_) => Err("Could not add record for user"),
+        }
+    }
+
+    /// Insert item (unassociated with Record) into DB with given name for user
+    pub async fn add_recordless_item<T: Into<String>>(
+        self, db: &Db, item_name: T,
+    ) -> sqlx::Result<Self> {
+        let item = Item::new(self.id.expect("User ID not set"), item_name);
+        match item.insert(db).await {
+            Ok(item) => Ok(self),
+            Err(_) => Err("Could not insert Item into DB"),
+        }
     }
 }
 
@@ -122,5 +169,10 @@ impl Default for User {
 #[async_trait::async_trait]
 impl Model for User {
     fn table() -> String { String::from("Users") }
+    
+    async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
+        self.insert(db).await?; 
+        Ok(self)
+    }
 }
 

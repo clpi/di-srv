@@ -78,6 +78,28 @@ impl<T: Into<&'static str>> From<T> for Visibility {
     }
 }
 
+impl From<Visibility> for String {
+    fn from(vis: Visibility) -> String {
+        match vis {
+            Visibility::Public => "public".to_string(),
+            Visibility::InviteOnly => "invite_only".to_string(),
+            Visibility::MutualsOnly => "mutuals_only".to_string(),
+            Visibility::Private => "private".to_string(),
+        }
+    }
+}
+
+impl From<Status> for String {
+    fn from(status: Status) -> String {
+        match status {
+            Status::Archived => "archived".to_string(),
+            Status::Deleted => "deleted".to_string(),
+            Status::Active => "active".to_string(),
+            Status::Completed => "completed".to_string(),
+            Status::Paused => "paused".to_string(),
+        }
+    }
+}
 impl From<i32> for Priority {
     fn from(priority: i32) -> Self {
         match  priority {
@@ -91,9 +113,6 @@ impl From<i32> for Priority {
         }
     }
 }
-
-impl From<i32> for Id { fn from(id: i32) -> Self { Id(Some(id)) } }
-impl From<Option<i32>> for Id { fn from(id: Option<i32>) -> Self { Id(id) } }
 
 impl Default for Status { 
     fn default() -> Self { Status::Active } 
