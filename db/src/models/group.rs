@@ -15,7 +15,9 @@ pub struct Group {
     pub id: Option<i32>,
     pub uid: i32,
     pub name: String,
+    #[serde(default="Visibility::default")]
     pub visibility: Visibility,
+    #[serde(default="Status::default")]
     pub status: Status,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,

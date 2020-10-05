@@ -68,7 +68,7 @@ pub async fn login(
 ) -> HttpResponse {
     let user = user.into_inner().clone();
     match User::get_by_username(&data.db, user.username).await {
-        Ok(db_user) => {
+        Ok(Some(db_user)) => {
             if Auth::new().verify(user.password, db_user.password).unwrap() {
                 id.remember(db_user.username);
                 let mut resp = HttpResponse::Ok();
@@ -79,7 +79,7 @@ pub async fn login(
                 HttpResponse::NotFound().body("User not signed in")
             }
         }
-        Err(_) => HttpResponse::NotFound().body("User not signed in"),
+        _ => HttpResponse::NotFound().body("User not signed in"),
     }
 }
 
@@ -111,13 +111,18 @@ pub async fn refresh_login(
         web::Data<State>,
     ),
 ) -> HttpResponse {
-    if id.identity().unwrap() == user.username {
-        return HttpResponse::Ok().body("User authenticated");
-    } else {
-        id.forget();
-        return HttpResponse::Gone()
+    match id.identity() {
+        Some(id) => match User::get_by_username(&data.db, id).await {
+            Ok(Some(user)) => HttpResponse::Ok().json(true),
+            _ => HttpResponse::Unauthorized()
+                .set_header("authorization", "false")
+                .del_cookie(&Cookie::named("authorized"))
+                .json(true),
+        },
+        None => HttpResponse::Gone()
             .set_header("authorization", "false")
             .del_cookie(&Cookie::named("authorized"))
-            .body("User logged out");
+            .json(false)
+        
     }
 }

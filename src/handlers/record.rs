@@ -8,20 +8,21 @@ use actix_web::{
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-    /// ------------ /user/{uid}/record/ -------- /// [ MAIN /src/handlers/record.rs ]
+    // ------------ /user/{uid}/record/ -------- /// [ MAIN /src/handlers/record.rs ]
+    /*
     .service(scope("/record")
         .service(resource("")
             .route(get().to(get_records))
             .route(post().to(add_record))
         )
-        /// ------------ /user/{uid}/record/{rid} -------- ///
+        // ------------ /user/{uid}/record/{rid} -------- ///
         .service(scope("/{rid}")
             .service(resource("")
                 .route(get().to(get_user_record))
                 .route(put().to(update_user_record))
                 .route(delete().to(delete_user_record))
             )
-            /// ------------ /user/{uid}/record/{rid}/items -------- ///
+            // ------------ /user/{uid}/record/{rid}/items -------- ///
             .service(resource("/items")
                 .route(get().to(get_record_items))
                 .route(post().to(add_item_to_record))
@@ -30,6 +31,8 @@ pub fn routes(cfg: &mut ServiceConfig) {
             )
         ) // -- /user/{uid}/record/{rid}
     ); // -- /user/{uid}/record 
+    */
+        ;
 
 }
 

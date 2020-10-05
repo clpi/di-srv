@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use sqlx::{
     types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json},
-    FromRow, Type, postgres::{Postgres, PgRow}, Decode
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
 };
-use crate::models::{Model, User};
+use crate::{ Db,
+    models::{Model, User}
+};
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
@@ -32,12 +34,69 @@ pub struct UserInfo {
     pub updated_at: DateTime<Utc>,
 }
 
+impl UserInfo {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn update<T, U>(mut self, field: T, val: U) -> Self
+        where T: Into<String> {
+        let field: String = field.into();
+        match field.as_str() {
+            "first_name" => (),
+            "last_name" => (),
+            "mid_initial" => (),
+            "phone_number" => (),
+            "occupation" => (),
+            "bio" => (), 
+            "img_path" => (),
+            "gender" => (),
+            "birth_date" => (),
+            "city" => (),
+            "zip_code" => (),
+            "state" => (),
+            "country" => (),
+            "social_links" => (),
+            "experience" => (),
+            _ => (),
+        }
+        self.updated_at = Utc::now();
+        self.to_owned()  
+    }
+
+    pub async fn insert_empty(db: &Db, uid: i32) -> sqlx::Result<i32> {
+        let res = sqlx::query("INSERT INTO UserInfo (
+            uid, first_name, mid_initial, last_name, phone_number,
+            occupation, bio, img_path, gender, birth_date, city,
+            zip_code, state, country, social_links, experience,
+            user_type, updated_at ) VALUES ($1, $2, $3, $4, $5, $6, $7)")
+            .bind(vec![-1_i32])
+            .execute(&db.pool).await?;
+        Ok(0)
+    }
+
+    pub async fn insert_field<T: Into<String>>(self, db: &Db, field: &str, value: T) -> sqlx::Result<i32> {
+        let str_fields = vec!["first_name, last_name, phone_number, occupation, bio,
+            img_path, gender, birth_date, city, zip_code, state, country, experience,
+            user_type"];
+        if str_fields.contains(&field) {
+            let res = sqlx::query("INSERT INTO UserInfo $1 VALUES $2 RETURNING id")
+                .bind(value.into())
+                .execute(&db.pool)
+                .await?
+                .rows_affected();
+            Ok(res as i32)
+        } else { Err(sqlx::Error::ColumnNotFound(field.to_string())) }
+    }
+}
+
 impl Default for UserInfo {
     fn default() -> Self {
         Self { 
             user_type: UserType::default(),
             updated_at: Utc::now(),
-            experience: 0,
+            experience: 0_i32,
             country: String::new(),
             ..Default::default()
         }
@@ -55,6 +114,11 @@ impl From<User> for UserInfo {
 
 #[derive(Serialize, Deserialize, Type, PartialEq, Clone, Default)]
 pub struct SocialLinks(HashMap<String, String>);
+
+pub struct SocialLink {
+    pub label: String,
+    pub url: String,
+}
 
 #[derive(Type, Serialize, Deserialize, PartialEq, Clone)]
 pub enum SocialProvider {

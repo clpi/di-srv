@@ -52,6 +52,8 @@ impl Record {
         }
     }
 
+    fn build() -> () {}
+
 
     pub fn name<T>(self, name: T) -> Self where T: Into<String> {
         Self { name: name.into(), ..self }
@@ -65,14 +67,14 @@ impl Record {
         Self { visibility: visibility.into(), ..self }
     }
 
-    pub async fn get_by_id(db: &Db, id:  i32) -> sqlx::Result<Vec<Self>> {
+    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Vec<Self>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
             "SELECT * FROM Records WHERE id=$1")
             .fetch_all(&db.pool).await?;
         Ok(res)
     }
 
-    pub async fn insert(mut self, db: &Db) -> sqlx::Result<i32> {
+    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
         let res = sqlx::query(
             "INSERT INTO Records (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
@@ -89,7 +91,7 @@ impl Record {
         link
             .insert(&db)
             .await?;
-        Ok(id)
+        Ok(self)
     }
 
     pub async fn get_linked_users(self, db: &Db) -> sqlx::Result<Vec<User>> {
@@ -104,47 +106,59 @@ impl Record {
         Ok(res)
     }
 
-    /// Create new item, insert it into DB, and insert RecItemLink into DB
-    /// for *ALREADY* in-DB Record
+    // Create new item, insert it into DB, and insert RecItemLink into DB
+    // for *ALREADY* in-DB Record
     pub async fn add_new_item<T: Into<String>>
         (self, db: &Db, item_name: T) -> sqlx::Result<Self> 
     {
-        if self.id != Some(-1) {
-            self.insert(db).await?;
-        } 
-        let item = Item::new(self.uid, item_name.into());
-        match item.insert(db).await {
-             Ok(item) => {
-                let link = RecordItemLink::from((self, item));
-                match link.insert(db).await {
-                    Ok(link) => Ok(self),
-                    Err(_) => Err("Could not insert RecordItemLink"),
-                }
-            },
-            Err(_) => Err("Could not insert item")
-        }
+        let rec = match self.id {
+            Some(_id) => self.clone(),
+            None => self.insert(db).await?,
+        };
+        let item = Item::new(rec.id.unwrap(), item_name.into())
+            .insert(db).await?;
+        RecordItemLink::from(
+            (rec.id.unwrap() as i32, item.id.unwrap() as i32))
+            .insert(db).await?;
+        Ok(rec)
     }
 
-    pub async fn add_existing_item<T: Into<Item>>(self, db: &Db, item: T)
+    // Create new item, insert it into DB, and and insert RecItemLink into DB
+    // for Record already in database
+    pub async fn add_existing_item(self, db: &Db, item: Item)
         -> sqlx::Result<Self> 
     {
-        let link = RecordItemLink::from((self, item.into()));
-        match link.insert(db).await {
-            Ok(link) => Ok(self),
-            Err(_) => Err("Could not insert RecordItemLink"),
-        }
+        let rec = match self.id {
+            Some(_id) => self.clone(),
+            None => self.insert(db).await?,
+        };
+        let item = match item.id {
+            Some(_id) => item.clone(),
+            None => item.insert(db).await?,
+        };
+        RecordItemLink::from(
+            (rec.id.unwrap() as i32, item.id.unwrap() as i32))
+            .insert(db).await?;
+        Ok(rec)
 
     }
 
-    pub async fn delete_by_id(db: &Db, id:  i32) -> sqlx::Result<u32> {
-        let res: u32 = sqlx::query_scalar(
+    pub async fn delete_by_id(db: &Db, id:  i32) -> sqlx::Result<i32> {
+        let res = sqlx::query(
             "DELETE FROM Records WHERE id=$1 RETURNING id")
+            .bind(id)
             .fetch_one(&db.pool).await?;
-        Ok(res)
+        let id = res.get("id");
+        Ok(id)
     }
 
-    pub async fn update_by_id(self, db: &Db, id: i32) -> sqlx::Result<u32> {
-        Ok(0 as u32)
+    pub async fn update_by_id(self, db: &Db, id: i32) -> sqlx::Result<i32> {
+        let res = sqlx::query(
+            "DELETE FROM Records WHERE id=$1 RETURNING id")
+            .bind(id)
+            .fetch_one(&db.pool).await?;
+        let id = res.get("id");
+        Ok(id)
     }
 
 }

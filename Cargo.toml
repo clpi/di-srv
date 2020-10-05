@@ -32,6 +32,7 @@ actix-files = "*"
 actix-identity = "*"
 actix-web-actors = "*"
 #actix-redis = "*"
+actix-session="*"
 #actix-session = "*"
 #actix-web-middleware-cognito = "*"
 

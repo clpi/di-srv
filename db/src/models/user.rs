@@ -1,4 +1,3 @@
-//pub use com::models::{user::User, record::Record};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*};
 use serde::{Serialize, Deserialize};
 use crate::{
@@ -30,6 +29,7 @@ pub struct User {
 }
 
 impl User {
+
     pub fn new<T, U, V>(email: T, username: U, password: V,) -> User
         where T: Into<String>, U: Into<String>, V: Into<String> {
         User { 
@@ -40,10 +40,10 @@ impl User {
         }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+    pub async fn insert(self, db: &Db) -> sqlx::Result<i32> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
         let mut conn = db.pool.acquire().await?;
-        let res: u32 = sqlx::query
+        let res: i32 = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
               VALUES ($1, $2, $3, $4) RETURNING id") 
             .bind(self.email)
@@ -53,23 +53,23 @@ impl User {
             .fetch_one(&mut conn).await?
             .get("id");
         conn.release();
-        Ok(res)
+        Ok(res as i32)
     }
 
-    pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<u32> {
-        let res: u32 = sqlx::query_scalar
+    pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {
+        let res: i32 = sqlx::query_scalar
             ("DELETE FROM Users WHERE username=$1 RETURNING id")
             .bind(username)
             .fetch_one(&db.pool).await?;
-        Ok(res)
+        Ok(res as i32)
     }
 
-    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<u32> {
+    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<i32> {
         let res: u32 = sqlx::query_scalar
             ("DELETE FROM Users WHERE id=$1 RETURNING id")
             .bind(id)
             .fetch_one(&db.pool).await?;
-        Ok(res)
+        Ok(res as i32)
     }
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<User>> {
@@ -80,26 +80,26 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<User> {
-        let res: User = sqlx::query_as::<Postgres, User>
+    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<User>> {
+        let res: Option<User> = sqlx::query_as::<Postgres, User>
             ("SELECT * FROM Users WHERE id=$1") 
             .bind(id)
-            .fetch_one(&db.pool)
+            .fetch_optional(&db.pool)
             .await?;
         Ok(res)
     }
 
     /// Get a user by username
-    pub async fn get_by_username(db: &Db, username: String) -> sqlx::Result<User> {
-        let res: User = sqlx::query_as::<Postgres, User>
+    pub async fn get_by_username(db: &Db, username: String) -> sqlx::Result<Option<User>> {
+        let res: Option<User> = sqlx::query_as::<Postgres, User>
             ("SELECT * FROM Users WHERE username=$1") 
             .bind(username)
-            .fetch_one(&db.pool)
+            .fetch_optional(&db.pool)
             .await?;
         Ok(res)
     }
 
-    /// Get all records created by user
+    // Get all records created by user
     pub async fn get_all_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>
             ("WITH Users as u SELECT * FROM Records r WHERE r.uid = u.id AND u.id = $1")
@@ -120,37 +120,38 @@ impl User {
         Ok(res)
     }
 
-    /// Insert Record with given name into DB for user
-    pub async fn add_new_record<T: Into<String>>(
-        self, db: &Db, rec_name: T,
-    ) -> sqlx::Result<Self> {
+    // Insert Record with given name into DB for user
+    pub async fn add_new_record(
+        self, db: &Db, rec_name: String,
+    ) -> sqlx::Result<Record> {
         let rec: Record = Record::new(
             self.id.expect("User ID not set"), rec_name
         );
-        match rec.insert(db).await {
-            Ok(res) => Ok(res),
-            Err(_) => Err("Could not add record for user"),
-        }
+        let res = rec.insert(db).await?;
+        Ok(res)
     }
 
-    pub async fn associate_record(self, db: &Db, rec: Record) 
-        -> sqlx::Result<Self> 
-    {
-        match rec.insert(db).await {
-            Ok(res) => Ok(res),
-            Err(_) => Err("Could not add record for user"),
-        }
+    pub async fn add_existing_record(self, db: &Db, rec: Record) 
+        -> sqlx::Result<Record> {
+        let res = rec.insert(db).await?;
+        Ok(res)
     }
 
-    /// Insert item (unassociated with Record) into DB with given name for user
-    pub async fn add_recordless_item<T: Into<String>>(
-        self, db: &Db, item_name: T,
-    ) -> sqlx::Result<Self> {
-        let item = Item::new(self.id.expect("User ID not set"), item_name);
-        match item.insert(db).await {
-            Ok(item) => Ok(self),
-            Err(_) => Err("Could not insert Item into DB"),
-        }
+    // Insert item (unassociated with Record) into DB with given name for user
+    pub async fn add_new_item(
+        self, db: &Db, item_name: String,
+    ) -> sqlx::Result<Item> {
+        let item = Item::new(self.id.expect("User ID not set"), item_name,)
+            .insert(db).await?;
+        Ok(item)
+    }
+
+    // Insert item (unassociated with Record) into DB with given name for user
+    pub async fn add_existing_item(
+        self, db: &Db, item: Item,
+    ) -> sqlx::Result<Item> {
+        let item = item.insert(db).await?;
+        Ok(item)
     }
 }
 
@@ -170,9 +171,5 @@ impl Default for User {
 impl Model for User {
     fn table() -> String { String::from("Users") }
     
-    async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
-        self.insert(db).await?; 
-        Ok(self)
-    }
 }
 

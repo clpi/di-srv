@@ -27,6 +27,7 @@ serde_json = "*"
 chrono = { version = "*", features = ["serde"] }
 uuid = { version = "*", features = ["serde", "v4"] }
 async-graphql= {version="*", optional=true}
+validator = { version = "0.11", features = ["derive"] }
 #juniper="*"
 dotenv="*"
 #walkdir = "*"

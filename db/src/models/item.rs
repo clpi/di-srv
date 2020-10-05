@@ -91,8 +91,8 @@ impl Default for Item {
             id: None,
             uid: -1,
             name: String::new(),
-            status: Status::Active as i32,
-            visibility: Visibility::Private as i32,
+            status: Status::Active,
+            visibility: Visibility::Private,
             created_at: Utc::now(),
         }
     }
@@ -110,13 +110,15 @@ impl From<User> for Item {
     }
 }
 
+impl From<(User, Record)> for Item {
+    fn from((user, record): (User, Record)) -> Self {
+        Self::default()
+    }
+}
+
 
 #[async_trait::async_trait]
 impl Model for Item {
     fn table() -> String { String::from("Items") }
 
-    async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
-        self.insert(db).await?;
-        Ok(self)
-    }
 }
