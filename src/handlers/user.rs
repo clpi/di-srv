@@ -60,6 +60,19 @@ pub fn routes(cfg: &mut ServiceConfig) {
         ),
     );
 }
+
+pub fn user_scope() -> actix_web::Scope {
+    scope("/{uid}")
+        .service(resource("")
+            .route(get().to(get_by_id))
+            .route(delete().to(delete_by_id))
+        )
+        .service(resource("/info")
+            .route(get().to(get_user_info))
+            .route(put().to(update_user_info))
+        )
+}
+
 //TODO programmatically handle requests by matching operation to user model function
 
 pub async fn get_all(data: web::Data<State>) -> HttpResponse {
