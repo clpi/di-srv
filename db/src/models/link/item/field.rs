@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
+use super::super::{Link, LinkedTo};
 use crate::{ Db,
-    models::{ attrib::Attrib, Record, Item, Priority, Field }, 
+    models::{  Record, Item, Priority, Field, }, 
 };
 use sqlx::{FromRow, Postgres, types::chrono::{DateTime, Utc}, prelude::*};
 
@@ -19,7 +20,7 @@ pub struct ItemFieldLink {
 
 impl ItemFieldLink {
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
+    pub async fn insert_new(self, db: &Db) -> sqlx::Result<u32> {
         let res = sqlx::query(
             "INSERT INTO ItemFieldLinks (iid, fid, created_at)
             VALUES ($1, $2, $3) RETURNING id")

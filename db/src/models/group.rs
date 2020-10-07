@@ -1,5 +1,5 @@
 use crate::{Db, models::{
-    Model, User, link::UserGroupLink,
+    Model, User, Record, link::{Link, LinkedTo}, Item,
     types::{Id, Status, Visibility}
 }};
 use serde::{Serialize, Deserialize};
@@ -29,11 +29,8 @@ impl Group {
         Self { name: name.into(), uid: uid.into(), ..Self::default() }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<u32> {
-        let link = UserGroupLink::from(
-                (self.uid, self.id.expect("Group ID not set"))
-        );
-        let res: u32 = sqlx::query_scalar(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<i32> {
+        let res: i32 = sqlx::query_scalar(
             "INSERT INTO Groups (uid, name, visibility, status, created_at)
             VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -42,11 +39,18 @@ impl Group {
             .bind(&self.status)
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?;
+        let link = Link::new(Some(self.uid), self.id).insert::<Group, User>(db).await?;
         Ok(res)
     }
 
-    pub async fn add_user(self, user: User, role: GroupRole) -> sqlx::Result<u32> {
-        Ok(0)
+    pub async fn add_member(self, db: &Db, user: User) -> sqlx::Result<i32> {
+        let link = Link::new(user.id, self.id).insert::<Group, User>(db).await?;
+        Ok(link) //to implement
+    }
+
+    pub async fn add_admin(self, db: &Db, admin: User) -> sqlx::Result<i32> {
+        let link = Link::new(admin.id, self.id).insert::<Group, User>(db).await?;
+        Ok(link) //to implement
     }
 }
 
@@ -67,3 +71,21 @@ pub enum GroupRole {
     Moderator,
     Member,
 }
+
+impl From<&'static PgRow> for Group {
+    fn from(row: &'static PgRow) -> Self {
+        Group::from_row(row).expect("Couldn't map to Group")
+    }
+}
+
+impl Model for Group { 
+    fn table() -> String { String::from("Groups") }
+    fn foreign_id() -> String {
+       String::from("gid") 
+    }
+    fn id(self) -> i32 { self.id.expect("ID not set for group") }
+}
+impl LinkedTo<User> for Group {}
+impl LinkedTo<Record> for Group {}
+impl LinkedTo<Item> for Group {}
+impl LinkedTo<Group> for Group {}

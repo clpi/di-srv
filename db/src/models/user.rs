@@ -1,14 +1,13 @@
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*};
+use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use serde::{Serialize, Deserialize};
 use crate::{
     db::Db, 
-    models::{
-        Record, UserInfo, Item, link::{UserRecordLink, UserGroupLink},
+    models::{ Group, Model,
+        Record, UserInfo, Item, link::{Link, LinkedTo},
     },
 };
 use sqlx::Postgres;
 use async_trait::async_trait;
-use super::Model;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UserLogin { pub username: String, pub password: String }
@@ -124,10 +123,9 @@ impl User {
     pub async fn add_new_record(
         self, db: &Db, rec_name: String,
     ) -> sqlx::Result<Record> {
-        let rec: Record = Record::new(
-            self.id.expect("User ID not set"), rec_name
-        );
+        let rec: Record = Record::new(self.id.expect("User ID not set"), rec_name);
         let res = rec.insert(db).await?;
+        let link = Link::new(self.id, res.id).insert::<User, Record>(db).await?;
         Ok(res)
     }
 
@@ -142,7 +140,10 @@ impl User {
         self, db: &Db, item_name: String,
     ) -> sqlx::Result<Item> {
         let item = Item::new(self.id.expect("User ID not set"), item_name,)
-            .insert(db).await?;
+            .insert(db)
+            .await?;
+        let link = Link::new(self.id, item.id)
+            .insert::<User, Item>(db).await?;
         Ok(item)
     }
 
@@ -167,9 +168,26 @@ impl Default for User {
     }
 }
 
+impl From<&'static PgRow> for User {
+    fn from(row: &'static PgRow) -> Self {
+        User::from_row(row).unwrap()
+    }
+}
+
 #[async_trait::async_trait]
 impl Model for User {
     fn table() -> String { String::from("Users") }
+    fn foreign_id() -> String { String::from("uid") }
+    fn fields() ->  Vec<String> { 
+        let fields = vec!["id", "uid", "username", "password", "email", "created_at"];
+        fields.into_iter()
+            .map(|field| field.to_string())
+            .collect::<Vec<String>>()
+    }
+    fn id(self) -> i32 { self.id.expect("ID not set for Item") }
     
 }
 
+impl LinkedTo<Record> for User {}
+impl LinkedTo<Group> for User {}
+impl LinkedTo<Item> for User {}

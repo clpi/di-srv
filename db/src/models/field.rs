@@ -1,5 +1,9 @@
 use std::fs::File;
-use crate::{models::{Visibility, Item, link::ItemFieldLink}, Db};
+use crate::{Db, 
+    models::{Visibility, Item, Model,
+        link::{LinkedTo, LinkModel, Link},
+    }
+};
 use serde::{Serialize, Deserialize};
 use chrono::Duration;
 use sqlx::{
@@ -64,14 +68,12 @@ impl Field {
         Ok(self.to_owned())
     }
 
-    pub async fn add_to_item(self, db: &Db, iid: i32) -> sqlx::Result<u32> {
+    pub async fn add_to_item(self, db: &Db, item: Item) -> sqlx::Result<i32> {
         let field = match self.id {
             Some(id) => self.clone(),
             None => self.insert(db).await?,
         };
-        let link = ItemFieldLink::from(
-            (field.id.expect("Item ID not set"), iid))
-            .insert(db).await?;
+        let link = Link::new(item.id, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
@@ -232,3 +234,21 @@ pub enum FieldTypeMap<T> where T: FieldItem {
     Place(Place),
     File(File),
 }
+
+impl From<&'static PgRow> for Field {
+    fn from(row: &'static PgRow) -> Self {
+        Field::from_row(row).expect("Couldn't map to field")
+    }
+}
+
+impl Model for Field {
+    fn table() -> String { String::from("Fields") }
+    fn foreign_id() -> String {
+       String::from("fid") 
+    }
+    fn id(self) -> i32 { self.id.expect("ID not set for field") }
+}
+
+impl LinkedTo<Item> for Field {}
+impl LinkedTo<Field> for Field {}
+

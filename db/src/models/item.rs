@@ -2,8 +2,8 @@ use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use crate::{
     Db, 
-    models::{Model, User, Record, Status, Visibility, Priority, Field, 
-        link::{RecordItemLink, ItemFieldLink},
+    models::{Model, User, Record, Status, Visibility, Priority, Field, Group,
+        link::{LinkedTo, Link},
         types::{FieldType, FieldDisplay},
 }};
 
@@ -52,7 +52,7 @@ impl Item {
 
     pub async fn add_new_field(
         self, db: &Db, field_name: String, field_type: FieldType
-    ) -> sqlx::Result<u32> 
+    ) -> sqlx::Result<i32> 
     {
         let res = match self.id {
             Some(id) => self.clone(),
@@ -60,18 +60,16 @@ impl Item {
         };
         let field = Field::new(res.uid, field_name)
             .insert(db).await?;
-        let link = ItemFieldLink::from((res, field))
-            .insert(db).await?;
+        let link = Link::new(res.id, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
-    pub async fn add_existing_field(self, db: &Db, field: Field) -> sqlx::Result<u32> {
+    pub async fn add_existing_field(self, db: &Db, field: Field) -> sqlx::Result<i32> {
         let field = match field.id { //Checks if field has ID retrieved from DB
             Some(id) => field.clone(),
             None => field.insert(db).await?,
         };
-        let link = ItemFieldLink::from((self, field))
-            .insert(db).await?;
+        let link = Link::new(self.id, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
@@ -116,9 +114,22 @@ impl From<(User, Record)> for Item {
     }
 }
 
+impl From<&'static PgRow> for Item {
+    fn from(row: &'static PgRow) -> Self {
+        Item::from_row(row).unwrap()
+    }
+}
 
 #[async_trait::async_trait]
 impl Model for Item {
     fn table() -> String { String::from("Items") }
+    fn foreign_id() -> String { String::from("iid") }
+    fn id(self) -> i32 { self.id.expect("ID not set for Item") }
 
 }
+
+impl LinkedTo<Field> for Item {}
+impl LinkedTo<Record> for Item {}
+impl LinkedTo<Group> for Item {}
+impl LinkedTo<Item> for Item {}
+impl LinkedTo<User> for Item {}

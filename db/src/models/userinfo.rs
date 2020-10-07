@@ -140,10 +140,20 @@ pub enum UserType {
     User,
 }
 
+impl From<&'static PgRow> for UserInfo {
+    fn from(row: &'static PgRow) -> Self {
+        UserInfo::from_row(row).expect("Couldn't map to UserInfo")
+    }
+}
+
 impl Default for UserType {
     fn default() -> Self { UserType::User }
 }
 
 impl Model for UserInfo {
     fn table() -> String { "UserInfo".to_string() }
+    fn foreign_id() -> String {
+        "uiid".to_string()
+    }
+    fn id(self) -> i32 { self.id.expect("ID not set for UserInfo") }
 }

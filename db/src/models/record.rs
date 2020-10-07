@@ -1,12 +1,13 @@
 use std::rc::Weak;
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*, Postgres};
+use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*, Postgres, postgres::PgRow};
 use serde::{Serialize, Deserialize};
 use crate::{Db, 
-    models::{Model, User, Status, Visibility, Priority, Item,
-        link::{LinkModel, Link, recorditem::RecordItemLink, UserRecordLink}
+    models::{Model, User, Status, Visibility, Priority, Item, Group,
+        link::{LinkedTo, Link},
     },
 };
 
+//TODO add validation so that user/record name combo is unique
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Record {
@@ -20,12 +21,6 @@ pub struct Record {
     pub visibility: Visibility,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
-}
-
-pub struct RecordObj {
-    pub id: Option<i32>,
-    pub user: Weak<User>,
-    pub items: Vec<Weak<Item>>,
 }
 
 impl Record {
@@ -54,22 +49,45 @@ impl Record {
 
     fn build() -> () {}
 
-
-    pub fn name<T>(self, name: T) -> Self where T: Into<String> {
+    pub fn set_name<T>(self, name: T) -> Self where T: Into<String> {
         Self { name: name.into(), ..self }
     }
 
-    pub fn status<T>(self, status: T) -> Self where T: Into<Status> {
+    pub fn set_status<T>(self, status: T) -> Self where T: Into<Status> {
         Self { status: status.into(), ..self }
     }
 
-    pub fn visibility<T>(self, visibility: T) -> Self where T: Into<Visibility>{
+    pub fn set_visibility<T>(self, visibility: T) -> Self where T: Into<Visibility> {
         Self { visibility: visibility.into(), ..self }
     }
 
+    pub async fn update_visibility<T>(
+        self, db: &Db, visibility: T, id: i32,
+    ) -> sqlx::Result<Self> where T: Into<Visibility>{
+        let vis = visibility.into();
+        sqlx::query("UPDATE Records SET visibility=$1 WHERE id=$2")
+                .bind(&vis)
+                .bind(id)
+                .execute(&db.pool).await?;
+        Ok ( Self { visibility: vis, ..self } )
+    }
+
+    pub async fn update_status<T>(
+        self, db: &Db, status: T, id: i32,
+    ) -> sqlx::Result<Self> where T: Into<Status>{
+        let stat = status.into();
+        sqlx::query("UPDATE Records SET visibility=$1 WHERE id=$2")
+                .bind(&stat)
+                .bind(id)
+                .execute(&db.pool).await?;
+        Ok ( Self { status: stat, ..self } )
+    }
+
+    // implemented in model trait -- remove?
     pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Vec<Self>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
             "SELECT * FROM Records WHERE id=$1")
+            .bind(id)
             .fetch_all(&db.pool).await?;
         Ok(res)
     }
@@ -86,14 +104,11 @@ impl Record {
             .fetch_one(&db.pool).await?;
         let id: i32 = res.get("id");
         self.id = Some(id);
-        let link = UserRecordLink::from(
-            (self.uid, self.id.expect("No record ID set")));
-        link
-            .insert(&db)
-            .await?;
+        let lnk = Link::new(self.id, Some(self.uid)).insert::<User, Record>(db).await?;
         Ok(self)
     }
 
+    // implemented in linkedto trait -- remove?
     pub async fn get_linked_users(self, db: &Db) -> sqlx::Result<Vec<User>> {
         let res = sqlx::query_as::<Postgres, User>
             ("SELECT u.id, u.username, u.email, u.created_at
@@ -117,9 +132,7 @@ impl Record {
         };
         let item = Item::new(rec.id.unwrap(), item_name.into())
             .insert(db).await?;
-        RecordItemLink::from(
-            (rec.id.unwrap() as i32, item.id.unwrap() as i32))
-            .insert(db).await?;
+        let link = Link::new(rec.id, item.id).insert::<Record, Item>(&db).await?;
         Ok(rec)
     }
 
@@ -128,18 +141,8 @@ impl Record {
     pub async fn add_existing_item(self, db: &Db, item: Item)
         -> sqlx::Result<Self> 
     {
-        let rec = match self.id {
-            Some(_id) => self.clone(),
-            None => self.insert(db).await?,
-        };
-        let item = match item.id {
-            Some(_id) => item.clone(),
-            None => item.insert(db).await?,
-        };
-        RecordItemLink::from(
-            (rec.id.unwrap() as i32, item.id.unwrap() as i32))
-            .insert(db).await?;
-        Ok(rec)
+        let link = Link::new(self.id, item.id).insert::<Record, Item>(&db).await?;
+        Ok(self)
 
     }
 
@@ -188,8 +191,25 @@ impl From<User> for Record {
     }
 }
 
+impl From<&'static PgRow> for Record {
+    fn from(row: &'static PgRow) -> Self {
+        Record::from_row(row).unwrap()
+    }
+}
+
 #[async_trait::async_trait]
 impl Model for Record {
     fn table() -> String { String::from("Records") }
+    fn foreign_id() -> String { String::from("rid") }
+    fn id(self) -> i32 { self.id.unwrap() }
+    fn fields() ->  Vec<String> { 
+        let fields = vec!["id", "uid", "name", "status", "visibility", "created_at"];
+        fields.into_iter()
+            .map(|field| field.to_string())
+            .collect::<Vec<String>>()
+    }
 }
 
+impl LinkedTo<User> for Record {  }
+impl LinkedTo<Item> for Record {  }
+impl LinkedTo<Group> for Record {  }

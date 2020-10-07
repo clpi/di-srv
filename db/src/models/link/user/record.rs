@@ -16,6 +16,21 @@ pub struct UserRecordLink {
     created_at: DateTime<Utc>,
 }
 
+impl Link<User, Record> {
+
+    pub async fn create(self, db: &Db) -> sqlx::Result<i32> {
+        let res = sqlx::query(
+            "INSERT INTO UserRecordLinks (uid, gid, created_at)
+            VALUES ($1, $2, $3) RETURNING id")
+            .bind(self.0.id.unwrap())
+            .bind(self.1.id.unwrap())
+            .bind(Utc::now());
+        let res = res.fetch_one(&db.pool).await?;
+        Ok(res.get("id"))
+    }
+}
+
+
 impl UserRecordLink {
 
     pub fn new(user: User, record: Record) -> Self {
@@ -66,15 +81,13 @@ impl From<(i32, i32)> for UserRecordLink {
     }
 }
 
-impl From<UserRecordLink> for Link<User, Record> {
-    fn from(link: UserRecordLink) -> Self {
-        Self {
-            model1: User::default(),
-            model2: Record::default(),
-            info: LinkInfo::new(),
-        }
+/*
+impl From<Link<User, Record>> for UserRecordLink {
+    fn from(link: Link<User, Record>) -> Self {
+        Self{ uid: link.0.id.unwrap(), rid: link.1.id.unwrap(), ..Default::default() }
     }
 }
+*/
 
 impl Link<User, Record> {
 

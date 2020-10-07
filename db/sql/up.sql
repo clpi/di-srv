@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS UserInfo (
 CREATE TABLE IF NOT EXISTS Groups (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
-    name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
+    name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80) UNIQUE,
     visibility TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS Records (
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     status TEXT NOT NULL,
     visibility TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (name, uid)
 );
 
 CREATE TABLE IF NOT EXISTS Items (
@@ -67,6 +68,7 @@ CREATE TABLE IF NOT EXISTS Items (
 
 CREATE TABLE IF NOT EXISTS Fields (
     id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     field_type TEXT NOT NULL,
     value BYTEA,
@@ -122,65 +124,205 @@ CREATE TABLE IF NOT EXISTS Actions (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS UserGroupLinks(
+-- Each link only has id, and two ids for each -- then create
+-- schema for attributes/relations which map to each link 
+-- table entry, such
+-- that a bunch of attributes (group role, status, etc.) can be
+-- mapped to each link entry, but each link entry can be uniform 
+
+-- LINKS -------------------------------------------
+
+-------- GROUP ------------------------------------
+
+CREATE TABLE IF NOT EXISTS GroupGroupLinks (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
     gid INTEGER NOT NULL REFERENCES Groups(id),
-    group_role TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS RecordItemLinks(
+CREATE TABLE IF NOT EXISTS GroupUserLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    gid INTEGER NOT NULL REFERENCES Groups(id),
+    rid
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS GroupRecordLinks (
     id SERIAL PRIMARY KEY NOT NULL,
     rid INTEGER NOT NULL REFERENCES Records(id),
     iid INTEGER NOT NULL REFERENCES Items(id),
     status TEXT NOT NULL,
-    priority INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+--------- USER LINKS ---------------------------
+
+CREATE TABLE IF NOT EXISTS UserUserLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    status TEXT NOT NULL,
+    relation TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS UserRecordLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS UserItemLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS UserRuleLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+----------- RECORD LINKS ---------------------------
+
+CREATE TABLE IF NOT EXISTS RecordRecordLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    relation TEXT NOT NULL DEFAULT "HasA",
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS RecordItemLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    rid INTEGER NOT NULL REFERENCES Records(id),
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    relation TEXT NOT NULL DEFAULT "HasA",
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+---------- ITEM LINKS -----------------------------
 
 CREATE TABLE IF NOT EXISTS ItemFieldLinks(
     id SERIAL PRIMARY KEY NOT NULL,
     iid INTEGER NOT NULL REFERENCES Items(id),
     fid INTEGER NOT NULL REFERENCES Fields(id),
-    priority INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    relation TEXT NOT NULL DEFAULT "HasA",
+    status TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (iid, fid, relation)
 );
 
-CREATE TABLE IF NOT EXISTS UserRecordLinks(
+CREATE TABLE IF NOT EXISTS ItemItemLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    iid2 INTEGER NOT NULL REFERENCES Items(id),
+    iid1 INTEGER NOT NULL REFERENCES Items(id),
+    relation TEXT NOT NULL DEFAULT "HasA",
+    status TEXT NOT NULL,
+    relation TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    UNIQUE (iid, fid, relation)
+);
+
+CREATE TABLE IF NOT EXISTS UserRelationLinks (
+    id SERIAL PRIMARY KEY NOT NULL,
+    iid INTEGER NOT NULL REFERENCES Items(id),
+    fid INTEGER NOT NULL REFERENCES Fields(id),
+    relation TEXT NOT NULL DEFAULT "HasA",
+    status TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    UNIQUE (iid, fid, relation)
+);
+------------- RELATIONS LINK ------------------
+
+-------------- NOTE USER DEFINED ----------------
+
+
+/*
+CREATE TABLE IF NOT EXISTS CustomRelations (
+    id,
+    table1 TEXT,
+    table2 TEXT,
+    name TEXT,
+)
+CREATE TABLE IF NOT EXISTS ItemAttributes (
     id SERIAL PRIMARY KEY NOT NULL,
     uid INTEGER NOT NULL REFERENCES Users(id),
-    rid INTEGER NOT NULL REFERENCES Records(id),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
 
-CREATE TABLE IF NOT EXISTS UserRelations(
+CREATE TABLE IF NOT EXISTS FieldAttributes (
     id SERIAL PRIMARY KEY NOT NULL,
-    uid1 INTEGER NOT NULL REFERENCES Users(id),
-    uid2 INTEGER NOT NULL REFERENCES Users(id),
-    relation TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
 
-CREATE TABLE IF NOT EXISTS RecordRelations(
+CREATE TABLE IF NOT EXISTS RecordAttributes (
     id SERIAL PRIMARY KEY NOT NULL,
-    rid1 INTEGER NOT NULL REFERENCES Records(id),
-    rid2 INTEGER NOT NULL REFERENCES Records(id),
-    relation TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+    uid INTEGER NOT NULL REFERENCES Users(id),
+)
 
-CREATE TABLE IF NOT EXISTS ItemRelations(
+CREATE TABLE IF NOT EXISTS GroupAttributes (
     id SERIAL PRIMARY KEY NOT NULL,
-    iid1 INTEGER NOT NULL REFERENCES Items(id),
-    iid2 INTEGER NOT NULL REFERENCES Items(id),
-    relation TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+    uid INTEGER NOT NULL REFERENCES Users(id),
+)
+
+CREATE TABLE IF NOT EXISTS UserRecordItemRelationss (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
+
+CREATE TABLE IF NOT EXISTS UserRecordRecordRelations (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
+
+CREATE TABLE IF NOT EXISTS UserRecordRecordRelations (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
+
+CREATE TABLE IF NOT EXISTS ItemAttributes (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    iid INTEGER NOT NULL REFERENCES Records(id),
+    target TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+)
+*/
 
 CREATE VIEW UserRecords AS
 SELECT r.id, r.uid, r.name, r.status, r.visibility, r.created_at
