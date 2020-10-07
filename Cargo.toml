@@ -35,6 +35,8 @@ actix-web-actors = "*"
 actix-session="*"
 #actix-session = "*"
 #actix-web-middleware-cognito = "*"
+#oxide-auth-actix="*"
+#actix-casbin-auth="*"
 
 async-graphql = { version = "*", optional= true }
 async-graphql-actix-web = { version = "*", optional = true }

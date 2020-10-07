@@ -1,7 +1,7 @@
 use crate::{state::State, models::request::AuthRequest};
 use actix_web::{FromRequest,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
-    HttpResponse,
+    HttpResponse, HttpRequest
 };
 use divdb::models::{Record, User, UserInfo,};
 use serde::{Serialize, Deserialize};
@@ -83,15 +83,27 @@ pub async fn get_by_id(data: web::Data<State>, id: web::Path<i32>) -> HttpRespon
     }
 }
 
+pub async fn delete_user_by_id(
+    path: web::Path<i32>, req: HttpRequest, data: web::Data<State>
+        ) -> HttpResponse 
+{
+    match User::delete_by_id(&data.db.clone(), *path).await {
+        Ok(Some(id)) => HttpResponse::Ok()
+            .content_type("application/json")
+            .body(format!("Deleted user with id {}", id)),
+        _ => HttpResponse::NotFound().body("Could not delete")
+    }
+}
+
 pub async fn delete_by_id(
     data: web::Data<State>, 
     id: web::Path<i32>
 ) -> HttpResponse {
     match User::delete_by_id(&data.db, *id).await {
-        Ok(id) => HttpResponse::Ok()
+        Ok(Some(id)) => HttpResponse::Ok()
             .content_type("application/json")
-            .body(format!("Deleted user {}", id)),
-        Err(_) => HttpResponse::NotFound().json("")
+            .body(format!("Deleted user {:?}", id)),
+        _ => HttpResponse::NotFound().json("")
     }
 }
 
@@ -131,18 +143,6 @@ pub async fn update_by_username(
     }
 }
 
-pub async fn get_records(
-    data: web::Data<State>, 
-    path: web::Path<i32>
-) -> HttpResponse {
-    match User::get_by_id(&data.db, *path).await {
-        Ok(Some(user)) => match user.get_all_records(&data.db).await {
-            Ok(recs) => HttpResponse::Ok().json(recs),
-            Err(_) => HttpResponse::NotFound().body(""),
-        },
-        _ => HttpResponse::NotFound().body(""),
-    }
-}
 
 pub async fn get_user_info(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")

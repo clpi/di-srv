@@ -63,12 +63,12 @@ impl User {
         Ok(res as i32)
     }
 
-    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<i32> {
-        let res: u32 = sqlx::query_scalar
+    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<Option<i32>> {
+        let res: Option<i32> = sqlx::query_scalar
             ("DELETE FROM Users WHERE id=$1 RETURNING id")
             .bind(id)
-            .fetch_one(&db.pool).await?;
-        Ok(res as i32)
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
     }
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<User>> {
@@ -99,21 +99,39 @@ impl User {
     }
 
     // Get all records created by user
-    pub async fn get_all_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
+    pub async fn get_all_records(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>
-            ("WITH Users as u SELECT * FROM Records r WHERE r.uid = u.id AND u.id = $1")
-            .bind(self.id.expect("No id set"))
+            ("SELECT * FROM Records r WHERE r.uid = $1")
+            .bind(id)
             .fetch_all(&db.pool).await?;
         Ok(res)
     }
 
-    pub async fn get_linked_records(self, db: &Db) -> sqlx::Result<Vec<Record>> {
+    pub async fn get_all_items(db: &Db, id: i32) -> sqlx::Result<Vec<Item>> {
+        let res: Vec<Item> = sqlx::query_as::<Postgres, Item>
+            ("SELECT * FROM Items i WHERE i.uid = $1")
+            .bind(id)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn get_linked_records(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
         let res = sqlx::query_as::<Postgres, Record>
             ("SELECT r.id, r.name, r.status, r.visibility, r.created_at
               FROM Records r INNER JOIN UserRecordLinks ur ON r.id = ur.rid
-                   INNER JOIN Users u on ur.uid = u.id
-                   AND u.id = $1")
-            .bind(&self.id.expect("User ID not set"))
+                   AND ur.uid = $1")
+            .bind(id)
+            .fetch_all(&db.pool)
+            .await?;
+        Ok(res)
+    }
+
+    pub async fn get_linked_items(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
+        let res = sqlx::query_as::<Postgres, Record>
+            ("SELECT i.id, i.name, i.status, i.visibility, i.created_at
+              FROM Items i INNER JOIN UserItemLinks ui ON ui.iid = i.id
+                   AND ui.uid = $1")
+            .bind(id)
             .fetch_all(&db.pool)
             .await?;
         Ok(res)

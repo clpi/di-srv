@@ -104,7 +104,7 @@ impl Record {
             .fetch_one(&db.pool).await?;
         let id: i32 = res.get("id");
         self.id = Some(id);
-        let lnk = Link::new(self.id, Some(self.uid)).insert::<User, Record>(db).await?;
+        Link::new(self.id, Some(self.uid)).insert::<User, Record>(db).await?;
         Ok(self)
     }
 
@@ -124,26 +124,20 @@ impl Record {
     // Create new item, insert it into DB, and insert RecItemLink into DB
     // for *ALREADY* in-DB Record
     pub async fn add_new_item<T: Into<String>>
-        (self, db: &Db, item_name: T) -> sqlx::Result<Self> 
+        (db: &Db, rid: i32, item_name: T) -> sqlx::Result<Item> 
     {
-        let rec = match self.id {
-            Some(_id) => self.clone(),
-            None => self.insert(db).await?,
-        };
-        let item = Item::new(rec.id.unwrap(), item_name.into())
-            .insert(db).await?;
-        let link = Link::new(rec.id, item.id).insert::<Record, Item>(&db).await?;
-        Ok(rec)
+        let item = Item::new(rid, item_name.into()).insert(db).await?;
+        Link::new(Some(rid), item.id).insert::<Record, Item>(&db).await?;
+        Ok(item)
     }
 
     // Create new item, insert it into DB, and and insert RecItemLink into DB
     // for Record already in database
-    pub async fn add_existing_item(self, db: &Db, item: Item)
-        -> sqlx::Result<Self> 
+    pub async fn add_existing_item(db: &Db, rid: i32, item: Item)
+        -> sqlx::Result<i32> 
     {
-        let link = Link::new(self.id, item.id).insert::<Record, Item>(&db).await?;
-        Ok(self)
-
+        let link = Link::new(Some(rid), item.id).insert::<Record, Item>(&db).await?;
+        Ok(link)
     }
 
     pub async fn delete_by_id(db: &Db, id:  i32) -> sqlx::Result<i32> {
@@ -163,7 +157,6 @@ impl Record {
         let id = res.get("id");
         Ok(id)
     }
-
 }
 
 impl Default for Record {

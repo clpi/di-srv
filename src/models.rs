@@ -1,8 +1,12 @@
 pub mod request;
 pub mod response;
+pub mod user;
+pub mod auth;
 
 pub use request::*;
 pub use response::*;
+pub use user::*;
+pub use auth::*;
 
 use serde::{Deserialize, Serialize};
 

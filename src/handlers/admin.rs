@@ -1,4 +1,5 @@
-use crate::{models::Response, state::State,};
+use divdb::{Db, models::User};
+use crate::{models::Response, state::State, handlers::user::*};
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{
     http::{Cookie, HeaderName, HeaderValue},
@@ -8,25 +9,33 @@ use actix_web::{
 use serde::{Deserialize, Serialize};
 
 pub fn routes(cfg: &mut ServiceConfig) {
-    cfg.service(
-        scope("/admin")
-            .service(
-                scope("/db")
-                    .service(resource("/up").route(get().to(db_up)))
-                    .service(resource("/down").route(get().to(db_down)))
-                    .service(
-                        scope("/{table}")
-                            .service(resource("").route(get().to(get_all_table)))
-                            .service(resource("/down").route(get().to(table_down)))
-                            .service(resource("/up").route(get().to(table_up))),
-                    ),
-            )
-            .service(
-                scope("/server")
-                    .service(resource("").route(get().to(server_info)))
-                    .service(resource("/up").route(post().to(server_up)))
-                    .service(resource("/down").route(post().to(server_down))),
+    // -------------/ admin -----------------//
+    cfg.service(scope("/admin")
+        // ----------------- /admin/db --------------//
+        .service(scope("/db")
+            .service(resource("/up").route(get().to(db_up)))
+            .service(resource("/down").route(get().to(db_down)))
+            // ------------/admin/db/{table} ---------//
+            .service(scope("/{table}")
+                .service(resource("").route(get().to(get_all_table)))
+                .service(resource("/down").route(get().to(table_down)))
+                .service(resource("/up").route(get().to(table_up))),
             ),
+    )
+    // ----------- /admin/server ------------------ //
+    .service(scope("/server")
+        .service(resource("").route(get().to(server_info)))
+        .service(resource("/up").route(post().to(server_up)))
+        .service(resource("/down").route(post().to(server_down))),
+    )
+    .service(scope("/user")
+        .service(scope("/{uid}")
+            .service(resource("")
+                .route(delete().to(delete_user_by_id))     
+                .route(post().to(|| HttpResponse::Ok().finish()))     
+            )
+        )
+    )
     );
 }
 

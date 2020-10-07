@@ -1,17 +1,11 @@
 use crate::{
-    handlers::{self, admin, auth, index, record, user},
-    middleware,
-    state::{self, State},
+    handlers, middleware, state::{self, State},
 };
-use actix_cors::Cors;
-use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_service::ServiceFactory;
 use actix_web::{
-    body, dev, get, http,
-    middleware::{DefaultHeaders, Logger},
-    web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder,
+    body, dev, get, 
+    web, App, Error, HttpRequest, HttpResponse, HttpServer, 
 };
-use divdb::db::Db;
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
@@ -22,6 +16,7 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
             .data(state::state())
             .wrap(middleware::logger())
             .wrap(middleware::identity_service())
+            .wrap(middleware::session())
             .configure(handlers::routes)
     });
     srv.listen(listener)?.run().await?;
