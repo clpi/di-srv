@@ -1,3 +1,19 @@
+// IO.DIV.IS - div.is backend API and server
+//
+// TODO: Start scaffolding a basic HTML web interface frontend to interact and implement
+//       frontend functionality for crud operations in the backend, as well as test
+//       experimental functionality (websockers, sse, etc.) and begin the incremental
+//       design process for a full featured frontend
+//
+// TODO: Start scaffolding flutter app (dimo) with basic functionality and communication
+//       with io.div.is backend, figure out ci/cd deployment pipeline infra
+//
+// TODO: Deploy to io.div.is and create ansible playbook to automate process (multi-stage
+//       docker build -> create binary w/o rust toolchain) to deploy to io.div.is, along
+//       side scaffolded frontend web interface
+//
+// TODO: Add route protection with authentication (actix-http-auth) as well as CORS
+
 use crate::{
     handlers, middleware, state::{self, State},
 };
@@ -38,10 +54,7 @@ pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::i
     sys.block_on(srv)
 }
 
-pub fn create_app(
-    state: &State,
-) -> App<
-    impl ServiceFactory<
+pub fn create_app(state: &State,) -> App<impl ServiceFactory<
         Config = (),
         Request = dev::ServiceRequest,
         Response = dev::ServiceResponse<body::Body>,

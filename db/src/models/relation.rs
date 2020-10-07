@@ -1,6 +1,6 @@
 use crate::models::{
     Group, User, Record, Item, Model,
-    link::{LinkType, Link},
+    link::{LinkType, Link, LinkedTo},
 };
 
 // TODO No separate "Link" and "Relation" tables -- unique trio of id1, id2, and relation
@@ -13,8 +13,22 @@ use crate::models::{
 // field which is nullable which contains a foreign key to a user-made relations table
 //
 // TODO All of this might be waaaay better implemented as a graph.......
+//
+//
+pub enum Relation<T: LinkedTo<U> + 'static, U: LinkedTo<T> +'static> {
+    HasA(T, U),
+}
 
-pub enum Relation {
+impl<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static> Relation<T, U> {
+
+    fn valid(m1: T, m2: U) -> Vec<Self> {
+        vec![
+            Relation::HasA(m1, m2)
+        ]
+    }
+}
+
+pub enum RelationType {
     HasA,
     Created,
 }
