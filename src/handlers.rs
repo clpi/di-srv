@@ -5,6 +5,8 @@ pub mod sse;
 pub mod stat;
 pub mod user;
 pub mod ws;
+pub mod item;
+pub mod group;
 
 use actix_files::Files;
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
@@ -15,10 +17,14 @@ use actix_web::{
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg.route("/", web::get().to(static_ind))
         .route("/index", web::get().to(index))
-        .service(test_service());
-    user::routes(cfg);
-    auth::routes(cfg);
-    record::routes(cfg);
+        .service(test_service())
+        .service(user::uid_routes())
+        .service(user::username_routes())
+        .service(auth::routes())
+        .service(record::base_routes())
+        .service(record::user_record_routes())
+        .service(item::base_routes())
+        .service(item::user_item_routes())
     admin::routes(cfg);
 }
 

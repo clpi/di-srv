@@ -3,14 +3,13 @@ use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
-    HttpRequest, HttpResponse,
+    HttpRequest, HttpResponse, Scope,
 };
 use com::auth::Auth;
 use divdb::models::user::*;
 
-pub fn routes(cfg: &mut ServiceConfig) {
-    cfg
-    .service(scope("/auth")
+pub fn routes() -> Scope {
+    scope("/auth")
         .service(resource("")
             .route(get().to(|| HttpResponse::Ok().body("GET /auth")))
             .route(get().to(|| HttpResponse::Ok().body("POST /auth")))
@@ -31,8 +30,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
         .service(resource("/refresh")
             .route(get().to(check_id))
             .route(post().to(refresh_login)),
-        ),
-    );
+        )
 }
 
 pub async fn signup(

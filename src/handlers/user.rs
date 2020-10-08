@@ -1,5 +1,5 @@
 use crate::{state::State, models::request::AuthRequest};
-use actix_web::{FromRequest,
+use actix_web::{FromRequest, Scope,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpResponse, HttpRequest
 };
@@ -9,10 +9,8 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize)]
 pub struct UserApi(User);
 
-//TODO implement query string route handlers for user ids
-
-pub fn routes(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/user")
+pub fn uid_routes() -> Scope {
+    scope("/user")
     // -------------- /user ------------------------- ///
         .service(resource("").route(get().to(get_all)))
         .service(scope("/{uid}")
@@ -27,10 +25,11 @@ pub fn routes(cfg: &mut ServiceConfig) {
                 .route(put().to(update_user_info))
             )
         )
-        // -------------- /user/{uid} --------------------///
-    )
+}
+
+pub fn username_routes() -> Scope {
     // -------------- /u ------------------------- ///
-    .service(scope("/u")
+    scope("/u")
         .service(resource("").route(get().to(|| HttpResponse::Ok().body("/u"))))
         // -------------- /u/{username} --------------------///
         .service(scope("/{username}")
@@ -57,19 +56,6 @@ pub fn routes(cfg: &mut ServiceConfig) {
                     .route(get().to(|| HttpResponse::Ok().body("")))
                 )
             )
-        ),
-    );
-}
-
-pub fn user_scope() -> actix_web::Scope {
-    scope("/{uid}")
-        .service(resource("")
-            .route(get().to(get_by_id))
-            .route(delete().to(delete_by_id))
-        )
-        .service(resource("/info")
-            .route(get().to(get_user_info))
-            .route(put().to(update_user_info))
         )
 }
 

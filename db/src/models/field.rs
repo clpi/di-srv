@@ -53,8 +53,8 @@ impl Field {
         Self {  field_type, ..self.to_owned() }
     }
 
-    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
-        let res = sqlx::query(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
+        let res: i32 = sqlx::query(
             "INSERT INTO Fields 
             (name, field_type, value, visibility, created_at) 
             VALUES ($1, $2, $3, $4, $5)")
@@ -63,9 +63,9 @@ impl Field {
             .bind(&self.value)
             .bind(&self.visibility)
             .bind(&self.created_at)
-            .fetch_one(&db.pool).await?;
-        self.id = res.get("id");
-        Ok(self.to_owned())
+            .fetch_one(&db.pool).await?
+            .get("id");
+        Ok( Self { id: Some(res), ..self })
     }
 
     pub async fn add_to_item(self, db: &Db, item: Item) -> sqlx::Result<i32> {

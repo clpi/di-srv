@@ -1,15 +1,25 @@
 use divdb::models::{Model, Record, User, Item};
 use crate::state::State;
-use actix_web::{
+use actix_web::{ Scope,
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse,
 };
+pub fn base_routes() -> Scope {
+    scope("/record")
+        .service(resource("")
+            .route(get().to(|| HttpResponse::Ok().body("")))
+        )
+        .service(scope("/{rid}")
+            .service(resource("")
+                .route(get().to(get_record_by_id))
+                .route(delete().to(delete_record_by_id))
+            )
+        )
+}
 
-pub fn routes(cfg: &mut ServiceConfig) {
-    cfg
-    // ------------ /user/{uid} -------- /// [ MAIN /src/handlers/record.rs ]
-    .service(scope("/user/{uid}")
+pub fn user_record_routes() -> Scope {
+    scope("/user/{uid}")
         // ------------ /user/{uid}/record/ -------- /// 
         .service(scope("/records")
             .service(resource("")
@@ -52,8 +62,8 @@ pub fn routes(cfg: &mut ServiceConfig) {
                 )
             )
         )
-    );
 }
+
 
 pub async fn get_user_records(
     data: web::Data<State>, uid: web::Path<i32>
@@ -163,3 +173,12 @@ pub async fn remove_item_from_record(path: web::Path<(i32, String)>, data: web::
 pub async fn get_record_item_by_id(path: web::Path<(i32, String)>, data: web::Data<State>) -> HttpResponse {
     HttpResponse::Ok().json("{}")
 }
+
+pub async fn get_record_by_id(path: web::Path<(i32, String)>, data: web::Data<State>) -> HttpResponse {
+    HttpResponse::Ok().json("{}")
+}
+
+pub async fn delete_record_by_id(path: web::Path<(i32, String)>, data: web::Data<State>) -> HttpResponse {
+    HttpResponse::Ok().json("{}")
+}
+

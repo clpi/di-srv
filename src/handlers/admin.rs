@@ -8,9 +8,9 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 
-pub fn routes(cfg: &mut ServiceConfig) {
+pub fn routes() -> actix_web::Scope {
     // -------------/ admin -----------------//
-    cfg.service(scope("/admin")
+    scope("/admin")
         // ----------------- /admin/db --------------//
         .service(scope("/db")
             .service(resource("/up").route(get().to(db_up)))
@@ -36,7 +36,6 @@ pub fn routes(cfg: &mut ServiceConfig) {
             )
         )
     )
-    );
 }
 
 pub async fn db_up(data: web::Data<State>) -> HttpResponse {

@@ -92,8 +92,8 @@ impl Record {
         Ok(res)
     }
 
-    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
-        let res = sqlx::query(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
+        let res: i32 = sqlx::query(
             "INSERT INTO Records (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -101,42 +101,35 @@ impl Record {
             .bind(&self.status)
             .bind(&self.visibility)
             .bind(&self.created_at)
-            .fetch_one(&db.pool).await?;
-        let id: i32 = res.get("id");
-        self.id = Some(id);
-        Link::new(self.id, Some(self.uid)).insert::<User, Record>(db).await?;
-        Ok(self)
+            .fetch_one(&db.pool).await?
+            .get("id");
+        Ok( Self { id: Some(res), ..self })
     }
 
     // implemented in linkedto trait -- remove?
-    pub async fn get_linked_users(self, db: &Db) -> sqlx::Result<Vec<User>> {
+    pub async fn get_linked_users(db: &Db, rid: i32) -> sqlx::Result<Vec<User>> {
         let res = sqlx::query_as::<Postgres, User>
             ("SELECT u.id, u.username, u.email, u.created_at
               FROM Users u INNER JOIN UserRecordLinks ur ON u.id = ur.uid
                    INNER JOIN Records r on ur.rid = r.id
                    AND r.id = $1")
-            .bind(&self.id.expect("No Record ID set"))
+            .bind(rid)
             .fetch_all(&db.pool)
             .await?;
         Ok(res)
     }
 
-    // Create new item, insert it into DB, and insert RecItemLink into DB
-    // for *ALREADY* in-DB Record
     pub async fn add_new_item<T: Into<String>>
         (db: &Db, rid: i32, item_name: T) -> sqlx::Result<Item> 
     {
         let item = Item::new(rid, item_name.into()).insert(db).await?;
-        Link::new(Some(rid), item.id).insert::<Record, Item>(&db).await?;
+        let link = Link::new(Some(rid), item.id).insert::<Record, Item>(db).await?;
         Ok(item)
     }
 
-    // Create new item, insert it into DB, and and insert RecItemLink into DB
-    // for Record already in database
-    pub async fn add_existing_item(db: &Db, rid: i32, item: Item)
-        -> sqlx::Result<i32> 
+    pub async fn add_existing_item(db: &Db, rid: i32, iid: i32) -> sqlx::Result<i32> 
     {
-        let link = Link::new(Some(rid), item.id).insert::<Record, Item>(&db).await?;
+        let link = Link::new(Some(rid), Some(iid)).insert::<Record, Item>(db).await?;
         Ok(link)
     }
 
@@ -145,17 +138,15 @@ impl Record {
             "DELETE FROM Records WHERE id=$1 RETURNING id")
             .bind(id)
             .fetch_one(&db.pool).await?;
-        let id = res.get("id");
-        Ok(id)
+        Ok( res.get("id") )
     }
 
-    pub async fn update_by_id(self, db: &Db, id: i32) -> sqlx::Result<i32> {
+    pub async fn update_by_id(db: &Db, id: i32, record: Record) -> sqlx::Result<i32> {
         let res = sqlx::query(
             "DELETE FROM Records WHERE id=$1 RETURNING id")
             .bind(id)
             .fetch_one(&db.pool).await?;
-        let id = res.get("id");
-        Ok(id)
+        Ok( res.get("id") )
     }
 }
 

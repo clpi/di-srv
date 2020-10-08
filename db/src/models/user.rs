@@ -137,40 +137,31 @@ impl User {
         Ok(res)
     }
 
-    // Insert Record with given name into DB for user
     pub async fn add_new_record(
-        self, db: &Db, rec_name: String,
-    ) -> sqlx::Result<Record> {
-        let rec: Record = Record::new(self.id.expect("User ID not set"), rec_name);
-        let res = rec.insert(db).await?;
-        let link = Link::new(self.id, res.id).insert::<User, Record>(db).await?;
+        db: &Db, uid: i32, rec_name: String,
+    ) -> sqlx::Result<i32> {
+        let rec: i32 = Record::new(uid, rec_name).insert(db).await?;
+        Link::new(Some(uid), Some(rec)).insert::<User, Record>(db).await?;
+        Ok(rec)
+    }
+
+    pub async fn add_existing_record(db: &Db, uid: i32, rid: i32) 
+        -> sqlx::Result<i32> {
+        let res = Link::new(Some(uid), Some(rid)).insert::<User, Record>(db).await?;
         Ok(res)
     }
 
-    pub async fn add_existing_record(self, db: &Db, rec: Record) 
-        -> sqlx::Result<Record> {
-        let res = rec.insert(db).await?;
-        Ok(res)
-    }
-
-    // Insert item (unassociated with Record) into DB with given name for user
     pub async fn add_new_item(
-        self, db: &Db, item_name: String,
-    ) -> sqlx::Result<Item> {
-        let item = Item::new(self.id.expect("User ID not set"), item_name,)
-            .insert(db)
-            .await?;
-        let link = Link::new(self.id, item.id)
-            .insert::<User, Item>(db).await?;
-        Ok(item)
+        db: &Db, uid: i32, item_name: String,
+    ) -> sqlx::Result<i32> {
+        let iid = Item::new(uid, item_name).insert(db).await?;
+        let link = Link::new(Some(uid), Some(iid)).insert::<User, Item>(db).await?;
+        Ok(iid)
     }
 
-    // Insert item (unassociated with Record) into DB with given name for user
-    pub async fn add_existing_item(
-        self, db: &Db, item: Item,
-    ) -> sqlx::Result<Item> {
-        let item = item.insert(db).await?;
-        Ok(item)
+    pub async fn add_existing_item(db: &Db, uid: i32, iid: i32) -> sqlx::Result<i32> {
+        let link = Link::new(Some(uid), Some(iid)).insert::<User, Item>(db).await?;
+        Ok(link)
     }
 }
 

@@ -24,11 +24,24 @@ pub struct Item {
 
 impl Item {
 
-    pub fn new(uid: i32, name: String) -> Self {
-        Self { uid, name, ..Self::default() }
+    pub fn new<T: Into<i32>, U: Into<String>>(uid: T, name: U) -> Self {
+        Self { uid: uid.into(), name: name.into(), ..Self::default() }
     } 
 
-    pub fn private(&mut self, visibility: Visibility) -> Self {
+    pub fn create<T, U, V, W>
+        (uid: T, name: U, status: V, visibility: W) -> Self    
+        where T: Into<i32>, U: Into<String>, 
+              V: Into<Status>, W: Into<Visibility> {
+        Self { 
+            name: name.into(),
+            uid: uid.into(),
+            status: status.into(),
+            visibility: visibility.into(),
+            ..Self::default()
+        }
+    }
+
+    pub fn with_visibility(&mut self, visibility: Visibility) -> Self {
         Self { visibility, ..self.to_owned() }
     }
 
@@ -36,8 +49,8 @@ impl Item {
         Self { status, ..self.to_owned() }
     }
 
-    pub async fn insert(mut self, db: &Db) -> sqlx::Result<Self> {
-        let res = sqlx::query(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
+        let res: i32 = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -45,35 +58,27 @@ impl Item {
             .bind(&self.status)
             .bind(&self.visibility)
             .bind(&self.created_at)
-            .fetch_one(&db.pool).await?;
-        self.id = res.get("id");
-        Ok(self)
+            .fetch_one(&db.pool).await?
+            .get("id");
+        Ok( Self { id: Some(res), ..self })
     }
 
     pub async fn add_new_field(
-        self, db: &Db, field_name: String, field_type: FieldType
+        db: &Db, iid: i32, field_name: String, field_type: FieldType
     ) -> sqlx::Result<i32> 
     {
-        let res = match self.id {
-            Some(id) => self.clone(),
-            None => self.insert(db).await?,
-        };
-        let field = Field::new(res.uid, field_name)
-            .insert(db).await?;
-        let link = Link::new(res.id, field.id).insert::<Item, Field>(db).await?;
+        let field = Field::new(field_name, field_type).insert(db).await?;
+        let link = Link::new(Some(iid), field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
-    pub async fn add_existing_field(self, db: &Db, field: Field) -> sqlx::Result<i32> {
-        let field = match field.id { //Checks if field has ID retrieved from DB
-            Some(id) => field.clone(),
-            None => field.insert(db).await?,
-        };
-        let link = Link::new(self.id, field.id).insert::<Item, Field>(db).await?;
+    pub async fn add_existing_field(db: &Db, iid: i32, field: Field) -> sqlx::Result<i32> {
+        let link = Link::new(Some(iid), field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
     pub async fn add_to_record(self, db: &Db, rid: i32) -> sqlx::Result<u32> {
+        Link::new(self.id, Some(rid)).insert::<Record, Item>(db).await?;
         Ok(0)
     }
 
