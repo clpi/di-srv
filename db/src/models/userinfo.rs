@@ -65,6 +65,14 @@ impl UserInfo {
         self.to_owned()  
     }
 
+    pub async fn get_all(db: &Db) -> sqlx::Result<Vec<Self>> {
+        let res: Vec<UserInfo> = sqlx::query_as::<Postgres, UserInfo>
+            ("SELECT * FROM UserInfo") 
+            .fetch_all(&db.pool)
+            .await?;
+        Ok(res)
+    }
+
     pub async fn insert_empty(db: &Db, uid: i32) -> sqlx::Result<i32> {
         let res = sqlx::query("INSERT INTO UserInfo (
             uid, first_name, mid_initial, last_name, phone_number,

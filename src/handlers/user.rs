@@ -1,4 +1,5 @@
 use crate::{state::State, models::request::AuthRequest};
+use actix_identity::Identity;
 use actix_web::{FromRequest, Scope,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpResponse, HttpRequest
@@ -61,7 +62,13 @@ pub fn username_routes() -> Scope {
 
 //TODO programmatically handle requests by matching operation to user model function
 
-pub async fn get_all(data: web::Data<State>) -> HttpResponse {
+pub async fn get_all(
+    id: Identity,
+    data: web::Data<State>,
+    query: web::Query<(String, String)>,) -> HttpResponse 
+{
+    let (q1, q2) = query.into_inner();
+    println!("GET ALL: Q: {:?}, {:?} FROM {:?}", q1, q2, id.identity());
     match User::get_all(&data.db).await {
         Ok(users) => HttpResponse::Ok()
             .content_type("application/json")
@@ -82,7 +89,7 @@ pub async fn get_by_id(data: web::Data<State>, id: web::Path<i32>) -> HttpRespon
     }
 }
 
-pub async fn delete_user_by_id(
+pub async fn update_by_id(
     path: web::Path<i32>, req: HttpRequest, data: web::Data<State>
         ) -> HttpResponse 
 {
@@ -119,9 +126,11 @@ pub async fn get_by_username(
 }
 
 pub async fn delete_by_username(
+    id: Identity,
     data: web::Data<State>,
     username: web::Path<String>,
 ) -> HttpResponse {
+    println!("DELETE USER BY USERNAME: From {:?}", id.identity());
     match User::delete_by_username(&data.db, username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")
@@ -131,9 +140,11 @@ pub async fn delete_by_username(
 }
 
 pub async fn update_by_username(
+    id: Identity,
     data: web::Data<State>, 
     username: web::Path<String>
 ) -> HttpResponse {
+    println!("UPDATE USER BY USERNAME: From {:?}", id.identity());
     match User::delete_by_username(&data.db, username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")

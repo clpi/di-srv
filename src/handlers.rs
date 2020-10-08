@@ -25,7 +25,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
         .service(record::user_record_routes())
         .service(item::base_routes())
         .service(item::user_item_routes())
-    admin::routes(cfg);
+        .service(admin::routes());
 }
 
 pub fn test_service() ->  actix_web::Resource {

@@ -4,7 +4,7 @@ pub mod record;
 pub mod item;
 pub mod field;
 
-use super::{Model, Status, Visibility};
+use super::{Model, Status, Visibility, relation::Relation,};
 use crate::Db;
 use sqlx::{prelude::*, postgres::*, types::chrono::{DateTime, Utc}};
 use serde::{Serialize, Deserialize};
@@ -22,6 +22,7 @@ pub enum LinkType {
     RecordItem,
     ItemItem,
     ItemField,
+    FieldField,
 }
 
 
@@ -120,14 +121,14 @@ impl Link {
         let table: String = LinkType::from((T::table(), U::table())).into();
         let (fid1, fid2) = Self::check_foreign_id::<T, U>();
         let res: i32 = sqlx::query
-            ("INSERT INTO $1 ($2, $3, status, created_at)
-            VALUES ($4, $4, $6) RETURNING id")
+            ("INSERT INTO $1 ($2, $3, relation, status, created_at)
+            VALUES ($4, $5, $6, $7) RETURNING id")
             .bind(table)
             .bind(fid1)
             .bind(fid2)
             .bind(self.0)
             .bind(self.1)
-            .bind("HasA".to_string()) //implement
+            .bind(Relation::default_for::<T, U>()) //implement
             .bind(Status::default())
             .bind(Utc::now())
             .fetch_one(&db.pool).await?

@@ -88,6 +88,10 @@ pub async fn table_down(path: web::Path<String>) -> HttpResponse {
     HttpResponse::Ok().body("")
 }
 
+pub async fn delete_user_by_id(path: web::Path<String>) -> HttpResponse {
+    HttpResponse::Ok().body("")
+}
+
 pub async fn run_cmd(cmd: web::Json<Cmd>) -> HttpResponse {
     use std::process::Command;
     let proc = Command::new("sh")

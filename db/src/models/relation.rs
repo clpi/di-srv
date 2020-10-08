@@ -1,44 +1,71 @@
+//TODO programmatically do this stuff with efficient code re-use. this way of implementing
+//     relationships probably looks so stupid to the outside, but i guess it's more important
+//     to get it working first and then optimize later!
+
+use sqlx::{Type, Postgres, types::chrono::{DateTime, Utc}};
+use serde::{Serialize, Deserialize};
 use crate::models::{
-    Group, User, Record, Item, Model,
+    Group, User, Record, Item, Model, Status,
     link::{LinkType, Link, LinkedTo},
 };
 
-// TODO No separate "Link" and "Relation" tables -- unique trio of id1, id2, and relation
-// Relationships are enumerated and stored as strings, not as a separate table for each
-// linkage. Some will be very few: UserUser -> (Friend, Blocked, Muted)
-//
-// Relations are then vectors: Say a record holds the relationships with a item:
-// TODO A specific user-made relation should be separated from an enumerated
-// relation necessary for backend functioning -- could be specified with a separate
-// field which is nullable which contains a foreign key to a user-made relations table
-//
-// TODO All of this might be waaaay better implemented as a graph.......
-//
-//
-pub enum Relation<T: LinkedTo<U> + 'static, U: LinkedTo<T> +'static> {
-    HasA(T, U),
+#[serde(rename_all="camelCase")]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone, PartialEq)]
+pub struct CustomRelation {
+    pub id: Option<i32>,
+    pub uid: i32,
+    pub name: String,
+    pub value: Option<Vec<u8>>,
+    pub status: Status,
+    pub created_at: DateTime<Utc>,
 }
 
-impl<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static> Relation<T, U> {
 
-    fn valid(m1: T, m2: U) -> Vec<Self> {
-        vec![
-            Relation::HasA(m1, m2)
-        ]
+// TODO have different types / implementations per linkage
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum Relation {
+    HasA,
+    CreatedBy,   
+    HasMember,
+    AssociatedWith,
+    HasMutual,
+}
+
+impl Relation {
+
+    fn valid<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>() -> Vec<impl Relationship> {
+        vec![Relation::HasA,] //TODO implement
+    }
+
+    pub fn default_for<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>() -> impl Relationship {
+        match LinkType::from((T::table(), U::table())) {
+            LinkType::GroupGroup => Relation::HasA,
+            LinkType::GroupUser => Relation::HasMember,
+            LinkType::GroupRecord => Relation::AssociatedWith,
+            LinkType::UserUser => Relation::HasMutual,
+            LinkType::UserRecord => Relation::HasA,
+            LinkType::UserItem => Relation::HasA,
+            LinkType::ItemItem => Relation::HasA,
+            LinkType::ItemField => Relation::HasA,
+            LinkType::FieldField => Relation::HasA,
+            _ => Relation::HasA,
+        }
     }
 }
 
-pub enum RelationType {
-    HasA,
-    Created,
-}
+pub trait Relationship : sqlx::Type<Postgres> + sqlx::Encode<'static, Postgres> {}
 
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
 pub enum GroupUserRelation {
-    MemberOf,
-    AdminOf,
-    ModeratorOf,
+    HasMember,
+    HasAdmin,
+    HasModerator,
 }
 
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
 pub enum GroupGroupRelation {
     Partnered,
     Associated,
@@ -46,6 +73,14 @@ pub enum GroupGroupRelation {
     None,
 }
 
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum GroupRecordRelation {
+    HasA,
+}
+
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
 pub enum UserUserRelation {
     Mutual,
     Following,
@@ -54,25 +89,42 @@ pub enum UserUserRelation {
     None,
 }
 
-pub enum GroupRelation {
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum UserRecordRelation {
     Group,
     User,
     Record
 }
 
-pub enum UserUserRelations {
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum UserItemRelation {
     Friend,
     Blocked,
     Muted,
 }
 
-pub enum GroupUserRelations {
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum RecordRecordRelation {
     Admin,
     Member,
     Moderator,
 }
 
-pub enum UserRecordRelations {
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum RecordItemRelation {
+    Admin,
+    Member,
+    Moderator,
+    CreatedBy,
+}
+
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum ItemItemRelation {
     Admin,
     Member,
     Moderator,
@@ -80,3 +132,33 @@ pub enum UserRecordRelations {
 }
 
 
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum ItemFieldRelation {
+    Admin,
+    Member,
+    Moderator,
+    CreatedBy,
+}
+
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
+#[sqlx(rename_all="snake_case")]
+pub enum FieldFieldRelation {
+    Admin,
+    Member,
+    Moderator,
+    CreatedBy,
+}
+
+impl Relationship for Relation {}
+impl Relationship for GroupGroupRelation {}
+impl Relationship for GroupUserRelation {}
+impl Relationship for GroupRecordRelation {}
+impl Relationship for UserUserRelation {}
+impl Relationship for UserRecordRelation {}
+impl Relationship for UserItemRelation {}
+impl Relationship for RecordRecordRelation {}
+impl Relationship for RecordItemRelation {}
+impl Relationship for ItemItemRelation {}
+impl Relationship for ItemFieldRelation {}
+impl Relationship for FieldFieldRelation {}

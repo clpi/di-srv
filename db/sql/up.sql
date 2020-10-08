@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS Fields (
     uid INTEGER NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     field_type TEXT NOT NULL,
-    value BYTEA,
     visibility TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (uid, name)
@@ -89,6 +88,7 @@ CREATE TABLE IF NOT EXISTS FieldEntries (
     id SERIAL PRIMARY KEY NOT NULL,
     fid INTEGER NOT NULL REFERENCES Fields(id),
     ieid INTEGER NOT NULL REFERENCES ItemEntries(id),
+    value BYTEA,
     content BYTEA
 );
 
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS GroupGroupLinks (
     gid2 INTEGER NOT NULL REFERENCES Groups(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (gid1, gid2, relation)
 );
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS GroupUserLinks (
     uid INTEGER NOT NULL REFERENCES Users(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (gid, uid, relation)
 );
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS GroupRecordLinks (
     rid INTEGER NOT NULL REFERENCES Records(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (gid, rid, relation)
 );
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS UserUserLinks (
     uid2 INTEGER NOT NULL REFERENCES Users(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (uid1, uid2, relation)
 );
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS UserRecordLinks (
     rid INTEGER NOT NULL REFERENCES Records(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (uid, rid, relation)
 );
@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS UserItemLinks (
     iid INTEGER NOT NULL REFERENCES Items(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (uid, iid, relation)
 );
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS UserRuleLinks (
     rule_id INTEGER NOT NULL REFERENCES Rules(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (uid, rule_id, relation)
 );
@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS RecordRecordLinks (
     rid2 INTEGER NOT NULL REFERENCES Records(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (rid1, rid2, relation)
 );
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS RecordItemLinks (
     iid INTEGER NOT NULL REFERENCES Items(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (rid, iid, relation)
 );
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS ItemFieldLinks(
     fid INTEGER NOT NULL REFERENCES Fields(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'mutual_of',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (iid, fid, relation)
 );
@@ -244,7 +244,30 @@ CREATE TABLE IF NOT EXISTS ItemItemLinks (
     iid2 INTEGER NOT NULL REFERENCES Items(id),
     status VARCHAR(40) NOT NULL DEFAULT 'active',
     relation VARCHAR(40) NOT NULL DEFAULT 'has_a',
-    custom BOOLEAN DEFAULT false,
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (iid1, iid2, relation)
 );
+
+CREATE TABLE IF NOT EXISTS FieldFieldLink (
+    id SERIAL PRIMARY KEY NOT NULL,
+    fid1 INTEGER NOT NULL REFERENCES Fields(id),
+    fid2 INTEGER NOT NULL REFERENCES Fields(id),
+    status VARCHAR(40) NOT NULL DEFAULT 'active',
+    relation VARCHAR(40) NOT NULL DEFAULT 'has_a',
+    crid INTEGER DEFAULT NULL REFERENCES CustomRelations(id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (iid1, iid2, relation)
+);
+
+CREATE TABLE IF NOT EXISTS CustomRelations (
+    id SERIAL PRIMARY KEY NOT NULL,
+    uid INTEGER NOT NULL REFERENCES Users(id),
+    name VARCHAR(40) NOT NULL,
+    value BYTEA,
+    status VARCHAR(40) NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+)
+-- relation rule link
+-- rule action link

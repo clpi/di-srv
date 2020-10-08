@@ -20,7 +20,6 @@ pub struct Field {
     pub name: String,
     #[serde(default="FieldType::default")]
     pub field_type: FieldType,
-    pub value: Vec<u8>,
     #[serde(default="Visibility::default")]
     pub visibility: Visibility,
     #[serde(default="Utc::now")]
@@ -34,15 +33,23 @@ impl Field {
         Field { uid:  uid.into(), name: name.into(), ..Self::default() }
     }
 
-    pub fn new<T, U> (uid: T, name: U) 
-        -> Field where T: Into<i32>, U: Into<String>
+    pub fn new<T, U> (uid: T, name: U, field_type: Option<FieldType>) 
+        -> Field where T: Into<i32>, U: Into<String>,
     {
         Field { 
             uid:  uid.into(), 
             name: name.into(), 
-            field_type: FieldType::Text,
+            field_type: field_type.unwrap_or_default(),
             visibility: Visibility::Private,
             ..Self::default() }
+    }
+
+    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+        let res: Option<Self> = sqlx::query_as::<Postgres, Self>(
+            "SELECT * FROM Fields WHERE id=$1")
+            .bind(id)
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
     }
 
     pub fn with_visibility<T: Into<Visibility>>(&mut self, visibility: T) -> Self {
@@ -56,11 +63,11 @@ impl Field {
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
         let res: i32 = sqlx::query(
             "INSERT INTO Fields 
-            (name, field_type, value, visibility, created_at) 
+            (uid, name, field_type, visibility, created_at) 
             VALUES ($1, $2, $3, $4, $5)")
             .bind(&self.name)
+            .bind(&self.uid)
             .bind(&self.field_type)
-            .bind(&self.value)
             .bind(&self.visibility)
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
@@ -68,12 +75,8 @@ impl Field {
         Ok( Self { id: Some(res), ..self })
     }
 
-    pub async fn add_to_item(self, db: &Db, item: Item) -> sqlx::Result<i32> {
-        let field = match self.id {
-            Some(id) => self.clone(),
-            None => self.insert(db).await?,
-        };
-        let link = Link::new(item.id, field.id).insert::<Item, Field>(db).await?;
+    pub async fn add_to_item(db: &Db, fid: i32, iid: i32) -> sqlx::Result<i32> {
+        let link = Link::new(Some(iid), Some(fid)).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
@@ -95,7 +98,6 @@ impl Default for Field {
             uid: -1,
             name: String::new(),
             field_type: FieldType::default(),
-            value: Vec::new(),
             visibility: Visibility::Private,
             created_at: Utc::now(),
         }
@@ -122,8 +124,8 @@ pub enum FieldType {
 }
 
 ///TODO implement
-impl From<Vec<u8>> for FieldType {
-    fn from(blob: Vec<u8>) -> Self {
+impl From<String> for FieldType {
+    fn from(ftype: String) -> Self {
         Self::default()
     }
 }
@@ -251,4 +253,5 @@ impl Model for Field {
 
 impl LinkedTo<Item> for Field {}
 impl LinkedTo<Field> for Field {}
+
 

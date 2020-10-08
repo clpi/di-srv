@@ -83,12 +83,40 @@ impl Record {
         Ok ( Self { status: stat, ..self } )
     }
 
-    // implemented in model trait -- remove?
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Vec<Self>> {
+    pub async fn get_all(db: &Db) -> sqlx::Result<Vec<Self>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
+            "SELECT * FROM Records")
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn get_all_by_user(db: &Db, uid: i32) -> sqlx::Result<Vec<Self>> {
+        let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
+            "SELECT * FROM Records r WHERE r.uid=$1")
+            .bind(uid)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
+
+    // implemented in model trait -- remove?
+    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+        let res: Option<Record> = sqlx::query_as::<Postgres, Record>(
             "SELECT * FROM Records WHERE id=$1")
             .bind(id)
-            .fetch_all(&db.pool).await?;
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn get_by_username_and_name(db: &Db, username: String, name: String) 
+        -> sqlx::Result<Option<Self>>
+    {
+        let res: Option<Self> = sqlx::query_as::<Postgres, Record>(
+            "SELECT r.id, r.name, r.uid, r.status, r.visibility, r.created_at, 
+             FROM Records r, Users u
+             WHERE r.name = $1 AND r.uid = u.id AND u.username = $1")
+            .bind(name)
+            .bind(username)
+            .fetch_optional(&db.pool).await?;
         Ok(res)
     }
 

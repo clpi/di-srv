@@ -64,11 +64,12 @@ impl Item {
     }
 
     pub async fn add_new_field(
-        db: &Db, iid: i32, field_name: String, field_type: FieldType
+        self, db: &Db, field_name: String, field_type: Option<FieldType>,
     ) -> sqlx::Result<i32> 
     {
-        let field = Field::new(field_name, field_type).insert(db).await?;
-        let link = Link::new(Some(iid), field.id).insert::<Item, Field>(db).await?;
+        let field = Field::new(self.id.expect("No ID set"), field_name, field_type)
+            .insert(db).await?;
+        let link = Link::new(self.id, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 

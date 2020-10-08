@@ -47,17 +47,46 @@ pub fn user_item_routes() -> Scope {
     )
 }
 
-pub async fn get_user_items(id: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match User::get_all_items(&data.db, *id).await {
+pub async fn get_user_items(
+    id: Identity,
+    uid: web::Path<i32>, 
+    data: web::Data<State>) -> HttpResponse 
+{
+    println!("GET USER ITEMS: From {:?}", id.identity());
+    match User::get_all_items(&data.db, *uid).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
 
 }
 
-pub async fn add_new_item_to_user(id: web::Path<(i32, String)>, data: web::Data<State>) -> HttpResponse {
-    match User::add_new_item(&data.db, id.0, id.1).await {
-        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
+pub async fn add_item_to_user(
+    id: Identity,
+    uid: web::Path<i32>, 
+    data: web::Data<State>,
+    item: web::Json<Item>) -> HttpResponse 
+{
+    println!("ADD ITEM: From {:?}", id.identity());
+    match User::add_existing_item(&data.db, *uid, item.into_inner()).await {
+        Ok(item) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(&item), //PgRow -> JSon?
+        Err(_) => HttpResponse::NotFound().json("{}")
+    }
+
+}
+
+pub async fn add_new_item_to_user(
+    id: Identity,
+    path: web::Path<(i32, String)>, 
+    data: web::Data<State>
+) -> HttpResponse {
+    println!("ADD NEW ITEM: From {:?}", id.identity());
+    let (id, name) = path.into_inner();
+    match User::add_new_item(&data.db, id, name).await {
+        Ok(item) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(&item), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
 

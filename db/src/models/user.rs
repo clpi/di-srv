@@ -39,20 +39,21 @@ impl User {
         }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<i32> {
+    pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
         let mut conn = db.pool.acquire().await?;
         let res: i32 = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
               VALUES ($1, $2, $3, $4) RETURNING id") 
-            .bind(self.email)
-            .bind(self.username)
-            .bind(self.password)
+            .bind(&self.email)
+            .bind(&self.username)
+            .bind(&self.password)
             .bind(&self.created_at)
             .fetch_one(&mut conn).await?
             .get("id");
         conn.release();
-        Ok(res as i32)
+        UserInfo::from(self.clone()).insert(db).await?;
+        Ok( Self { id: Some(res), ..self } )
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {
@@ -137,31 +138,35 @@ impl User {
         Ok(res)
     }
 
-    pub async fn add_new_record(
-        db: &Db, uid: i32, rec_name: String,
-    ) -> sqlx::Result<i32> {
-        let rec: i32 = Record::new(uid, rec_name).insert(db).await?;
-        Link::new(Some(uid), Some(rec)).insert::<User, Record>(db).await?;
+    pub async fn add_new_record(db: &Db, uid: i32, rec_name: String,
+        ) -> sqlx::Result<Record> 
+    {
+        let rec: Record = Record::new(uid, rec_name).insert(db).await?;
+        Link::new(Some(uid), rec.id).insert::<User, Record>(db).await?;
         Ok(rec)
     }
 
-    pub async fn add_existing_record(db: &Db, uid: i32, rid: i32) 
-        -> sqlx::Result<i32> {
-        let res = Link::new(Some(uid), Some(rid)).insert::<User, Record>(db).await?;
-        Ok(res)
+    pub async fn add_existing_record(db: &Db, uid: i32, record: Record) 
+        -> sqlx::Result<Option<Record>> {
+        if uid == record.id.unwrap() { return Ok(None); }
+        let res = Link::new(Some(uid), record.id).insert::<User, Record>(db).await?;
+        Ok(Some(record))
     }
 
     pub async fn add_new_item(
         db: &Db, uid: i32, item_name: String,
-    ) -> sqlx::Result<i32> {
-        let iid = Item::new(uid, item_name).insert(db).await?;
-        let link = Link::new(Some(uid), Some(iid)).insert::<User, Item>(db).await?;
-        Ok(iid)
+    ) -> sqlx::Result<Item> {
+        let item = Item::new(uid, item_name).insert(db).await?;
+        Link::new(Some(uid), item.id).insert::<User, Item>(db).await?;
+        Ok(item)
     }
 
-    pub async fn add_existing_item(db: &Db, uid: i32, iid: i32) -> sqlx::Result<i32> {
-        let link = Link::new(Some(uid), Some(iid)).insert::<User, Item>(db).await?;
-        Ok(link)
+    pub async fn add_existing_item(db: &Db, uid: i32, item: Item) 
+        -> sqlx::Result<Option<Item>> 
+    {
+        if uid == item.id.unwrap() { return Ok(None); }
+        let link = Link::new(Some(uid), item.id).insert::<User, Item>(db).await?;
+        Ok(Some(item))
     }
 }
 
