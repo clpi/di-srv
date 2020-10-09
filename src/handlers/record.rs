@@ -1,5 +1,6 @@
 use divdb::models::{Model, Record, User, Item};
 use crate::state::State;
+use actix_identity::Identity;
 use actix_web::{ Scope,
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
@@ -25,6 +26,10 @@ pub fn user_record_routes() -> Scope {
             .service(resource("")
                 .route(get().to(get_user_records))
                 .route(post().to(create_user_record))
+            )
+            .service(resource("/{name}")
+                .route(get().to(get_user_record_by_name))
+                .route(post().to(add_user_record_by_name))
             )
         )
         // ------------ /user/{uid}/{rid} -------- /// 
@@ -82,14 +87,15 @@ pub async fn get_by_id(id: web::Path<i32>, data: web::Data<State>) -> HttpRespon
         Ok(rec) => HttpResponse::Ok().json(&rec), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
-
 }
 
 pub async fn create_user_record(
-    path: web::Path<(i32, String)>, data: web::Data<State>
-) -> HttpResponse {
-    let (uid, rec_name): (&i32, &String) = (&path.clone().0, &path.into_inner().1);
-    match Record::new(uid.to_owned(), rec_name.to_string()).insert(&data.db).await {
+    id: Identity,
+    path: web::Path<i32>, 
+    data: web::Data<State>,
+    record: web::Json<Record>,) -> HttpResponse  //Should be RecordIn
+{
+    match record.into_inner().insert(&data.db).await {
         Ok(rec) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&rec), //PgRow -> JSon?
@@ -150,6 +156,36 @@ pub async fn get_records_with_relation(path: web::Path<i32>, data: web::Data<Sta
         Err(_) => HttpResponse::NotFound().json("{}")
     }
 
+}
+
+pub async fn get_user_record_by_name(
+    id: Identity,
+    path: web::Path<(i32, String)>, 
+    data: web::Data<State>) -> HttpResponse 
+{
+    let (uid, rec_name) = path.into_inner();
+    match User::get_named_record(&data.db, uid, rec_name).await {
+        Ok(rec) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(&rec),
+        Err(_) => HttpResponse::NotFound()
+            .json("{}")
+    }
+}
+
+pub async fn add_user_record_by_name(
+    id: Identity,
+    path: web::Path<(i32, String)>, 
+    data: web::Data<State>) -> HttpResponse 
+{
+    let (uid, rec_name) = path.into_inner();
+    match User::add_new_record(&data.db, uid, rec_name).await {
+        Ok(rec) => HttpResponse::Created()
+            .content_type("application/json")
+            .json(&rec),
+        Err(_) => HttpResponse::InternalServerError()
+            .body("")
+    }
 }
 
 pub async fn add_record_with_relation(path: web::Path<i32>, data: web::Data<State>) -> HttpResponse {

@@ -15,7 +15,9 @@ pub fn base_routes() -> Scope {
             .route(get().to(|| HttpResponse::Ok().body("")))
         )
         .service(resource("{iid}")
-            .route(get().to(|| HttpResponse::Ok().body("")))
+            .route(get().to(get_by_id))
+            .route(put().to(update_by_id))
+            .route(delete().to(delete_by_id))
         )
 }
 
@@ -28,11 +30,11 @@ pub fn user_item_routes() -> Scope {
             .route(put().to(add_item_to_user))
         )
         // ------------ /user/{uid}/item/{iid} -------- ///
-        .service(scope("/{iid}")
+        .service(scope("/{name}")
             .service(resource("")
-                .route(get().to(|| HttpResponse::Ok().body("")))
-                .route(put().to(|| HttpResponse::Ok().body("")))
-                .route(delete().to(|| HttpResponse::Ok().body("")))
+                .route(get().to(get_user_item))
+                .route(put().to(add_new_item_to_user))
+                .route(delete().to(delete_user_item))
             )
             // ------------ /user/{uid}/item/{iid}/feed -------- ///
             .service(resource("/feed")
@@ -45,6 +47,66 @@ pub fn user_item_routes() -> Scope {
             )
         )
     )
+}
+
+pub async fn get_by_id(id: Identity, iid: web::Path<i32>, data: web::Data<State>
+    ) -> HttpResponse 
+{
+    match Item::get_by_id(&data.db, *iid).await {
+        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
+        Err(_) => HttpResponse::NotFound().json("{}")
+    }
+
+}
+
+pub async fn delete_by_id(id: Identity, iid: web::Path<i32>, data: web::Data<State>
+    ) -> HttpResponse 
+{
+    match Item::delete_by_id(&data.db, *iid).await {
+        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
+        Err(_) => HttpResponse::NotFound().json("{}")
+    }
+
+}
+
+pub async fn update_by_id(
+    id: Identity, 
+    iid: web::Path<i32>, 
+    data: web::Data<State>,
+    item: web::Json<Item>,
+    ) -> HttpResponse 
+{
+    match Item::update_by_id(&data.db, *iid, item.into_inner()).await {
+        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
+        Err(_) => HttpResponse::NotFound().json("{}")
+    }
+
+}
+
+pub async fn get_user_item(
+    id: Identity,
+    path: web::Path<(i32, String)>, 
+    data: web::Data<State>) -> HttpResponse 
+{
+    let (uid, item_name) = path.into_inner();
+    match User::get_item_by_name(&data.db, uid, item_name).await {
+        Ok(Some(item)) => HttpResponse::Ok().json(&item),
+        _ => HttpResponse::NotFound().json("{}")
+    }
+
+}
+
+pub async fn delete_user_item(
+    id: Identity,
+    path: web::Path<(i32, String)>, 
+    data: web::Data<State>) -> HttpResponse 
+{
+    let (uid, item_name) = path.into_inner();
+    match User::delete_item_by_name(&data.db, uid, item_name).await {
+        Ok(iid) => HttpResponse::Ok().json(&iid),
+        _ => HttpResponse::NotFound().json("{}")
+    }
+
 }
 
 pub async fn get_user_items(

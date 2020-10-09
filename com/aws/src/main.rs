@@ -1,6 +1,11 @@
 use rusoto_core::Region;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
 
+#[async_std::main]
+pub async fn main() {
+    connect_dynamodb().await;
+}
+
 pub async fn connect_dynamodb() {
     let client = DynamoDbClient::new(Region::UsWest2);
     let list_tables: ListTablesInput = Default::default();

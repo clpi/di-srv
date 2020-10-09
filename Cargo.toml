@@ -32,13 +32,12 @@ actix-files = "*"
 actix-identity = "*"
 actix-session="*"
 actix-web-actors = "*"
+derive_more = "*"
 #oxide-auth="*"
 #oxide-auth-actix="*"
 #reqwest = { version="*", features = ["json"] }
 #jsonwebtoken = "*"
 #actix-redis = "*"
-#actix-session = "*"
-#actix-web-middleware-cognito = "*"
 #actix-casbin-auth="*"
 
 async-graphql = { version = "*", optional= true }

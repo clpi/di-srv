@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
+use sqlx::{Postgres, FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use crate::{
     Db, 
     models::{Model, User, Record, Status, Visibility, Priority, Field, Group,
@@ -49,6 +49,30 @@ impl Item {
         Self { status, ..self.to_owned() }
     }
 
+    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+        let res: Option<Item> = sqlx::query_as::<Postgres, Item>(
+            "SELECT * FROM Items WHERE id=$1")
+            .bind(id)
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<i32> {
+        let res = sqlx::query(
+            "DELETE FROM Items WHERE id=$1 RETURNING id")
+            .bind(&id)
+            .fetch_one(&db.pool).await?;
+        Ok(res.get("id"))
+    }
+
+    pub async fn update_by_id(db: &Db, id: i32, item: Item) -> sqlx::Result<Option<Self>> {
+        let res: Option<Item> = sqlx::query_as::<Postgres, Item>(
+            "SELECT * FROM Items WHERE id=$1")
+            .bind(id)
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
+    }
+
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
         let res: i32 = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
@@ -83,6 +107,21 @@ impl Item {
         Ok(0)
     }
 
+    pub async fn get_all_by_user(db: &Db, uid: i32) -> sqlx::Result<Vec<Item>> {
+        let res: Vec<Item> = sqlx::query_as::<Postgres, Item>(
+            "SELECT * FROM Items i WHERE i.uid=$1")
+            .bind(uid)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn get_all_from_record(db: &Db, rid: i32) -> sqlx::Result<Vec<Item>> {
+        let res: Vec<Item> = sqlx::query_as::<Postgres, Item>(
+            "SELECT * FROM Items i WHERE i.uid=$1") //IMPLEMENT
+            .bind(rid)
+            .fetch_all(&db.pool).await?;
+        Ok(res)
+    }
 }
 
 pub struct ItemEntry {

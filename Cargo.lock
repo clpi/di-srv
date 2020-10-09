@@ -1573,6 +1573,7 @@ dependencies = [
  "async-graphql",
  "async-graphql-actix-web",
  "com",
+ "derive_more",
  "divdb",
  "futures 0.3.5",
  "log",

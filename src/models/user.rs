@@ -24,3 +24,15 @@ pub struct UserQuery {
     username: Option<String>,
     email: Option<String>
 }
+
+/*
+impl FromRequest for UserIn {
+    type Error = Error;
+    type Config = ();
+    type Future = Ready<Result<Self, Self::Error>>;
+
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        let id = RequestIdentity::get_identity(req);
+    }
+}
+*/

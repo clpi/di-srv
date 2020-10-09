@@ -41,7 +41,6 @@ impl User {
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
-        let mut conn = db.pool.acquire().await?;
         let res: i32 = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
               VALUES ($1, $2, $3, $4) RETURNING id") 
@@ -49,11 +48,11 @@ impl User {
             .bind(&self.username)
             .bind(&self.password)
             .bind(&self.created_at)
-            .fetch_one(&mut conn).await?
+            .fetch_one(&db.pool).await?
             .get("id");
-        conn.release();
-        UserInfo::from(self.clone()).insert(db).await?;
-        Ok( Self { id: Some(res), ..self } )
+        let user_with_id = User { id: Some(res), ..self };
+        //UserInfo::from(user_with_id.clone()).insert(db).await?;
+        Ok(user_with_id)
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {
@@ -108,6 +107,31 @@ impl User {
         Ok(res)
     }
 
+    pub async fn get_item_by_name(
+        db: &Db, uid: i32, item_name: String
+        ) -> sqlx::Result<Option<Item>> 
+    {
+        let res: Option<Item> = sqlx::query_as::<Postgres, Item>
+            ("SELECT * FROM Items i WHERE i.uid = $1 AND i.name = $2")
+            .bind(uid)
+            .bind(item_name)
+            .fetch_optional(&db.pool).await?;
+        Ok(res)
+    }
+
+    pub async fn delete_item_by_name(
+        db: &Db, uid: i32, item_name: String
+        ) -> sqlx::Result<i32>
+    {
+        let res: i32 = sqlx::query(
+            "DELETE FROM Items i WHERE i.uid = $1 AND i.name = $2 RETURNING id")
+            .bind(uid)
+            .bind(item_name)
+            .fetch_one(&db.pool).await?
+            .get("id");
+        Ok(res)
+    }
+
     pub async fn get_all_items(db: &Db, id: i32) -> sqlx::Result<Vec<Item>> {
         let res: Vec<Item> = sqlx::query_as::<Postgres, Item>
             ("SELECT * FROM Items i WHERE i.uid = $1")
@@ -136,6 +160,18 @@ impl User {
             .fetch_all(&db.pool)
             .await?;
         Ok(res)
+    }
+
+    pub async fn get_named_record(db: &Db, uid: i32, rec_name: String,
+        ) -> sqlx::Result<Record> 
+    {
+        Ok(Record::default())
+    }
+
+    pub async fn get_named_item(db: &Db, uid: i32, item_name: String,
+        ) -> sqlx::Result<Item> 
+    {
+        Ok(Item::default())
     }
 
     pub async fn add_new_record(db: &Db, uid: i32, rec_name: String,

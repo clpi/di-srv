@@ -8,6 +8,16 @@ struct Websocket {
     hb: Instant,
 }
 
+#[derive(Default)]
+struct WsSession {
+    id: usize,
+    name: Option<String>,
+}
+
+impl WsSession {
+    pub fn new() {}
+}
+
 /*
 impl Actor for Websocket {
     type Context = ws::WebsocketContext<Self>;
