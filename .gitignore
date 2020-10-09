@@ -2,4 +2,6 @@
 **.debug/
 /target
 **.env
+**.dev.env
+**.prod.env
 db/.env

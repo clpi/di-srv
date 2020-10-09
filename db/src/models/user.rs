@@ -74,7 +74,7 @@ impl User {
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<User>> {
         let res: Vec<User> = sqlx::query_as::<Postgres, User>
-            ("SELECT * FROM Users") 
+            ("SELECT * FROM Users;") 
             .fetch_all(&db.pool)
             .await?;
         Ok(res)

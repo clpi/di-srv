@@ -64,11 +64,9 @@ pub fn username_routes() -> Scope {
 
 pub async fn get_all(
     id: Identity,
-    data: web::Data<State>,
-    query: web::Query<(String, String)>,) -> HttpResponse 
+    data: web::Data<State>,) -> HttpResponse
 {
-    let (q1, q2) = query.into_inner();
-    println!("GET ALL: Q: {:?}, {:?} FROM {:?}", q1, q2, id.identity());
+    //println!("GET ALL: FROM {:?}", id.identity());
     match User::get_all(&data.db).await {
         Ok(users) => HttpResponse::Ok()
             .content_type("application/json")

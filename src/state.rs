@@ -1,3 +1,4 @@
+use actix::{Actor, Addr, Context, Handler};
 use std::collections::HashMap;
 use divdb::db::Db;
 use actix_web::{self, web, HttpRequest, HttpResponse};
@@ -29,4 +30,14 @@ pub struct State {
     pub db: Db,
 }
 
-impl State {}
+impl State {
+
+    pub async fn new() -> Self {
+        let db = Db::new_blocking().unwrap();
+        Self { db }
+    }
+}
+
+impl Actor for State { 
+    type Context = Context<Self>;
+}

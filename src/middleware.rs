@@ -2,7 +2,12 @@ pub mod auth;
 
 use actix_cors::Cors;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
-use actix_web::{client::Client, middleware::Logger};
+use actix_web::{
+    client::Client, 
+    middleware::{Logger, 
+        normalize::{NormalizePath, TrailingSlash},
+    },
+};
 use actix_session::{Session, UserSession, CookieSession};
 
 pub fn logger() -> Logger {
@@ -15,6 +20,10 @@ pub fn cors() -> Cors {
         .max_age(3600)
         .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
         .send_wildcard()
+}
+
+pub fn trim_trailing_slash() -> NormalizePath {
+    NormalizePath::new(TrailingSlash::Trim)
 }
 
 pub fn identity_service() -> IdentityService<CookieIdentityPolicy> {

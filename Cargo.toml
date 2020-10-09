@@ -30,12 +30,15 @@ actix-web = "*"
 actix-cors = "*"
 actix-files = "*"
 actix-identity = "*"
-actix-web-actors = "*"
-#actix-redis = "*"
 actix-session="*"
+actix-web-actors = "*"
+#oxide-auth="*"
+#oxide-auth-actix="*"
+#reqwest = { version="*", features = ["json"] }
+#jsonwebtoken = "*"
+#actix-redis = "*"
 #actix-session = "*"
 #actix-web-middleware-cognito = "*"
-#oxide-auth-actix="*"
 #actix-casbin-auth="*"
 
 async-graphql = { version = "*", optional= true }
