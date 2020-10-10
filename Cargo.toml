@@ -35,7 +35,7 @@ actix-web-actors = "*"
 derive_more = "*"
 #oxide-auth="*"
 #oxide-auth-actix="*"
-#reqwest = { version="*", features = ["json"] }
+reqwest = { version="*", features = ["json"] }
 #jsonwebtoken = "*"
 #actix-redis = "*"
 #actix-casbin-auth="*"
