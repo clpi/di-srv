@@ -1,3 +1,4 @@
+use std::sync::{Arc, Mutex};
 use actix::{Actor, Addr, Context, Handler};
 use std::collections::HashMap;
 use divdb::db::Db;
@@ -5,9 +6,11 @@ use actix_web::{self, web, HttpRequest, HttpResponse};
 
 pub fn state() -> State {
     let db = Db::new_blocking().unwrap();
-    let state = State { db };
+    let state = State { db: Arc::new(Mutex::new(db)) };
     state
 }
+
+pub struct LoggedInUsers {}
 
 pub struct Config {
     db_url: String,
@@ -27,14 +30,14 @@ impl Config {
 
 #[derive(Clone)]
 pub struct State {
-    pub db: Db,
+    pub db: Arc<Mutex<Db>>,
 }
 
 impl State {
 
     pub async fn new() -> Self {
-        let db = Db::new_blocking().unwrap();
-        Self { db }
+        let db = Db::new().await.expect("Could not get DB");
+        Self { db: Arc::new(Mutex::new(db)) }
     }
 }
 

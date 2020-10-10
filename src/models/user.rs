@@ -1,4 +1,5 @@
-pub use divdb::models::User;
+pub use divdb::models::{Record, User, Item};
+use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 use actix_identity::{Identity, RequestIdentity};
 use actix_web::dev::Payload;
@@ -23,6 +24,15 @@ pub struct UserQuery {
     id: Option<i32>,
     username: Option<String>,
     email: Option<String>
+}
+
+pub struct UserData {
+    id: i32,
+    username: String,
+    email: String,
+    records: Vec<Record>,
+    items: Vec<Item>,
+    created_at: DateTime<Utc>,
 }
 
 /*

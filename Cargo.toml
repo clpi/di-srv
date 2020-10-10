@@ -20,6 +20,7 @@ required-features= ["gql"]
 [dependencies]
 tokio = { version = "*", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
+chrono = { version = "*", features= [ "serde" ] }
 #validator = { version = "*", features = [ "derive" ] }
 futures = "*"
 serde_json = "*"
@@ -31,13 +32,14 @@ actix-cors = "*"
 actix-files = "*"
 actix-identity = "*"
 actix-session="*"
-actix-web-actors = "*"
+actix-web-actors = "3.0.0"
+actix-multipart = "*"
 derive_more = "*"
+actix-redis = "*"
 #oxide-auth="*"
 #oxide-auth-actix="*"
 reqwest = { version="*", features = ["json"] }
 #jsonwebtoken = "*"
-#actix-redis = "*"
 #actix-casbin-auth="*"
 
 async-graphql = { version = "*", optional= true }

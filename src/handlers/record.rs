@@ -73,8 +73,10 @@ pub fn user_record_routes() -> Scope {
 pub async fn get_user_records(
     data: web::Data<State>, uid: web::Path<i32>
 ) -> HttpResponse {
-    match User::get_by_id(&data.db, *uid).await {
-        Ok(Some(user)) => match User::get_all_records(&data.db, user.id.unwrap()).await {
+    match User::get_by_id(&data.db.lock().unwrap(), *uid).await {
+        Ok(Some(user)) => match User::get_all_records(
+                &data.db.lock().unwrap(), user.id.unwrap())
+                .await {
             Ok(recs) => HttpResponse::Ok().json(recs),
             Err(_) => HttpResponse::NotFound().body(""),
         },
@@ -83,7 +85,7 @@ pub async fn get_user_records(
 }
 
 pub async fn get_by_id(id: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match Record::get_by_id(&data.db, *id).await {
+    match Record::get_by_id(&data.db.lock().unwrap(), *id).await {
         Ok(rec) => HttpResponse::Ok().json(&rec), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
@@ -95,7 +97,7 @@ pub async fn create_user_record(
     data: web::Data<State>,
     record: web::Json<Record>,) -> HttpResponse  //Should be RecordIn
 {
-    match record.into_inner().insert(&data.db).await {
+    match record.into_inner().insert(&data.db.lock().unwrap()).await {
         Ok(rec) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&rec), //PgRow -> JSon?
@@ -106,7 +108,7 @@ pub async fn create_user_record(
 pub async fn delete_by_id(
     id: web::Path<i32>, data: web::Data<State>
 ) -> HttpResponse {
-    match Record::delete_by_id(&data.db, *id).await {
+    match Record::delete_by_id(&data.db.lock().unwrap(), *id).await {
         Ok(rec) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&rec), //PgRow -> JSon?
@@ -118,7 +120,7 @@ pub async fn delete_by_id(
 pub async fn update_user_record(
     path: web::Path<i32>, data: web::Data<State>
 ) -> HttpResponse {
-    match User::get_all_records(&data.db, *path).await {
+    match User::get_all_records(&data.db.lock().unwrap(), *path).await {
         Ok(recs) => HttpResponse::Ok().json(&recs), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
@@ -128,7 +130,7 @@ pub async fn add_new_item_to_record_by_name(
     path: web::Path<(i32, i32, String)>, data: web::Data<State>
 ) -> HttpResponse {
     let (_uid, rid, item_name) = path.into_inner().clone();
-    match Record::add_new_item(&data.db, rid, item_name).await {
+    match Record::add_new_item(&data.db.lock().unwrap(), rid, item_name).await {
         Ok(item) => HttpResponse::Ok().json(&item), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
@@ -142,7 +144,7 @@ pub async fn add_existing_item_to_record(
 }
 
 pub async fn get_records_linked_with(path: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match User::get_linked_records(&data.db, *path).await {
+    match User::get_linked_records(&data.db.lock().unwrap(), *path).await {
         Ok(recs) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&recs), //PgRow -> JSon?
@@ -151,7 +153,7 @@ pub async fn get_records_linked_with(path: web::Path<i32>, data: web::Data<State
 }
 
 pub async fn get_records_with_relation(path: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match User::get_linked_records(&data.db, *path).await {
+    match User::get_linked_records(&data.db.lock().unwrap(), *path).await {
         Ok(recs) => HttpResponse::Ok().json(&recs), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}")
     }
@@ -164,7 +166,7 @@ pub async fn get_user_record_by_name(
     data: web::Data<State>) -> HttpResponse 
 {
     let (uid, rec_name) = path.into_inner();
-    match User::get_named_record(&data.db, uid, rec_name).await {
+    match User::get_named_record(&data.db.lock().unwrap(), uid, rec_name).await {
         Ok(rec) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&rec),
@@ -179,7 +181,7 @@ pub async fn add_user_record_by_name(
     data: web::Data<State>) -> HttpResponse 
 {
     let (uid, rec_name) = path.into_inner();
-    match User::add_new_record(&data.db, uid, rec_name).await {
+    match User::add_new_record(&data.db.lock().unwrap(), uid, rec_name).await {
         Ok(rec) => HttpResponse::Created()
             .content_type("application/json")
             .json(&rec),

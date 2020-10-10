@@ -1,8 +1,10 @@
 use actix_web::client::Client;
+use actix_redis::RedisSession;
+use actix_session::Session;
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
-use actix_web::{
+use actix_web::{ Error, 
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
@@ -30,12 +32,15 @@ pub fn routes() -> Scope {
             .route(post().to(signup)),
         )
         .service(resource("/logout")
-            .route(get().to(|| HttpResponse::Ok().body("GET /auth/logout")))
+            .route(get().to(logout_session))
             .route(post().to(logout)),
         )
         .service(resource("/refresh")
             .route(get().to(check_id))
             .route(post().to(refresh_login)),
+        )
+        .service(resource("/check")
+            .route(get().to(check_session))
         )
 }
 
@@ -48,6 +53,14 @@ pub fn cognito_routes() -> Scope {
             .service(resource("/token").route(get().to(cognito_token)))
 }
 
+pub fn validate(session: &Session) -> Result<i32, actix_web::HttpResponse> {
+    let uid: Option<i32> = session.get("id").unwrap_or(None);
+    match uid {
+        Some(uid) => { session.renew(); Ok(uid) },
+        None => Err(HttpResponse::Unauthorized().json("Unauthorized"))
+    }
+}
+
 pub async fn signup(
     (req, user, data): (HttpRequest, web::Json<User>, web::Data<State>),
 ) -> HttpResponse {
@@ -56,7 +69,7 @@ pub async fn signup(
         password: Auth::new().hash(&user.password).unwrap(), ..user.clone()
     };
     println!("SIGNUP: {}", serde_json::to_string(&hashed_user).unwrap());
-    match hashed_user.insert(&data.db).await {
+    match hashed_user.insert(&data.db.lock().unwrap()).await {
         Ok(_uid) => {
             HttpResponse::Ok()
                 .body("User signed up")
@@ -66,39 +79,50 @@ pub async fn signup(
 }
 
 pub async fn login(
-    (id, req, user, data): (
-        Identity,
-        HttpRequest,
-        web::Json<UserLogin>,
-        web::Data<State>,
-    ),
-) -> HttpResponse {
+    (id, session, req, user, data): 
+    (Identity, Session, HttpRequest, web::Json<UserLogin>, web::Data<State>),
+) -> Result<HttpResponse, HttpResponse> {
     let user = user.into_inner().clone();
-    match User::get_by_username(&data.db, user.username).await {
+    match User::get_by_username(&data.db.lock().unwrap(), user.username).await {
         Ok(Some(db_user)) => {
             if Auth::new().verify(user.password, &db_user.password).unwrap() {
-                let user_in = UserIn::from(db_user);
+                let user_in = UserIn::from(db_user.clone());
                 let login_str = serde_json::to_string(&user_in).unwrap();
                 id.remember(login_str.clone());
-                HttpResponse::Ok()
+                session.set("uid", &db_user.id.unwrap()).unwrap();
+                Ok(HttpResponse::Ok()
                     .set_header("authorization", "true")
                     .content_type("application/json")
-                    .json(&user_in)
-            } else { HttpResponse::NotFound().body("Couldn't login") }
+                    .json(&user_in))
+            } else { Err(HttpResponse::NotFound().body("Couldn't login")) }
         }
-        _ => HttpResponse::NotFound().body("COuldn't login")
+        _ => Err(HttpResponse::NotFound().body("COuldn't login"))
     }
 }
 
-pub async fn logout(id: Identity) -> HttpResponse {
+pub async fn logout(id: Identity, session: Session) -> HttpResponse {
     match id.identity() {
         Some(_ident) => {
             id.forget();
+            session.purge();
             HttpResponse::Ok()
                 .set_header("authorization", "false")
                 .body("User logged out")
         }
         None => HttpResponse::NotFound().body("No user to log out"),
+    }
+}
+
+pub async fn logout_session(session: Session) -> Result<HttpResponse, HttpResponse> {
+    let sess: Result<Option<i32>, Error> = session.get("uid");
+    match sess {
+        Ok(Some(uid)) => { 
+            session.remove("uid");
+            Ok(HttpResponse::Ok()
+                .set_header("authorization", "false")
+                .body("User logged out"))
+        }
+        _ => Err(HttpResponse::NotFound().body("No user to log out")),
     }
 }
 
@@ -141,6 +165,25 @@ pub async fn check_id(
     }
 }
 
+pub async fn check_session(
+    (session, req, user, data): (
+        Session,
+        HttpRequest,
+        web::Json<UserLogin>,
+        web::Data<State>,
+    ),
+) -> Result<HttpResponse, HttpResponse> {
+    let sess: Result<Option<i32>, Error> = session.get("uid");
+    match sess {
+        Ok(Some(uid)) => {
+            Ok(HttpResponse::Ok()
+                .json(uid))
+        }
+        _ => Err(HttpResponse::NotFound()
+                .json(false))
+    }
+}
+
 pub async fn cognito_login(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
@@ -170,7 +213,7 @@ pub async fn cognito_authorize(
 }
 
 pub async fn cognito_logout(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
+    (req,  data, body): (HttpRequest, web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
     let payload = body.into_inner();
     match Client::new()
@@ -184,19 +227,27 @@ pub async fn cognito_logout(
 }
 
 pub async fn cognito_signup(
-    (req,  data): (HttpRequest,web::Data<State>,), ) -> HttpResponse 
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
         HttpResponse::NotFound()
             .set_header("authorization", "false")
             .json(false)
 }
+
 pub async fn cognito_userinfo(
-    (req,  data): (HttpRequest,web::Data<State>,), ) -> HttpResponse 
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
-        HttpResponse::NotFound()
-            .set_header("authorization", "false")
-            .json(false)
+    let payload = body.into_inner();
+    match Client::new()
+        .get("https://in.div.is/oauth2/userinfo")
+        .send_json(&payload).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(true),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
 }
+
 pub async fn cognito_token(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>), ) -> HttpResponse 
 {

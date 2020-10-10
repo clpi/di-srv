@@ -7,6 +7,7 @@ pub mod user;
 pub mod ws;
 pub mod item;
 pub mod group;
+pub mod upload;
 
 use actix_files::Files;
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
@@ -20,6 +21,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
         .service(test_service())
         .service(user::uid_routes())
         .service(user::username_routes())
+        .service(auth::routes())
         .service(auth::cognito_routes())
         .service(record::base_routes())
         .service(record::user_record_routes())
@@ -45,6 +47,7 @@ pub async fn index(id: Identity) -> impl Responder {
 }
 
 pub async fn static_ind(id: Identity) -> impl Responder {
+    //TODO Only works when run in root dir
     let html = String::from_utf8(std::fs::read("static/index.html").unwrap()).unwrap();
     HttpResponse::Ok()
         .content_type("text/html")

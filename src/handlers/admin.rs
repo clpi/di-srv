@@ -1,7 +1,7 @@
 use divdb::{Db, models::User};
-use crate::{models::Response, state::State, handlers::user::*};
+use crate::{models::Response, state::State, handlers::{user::*, auth::validate}};
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
-use actix_web::{
+use actix_web::{ Error, 
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse,
@@ -38,22 +38,23 @@ pub fn routes() -> actix_web::Scope {
     )
 }
 
-pub async fn db_up(data: web::Data<State>) -> HttpResponse {
-    match &data.db.clone().init().await {
-        Ok(_) => HttpResponse::Ok().body("Success"),
-        Err(_) => HttpResponse::InternalServerError().body("Could not take down DB")
+pub async fn db_up(data: web::Data<State>) -> Result<HttpResponse, Error> {
+    let db = data.db.lock().unwrap();
+    match db.clone().init().await {
+        Ok(_) => Ok(HttpResponse::Ok().body("Success")),
+        Err(err) => Err(actix_web::error::ErrorUnauthorized(err))
     }
 }
 
 pub async fn db_down(data: web::Data<State>) -> HttpResponse {
-    match &data.db.clone().down().await {
+    match &data.db.lock().unwrap().clone().down().await {
         Ok(_) => HttpResponse::Ok().body("Success"),
         Err(_) => HttpResponse::InternalServerError().body("Could not take down DB")
     }
 }
 
 pub async fn db_reset(data: web::Data<State>) -> HttpResponse {
-    match &data.db.clone().down().await {
+    match &data.db.lock().unwrap().clone().down().await {
         Ok(db) => { 
             match db.clone().init().await {
                 Ok(_db) => HttpResponse::Ok().body(""),

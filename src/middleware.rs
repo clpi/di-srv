@@ -1,8 +1,12 @@
 pub mod auth;
 
-use actix_cors::Cors;
+use std::time::Duration;
+use actix_redis::{RedisActor, RedisSession};
+use actix_cors::{Cors, AllOrSome};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
+    cookie::SameSite,
+    http::{self, HeaderName, HeaderValue},
     client::Client, 
     middleware::{Logger, 
         normalize::{NormalizePath, TrailingSlash},
@@ -16,10 +20,9 @@ pub fn logger() -> Logger {
 
 pub fn cors() -> Cors {
     Cors::new()
-        .allowed_origin("*")
-        .max_age(3600)
-        .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
         .send_wildcard()
+        .max_age(3600)
+        .allowed_methods(vec!["GET", "POST", "DELETE", "PUT", "OPTIONS"])
 }
 
 pub fn trim_trailing_slash() -> NormalizePath {
@@ -32,6 +35,13 @@ pub fn identity_service() -> IdentityService<CookieIdentityPolicy> {
             .name("auth-cookie")
             .secure(false),
     )
+}
+
+pub fn redis_session() -> RedisSession {
+    RedisSession::new("127.0.0.1:6379", &[0; 32])
+        .cookie_http_only(false)
+        .cookie_name("r-auth-cookie")
+        .cookie_same_site(SameSite::Lax)
 }
 
 pub fn session() -> CookieSession {

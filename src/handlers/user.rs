@@ -67,7 +67,8 @@ pub async fn get_all(
     data: web::Data<State>,) -> HttpResponse
 {
     //println!("GET ALL: FROM {:?}", id.identity());
-    match User::get_all(&data.db).await {
+    let db = &data.db.lock().unwrap();
+    match User::get_all(&db).await {
         Ok(users) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&users),
@@ -76,7 +77,7 @@ pub async fn get_all(
 }
 
 pub async fn get_by_id(data: web::Data<State>, id: web::Path<i32>) -> HttpResponse {
-    match User::get_by_id(&data.db, *id).await {
+    match User::get_by_id(&data.db.lock().unwrap(), *id).await {
         Ok(maybe_user) => match maybe_user {
             Some(user) => HttpResponse::Ok()
                 .content_type("application/json")
@@ -91,7 +92,7 @@ pub async fn update_by_id(
     path: web::Path<i32>, req: HttpRequest, data: web::Data<State>
         ) -> HttpResponse 
 {
-    match User::delete_by_id(&data.db.clone(), *path).await {
+    match User::delete_by_id(&data.db.lock().unwrap(), *path).await {
         Ok(Some(id)) => HttpResponse::Ok()
             .content_type("application/json")
             .body(format!("Deleted user with id {}", id)),
@@ -103,7 +104,7 @@ pub async fn delete_by_id(
     data: web::Data<State>, 
     id: web::Path<i32>
 ) -> HttpResponse {
-    match User::delete_by_id(&data.db, *id).await {
+    match User::delete_by_id(&data.db.lock().unwrap(), *id).await {
         Ok(Some(id)) => HttpResponse::Ok()
             .content_type("application/json")
             .body(format!("Deleted user {:?}", id)),
@@ -115,7 +116,7 @@ pub async fn get_by_username(
     data: web::Data<State>, 
     username: web::Path<String>
 ) -> HttpResponse {
-    match User::get_by_username(&data.db, username.to_string()).await {
+    match User::get_by_username(&data.db.lock().unwrap(), username.to_string()).await {
         Ok(Some(user)) => HttpResponse::Ok()
                 .content_type("application/json")
                 .json(&user),
@@ -129,7 +130,7 @@ pub async fn delete_by_username(
     username: web::Path<String>,
 ) -> HttpResponse {
     println!("DELETE USER BY USERNAME: From {:?}", id.identity());
-    match User::delete_by_username(&data.db, username.to_string()).await {
+    match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")
             .body(format!("Deleted user {}", id)),
@@ -143,7 +144,7 @@ pub async fn update_by_username(
     username: web::Path<String>
 ) -> HttpResponse {
     println!("UPDATE USER BY USERNAME: From {:?}", id.identity());
-    match User::delete_by_username(&data.db, username.to_string()).await {
+    match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")
             .body(format!("Deleted user {}", id)),

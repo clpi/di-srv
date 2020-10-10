@@ -215,6 +215,7 @@ version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05dd80ba8f27c4a34357c07e338c8f5c38f8520e6d626ca1727d8fecc41b0cab"
 dependencies = [
+ "actix 0.10.0",
  "actix-codec 0.3.0",
  "actix-connect 2.0.0",
  "actix-rt",
@@ -278,6 +279,50 @@ checksum = "a60f9ba7c4e6df97f3aacb14bb5c0cd7d98a49dcbaed0d7f292912ad9a6a3ed2"
 dependencies = [
  "quote 1.0.7",
  "syn",
+]
+
+[[package]]
+name = "actix-multipart"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "774bfeb11b54bf9c857a005b8ab893293da4eaff79261a66a9200dab7f5ab6e3"
+dependencies = [
+ "actix-service",
+ "actix-utils 2.0.0",
+ "actix-web 3.0.2",
+ "bytes",
+ "derive_more",
+ "futures-util",
+ "httparse",
+ "log",
+ "mime",
+ "twoway",
+]
+
+[[package]]
+name = "actix-redis"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6856e8adb0b1683817fc6504fed3eba36aba49bea450eb7437a0777a9adc78bc"
+dependencies = [
+ "actix 0.10.0",
+ "actix-http 2.0.0",
+ "actix-rt",
+ "actix-service",
+ "actix-session",
+ "actix-utils 2.0.0",
+ "actix-web 3.0.2",
+ "backoff",
+ "derive_more",
+ "futures-util",
+ "log",
+ "rand 0.7.3",
+ "redis-async",
+ "serde",
+ "serde_json",
+ "time 0.2.22",
+ "tokio",
+ "tokio-util 0.3.1",
 ]
 
 [[package]]
@@ -536,6 +581,22 @@ dependencies = [
  "actix-web 2.0.0",
  "bytes",
  "futures 0.3.5",
+ "pin-project",
+]
+
+[[package]]
+name = "actix-web-actors"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f6edf3c2693e2a8c422800c87ee89a6a4eac7dd01109bc172a1093ce1f4f001"
+dependencies = [
+ "actix 0.10.0",
+ "actix-codec 0.3.0",
+ "actix-http 2.0.0",
+ "actix-web 3.0.2",
+ "bytes",
+ "futures-channel",
+ "futures-core",
  "pin-project",
 ]
 
@@ -805,7 +866,7 @@ dependencies = [
  "actix 0.9.0",
  "actix-rt",
  "actix-web 2.0.0",
- "actix-web-actors",
+ "actix-web-actors 2.0.0",
  "async-graphql",
  "bytes",
  "futures 0.3.5",
@@ -1058,6 +1119,16 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+]
+
+[[package]]
+name = "backoff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "721c249ab59cbc483ad4294c9ee2671835c1e43e9ffc277e6b4ecfef733cfdc5"
+dependencies = [
+ "instant",
+ "rand 0.7.3",
 ]
 
 [[package]]
@@ -1565,13 +1636,16 @@ dependencies = [
  "actix-cors",
  "actix-files",
  "actix-identity",
+ "actix-multipart",
+ "actix-redis",
  "actix-rt",
  "actix-service",
  "actix-session",
  "actix-web 3.0.2",
- "actix-web-actors",
+ "actix-web-actors 3.0.0",
  "async-graphql",
  "async-graphql-actix-web",
+ "chrono",
  "com",
  "derive_more",
  "divdb",
@@ -3059,6 +3133,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "678054eb77286b51581ba43620cc911abf02758c91f93f479767aed0f90458b2"
 dependencies = [
  "rand_core 0.3.1",
+]
+
+[[package]]
+name = "redis-async"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32c2f29b2a86ac0be0ba2680118d8280b8c7743a6fb2c11d2d04bb9ea41b94f1"
+dependencies = [
+ "bytes",
+ "futures-channel",
+ "futures-sink",
+ "futures-util",
+ "log",
+ "tokio",
+ "tokio-util 0.3.1",
 ]
 
 [[package]]

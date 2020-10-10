@@ -21,6 +21,7 @@ pub struct User {
     #[serde(skip_serializing_if="Option::is_none")]
     pub id: Option<i32>,
     pub email: String,
+    #[serde(skip_serializing)]
     pub username: String,
     pub password: String,
     #[serde(default="Utc::now")]
@@ -73,7 +74,7 @@ impl User {
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<User>> {
         let res: Vec<User> = sqlx::query_as::<Postgres, User>
-            ("SELECT * FROM Users;") 
+            ("SELECT * FROM Users") 
             .fetch_all(&db.pool)
             .await?;
         Ok(res)

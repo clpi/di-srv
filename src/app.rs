@@ -27,34 +27,21 @@ use std::{net::TcpListener, sync::mpsc};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
-    let srv = HttpServer::new(move || {
-        App::new()
-            .data(state::state())
-            .wrap(middleware::logger())
-            .wrap(middleware::identity_service())
-            .wrap(middleware::session())
-            .configure(handlers::routes)
-    });
+    let srv = HttpServer::new(move || create_app());
     srv.listen(listener)?.run().await?;
     Ok(())
 }
 
 pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::io::Result<()> {
     let mut sys = actix_rt::System::new("api");
-    let srv = HttpServer::new(move || {
-        App::new()
-            .data(state::state())
-            .wrap(middleware::logger())
-            .wrap(middleware::identity_service())
-            .configure(handlers::routes)
-    })
+    let srv = HttpServer::new(move || create_app())
     .listen(listener)?
     .run();
     let _ = tx.send(srv.clone());
     sys.block_on(srv)
 }
 
-pub fn create_app(state: &State,) -> App<impl ServiceFactory<
+pub fn create_app() -> App<impl ServiceFactory<
         Config = (),
         Request = dev::ServiceRequest,
         Response = dev::ServiceResponse<body::Body>,
@@ -64,8 +51,10 @@ pub fn create_app(state: &State,) -> App<impl ServiceFactory<
     body::Body,
 > {
     App::new()
-        .data(state::state())
+        .data(state::state().clone())
         .wrap(middleware::cors().finish())
+        //.wrap(middleware::session())
+        .wrap(middleware::redis_session())
         .wrap(middleware::identity_service())
         .configure(handlers::routes)
 }

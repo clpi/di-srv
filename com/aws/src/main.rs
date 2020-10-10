@@ -40,6 +40,10 @@ pub async fn connect_s3() {
     }
 }
 
+pub struct S3Client {
+
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
