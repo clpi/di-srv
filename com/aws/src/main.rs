@@ -1,9 +1,12 @@
+use serde_json::json;
 use rusoto_core::Region;
+use rusoto_s3::{S3Client, S3, Bucket, ListBucketsOutput};
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
 
-#[async_std::main]
+#[tokio::main]
 pub async fn main() {
     connect_dynamodb().await;
+    connect_s3().await;
 }
 
 pub async fn connect_dynamodb() {
@@ -21,7 +24,20 @@ pub async fn connect_dynamodb() {
         },
         Err(e) => { println!("Error {:?}", e) }
     };
-    let t = 3;
+}
+
+pub async fn connect_s3() {
+    let client = S3Client::new(Region::UsWest2);
+    let buckets = client.list_buckets().await;
+    match buckets {
+        Ok(buc) => {
+            println!("Buckets:");
+            for bucket in buc.buckets {
+                println!("{:?}", bucket);
+            }
+        },
+        Err(_) => { println!("No buckets in region") }
+    }
 }
 
 #[cfg(test)]
