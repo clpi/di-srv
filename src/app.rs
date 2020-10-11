@@ -14,9 +14,7 @@
 //
 // TODO: Add route protection with authentication (actix-http-auth) as well as CORS
 
-use crate::{
-    handlers, middleware, state::{self, State},
-};
+use crate::{handlers, middleware, state,};
 use actix_service::ServiceFactory;
 use actix_web::{
     body, dev, get, 
@@ -53,9 +51,9 @@ pub fn create_app() -> App<impl ServiceFactory<
     App::new()
         .data(state::state().clone())
         .wrap(middleware::cors().finish())
+        .wrap(middleware::identity_service())
         //.wrap(middleware::session())
         .wrap(middleware::redis_session())
-        .wrap(middleware::identity_service())
         .configure(handlers::routes)
 }
 

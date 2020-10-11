@@ -1,11 +1,9 @@
 use actix_web::client::Client;
-use actix_redis::RedisSession;
-use actix_session::Session;
+use actix_session::{Session, SessionStatus};
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
-use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
-use actix_web::{ Error, 
-    http::{Cookie, HeaderName, HeaderValue},
+use actix_identity::Identity;
+use actix_web::{ Error, cookie::Cookie,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
@@ -53,10 +51,18 @@ pub fn cognito_routes() -> Scope {
             .service(resource("/token").route(get().to(cognito_token)))
 }
 
-pub fn validate(session: &Session) -> Result<i32, actix_web::HttpResponse> {
-    let uid: Option<i32> = session.get("id").unwrap_or(None);
-    match uid {
-        Some(uid) => { session.renew(); Ok(uid) },
+pub fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
+    let user: Option<UserIn> = session.get("uid").unwrap_or(None);
+    match user {
+        Some(user) => { session.renew(); Ok(user) },
+        None => Err(HttpResponse::Unauthorized().json("Unauthorized"))
+    }
+}
+
+pub fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpResponse> {
+    let user: Option<String> = id.identity();
+    match user {
+        Some(user) => { Ok(serde_json::from_str(&user).unwrap()) },
         None => Err(HttpResponse::Unauthorized().json("Unauthorized"))
     }
 }
@@ -89,7 +95,7 @@ pub async fn login(
                 let user_in = UserIn::from(db_user.clone());
                 let login_str = serde_json::to_string(&user_in).unwrap();
                 id.remember(login_str.clone());
-                session.set("uid", &db_user.id.unwrap()).unwrap();
+                session.set("uid", &user_in).unwrap();
                 Ok(HttpResponse::Ok()
                     .set_header("authorization", "true")
                     .content_type("application/json")
@@ -107,6 +113,8 @@ pub async fn logout(id: Identity, session: Session) -> HttpResponse {
             session.purge();
             HttpResponse::Ok()
                 .set_header("authorization", "false")
+                .del_cookie(&Cookie::named("r-auth-cookie"))
+                .del_cookie(&Cookie::named("auth-session"))
                 .body("User logged out")
         }
         None => HttpResponse::NotFound().body("No user to log out"),
@@ -114,12 +122,14 @@ pub async fn logout(id: Identity, session: Session) -> HttpResponse {
 }
 
 pub async fn logout_session(session: Session) -> Result<HttpResponse, HttpResponse> {
-    let sess: Result<Option<i32>, Error> = session.get("uid");
+    let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
-        Ok(Some(uid)) => { 
-            session.remove("uid");
+        Ok(Some(user)) => { 
+            session.purge();
             Ok(HttpResponse::Ok()
                 .set_header("authorization", "false")
+                .del_cookie(&Cookie::named("r-auth-cookie"))
+                .del_cookie(&Cookie::named("auth-session"))
                 .body("User logged out"))
         }
         _ => Err(HttpResponse::NotFound().body("No user to log out")),
@@ -173,11 +183,11 @@ pub async fn check_session(
         web::Data<State>,
     ),
 ) -> Result<HttpResponse, HttpResponse> {
-    let sess: Result<Option<i32>, Error> = session.get("uid");
+    let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
-        Ok(Some(uid)) => {
+        Ok(Some(user)) => {
             Ok(HttpResponse::Ok()
-                .json(uid))
+                .json(user))
         }
         _ => Err(HttpResponse::NotFound()
                 .json(false))

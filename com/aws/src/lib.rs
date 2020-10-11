@@ -1,3 +1,5 @@
+pub mod auth;
+
 use rusoto_core::Region;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
 

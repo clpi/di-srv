@@ -1,6 +1,8 @@
 cargo build -p ./ --release --target x86_64-unknown-linux-musl &&
 
-cp ./target/release/ ./lambda && zip lambda.zip lambda && rm lambda &&
+#zip -j rust.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
+
+cp -r ./target/release/ ./lambda && zip lambda.zip lambda && rm -rf lambda &&
 
 
 #aws lambda create-function --function-name divLambda \

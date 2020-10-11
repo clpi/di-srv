@@ -13,7 +13,7 @@ use async_trait::async_trait;
 pub struct UserLogin { pub username: String, pub password: String }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct UserRegister { email: String, username: String, password: String }
+pub struct UserRegister { pub email: String, pub username: String, pub password: String }
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]

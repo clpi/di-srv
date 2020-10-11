@@ -1,5 +1,6 @@
 use divdb::{Db, models::User};
-use crate::{models::Response, state::State, handlers::{user::*, auth::validate}};
+use crate::{models::{Response, UserIn}, state::State, handlers::{user::*, auth::{validate, validate_id}}};
+use actix_session::Session;
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{ Error, 
     http::{Cookie, HeaderName, HeaderValue},
@@ -12,6 +13,12 @@ pub fn routes() -> actix_web::Scope {
     // -------------/ admin -----------------//
     scope("/admin")
         // ----------------- /admin/db --------------//
+        .service(resource("")
+            .route(get().to(check_auth))
+        )
+        .service(resource("/id")
+            .route(get().to(check_id))
+        )
         .service(scope("/db")
             .service(resource("/up").route(get().to(db_up)))
             .service(resource("/down").route(get().to(db_down)))
@@ -21,21 +28,31 @@ pub fn routes() -> actix_web::Scope {
                 .service(resource("/down").route(get().to(table_down)))
                 .service(resource("/up").route(get().to(table_up))),
             ),
-    )
-    // ----------- /admin/server ------------------ //
-    .service(scope("/server")
-        .service(resource("").route(get().to(server_info)))
-        .service(resource("/up").route(post().to(server_up)))
-        .service(resource("/down").route(post().to(server_down))),
-    )
-    .service(scope("/user")
-        .service(scope("/{uid}")
-            .service(resource("")
-                .route(delete().to(delete_user_by_id))     
-                .route(post().to(|| HttpResponse::Ok().finish()))     
+        )
+        // ----------- /admin/server ------------------ //
+        .service(scope("/server")
+            .service(resource("").route(get().to(server_info)))
+            .service(resource("/up").route(post().to(server_up)))
+            .service(resource("/down").route(post().to(server_down))),
+        )
+        .service(scope("/user")
+            .service(scope("/{uid}")
+                .service(resource("")
+                    .route(delete().to(delete_user_by_id))     
+                    .route(post().to(|| HttpResponse::Ok().finish()))     
+                )
             )
         )
-    )
+}
+
+pub async fn check_auth(session: Session, data: web::Data<State>) -> Result<HttpResponse, Error> {
+    let user = validate(&session)?;
+    Ok(HttpResponse::Ok().json(user))
+}
+
+pub async fn check_id(id: Identity, data: web::Data<State>) -> Result<HttpResponse, Error> {
+    let user = validate_id(&id)?;
+    Ok(HttpResponse::Ok().json(user))
 }
 
 pub async fn db_up(data: web::Data<State>) -> Result<HttpResponse, Error> {

@@ -37,6 +37,8 @@ pub fn identity_service() -> IdentityService<CookieIdentityPolicy> {
     )
 }
 
+pub struct RsSession {}
+
 pub fn redis_session() -> RedisSession {
     RedisSession::new("127.0.0.1:6379", &[0; 32])
         .cookie_http_only(false)

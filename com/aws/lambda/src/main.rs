@@ -1,21 +1,26 @@
-use lambda_runtime::{error::HandlerError, lambda, Context};
+use std::error::Error;
+use lambda_runtime::{error::HandlerError, Context, lambda};
 use serde::{Serialize, Deserialize};
 
-fn main() {
-    println!("Hello, world!");
+type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    lambda!(handler);
+    Ok(())
 }
 
 #[derive(Deserialize)]
 pub struct Event {
-    username: String,
-    email: String,
+    pub username: String,
+    pub email: String,
 }
 
 #[derive(Serialize)]
 pub struct Output {
-
+    out: String,
 }
 
-fn handler() -> Result<Output, HandlerError> {
-    Ok(Output {  })
+fn handler(e: Event, c: Context) -> Result<Output, HandlerError> {
+    Ok(Output {out:  format!("Hello! {}", e.username) })
 }

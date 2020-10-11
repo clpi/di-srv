@@ -16,17 +16,23 @@
     - name: Copy postgres files
       synchronize:
         src: ../data
-        dest: /usr/src/div/
+        dest: /usr/src/div/data/
         mode: push
     - name: Copy back end files
       synchronize:
-        src: ../back
+        src: ./
         dest: /usr/src/div/
         mode: push
         rsync_opts:
-          - "--exclude=target"
-    - name: Build backend image
-      command: sudo podman build /usr/src/div/back -t divb
-    - name: Run backend image
-      command: sudo podman run --rm -dt -p 3001:3001 --name divb localhost/divb
+          - "--exclude=target:db/target:com/target:com/aws/target:com/aws/lambda/target"
+    - name: Build backend bin
+      command: cargo build --release
+    - name: Install binary
+      command: cargo install --path ./
+    - name: Clean up source files
+      command: cd ../ && rm -rf div
+    - name: Run redis server
+      command: redis-server
+    - name: Run installed binary
+      command: /usr/local/cargo/bin/divapi
 

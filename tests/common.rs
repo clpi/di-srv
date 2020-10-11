@@ -1,5 +1,5 @@
 use actix_identity::Identity;
-use actix_web::test;
+use actix_web::{App,  test, web};
 use divapi::app;
 use std::{net::TcpListener, sync::mpsc, thread};
 
@@ -27,3 +27,4 @@ pub fn spawn_api() -> std::io::Result<()> {
     actix_rt::System::new("").block_on(srv.stop(true));
     Ok(())
 }
+

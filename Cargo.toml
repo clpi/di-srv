@@ -45,6 +45,10 @@ reqwest = { version="*", features = ["json"] }
 async-graphql = { version = "*", optional= true }
 async-graphql-actix-web = { version = "*", optional = true }
 
+rusoto_core = { version = "*", optional = true }
+rusoto_cognito_idp = { version = "*", optional = true }
+rusoto_cognito_identity = { version = "*", optional = true }
+
 divdb = { path = "./db/" }
 com = { path = "./com/" }
 
@@ -56,6 +60,7 @@ log = "*"
 [features]
 default=[]
 graphql=["divdb/gql", "async-graphql", "async-graphql-actix-web"]
+cognito=["rusoto_core", "rusoto_cognito_identity", "rusoto_cognito_idp"]
 
 [profile.release]
 lto=true

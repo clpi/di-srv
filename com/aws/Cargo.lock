@@ -49,7 +49,9 @@ name = "aws"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "dotenv",
  "rusoto_cognito_identity",
+ "rusoto_cognito_idp",
  "rusoto_core",
  "rusoto_credential",
  "rusoto_dynamodb",
@@ -234,6 +236,12 @@ name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "fnv"
@@ -898,6 +906,20 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "futures",
+ "rusoto_core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rusoto_cognito_idp"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96e1a46c1bebbc55150e489a68220fc367c87aaa155fd1b7e3f53e18fb845a7f"
+dependencies = [
+ "async-trait",
+ "bytes",
  "futures",
  "rusoto_core",
  "serde",

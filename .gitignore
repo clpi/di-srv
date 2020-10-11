@@ -5,3 +5,4 @@
 **.dev.env
 **.prod.env
 db/.env
+./com/aws/src/auth.rs
