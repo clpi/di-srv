@@ -2,6 +2,7 @@ use serde_json::json;
 use rusoto_core::Region;
 use rusoto_s3::{S3Client, S3, Bucket, ListBucketsOutput};
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
+use div_cloud::auth::*;
 
 #[tokio::main]
 pub async fn main() {
@@ -38,10 +39,6 @@ pub async fn connect_s3() {
         },
         Err(_) => { println!("No buckets in region") }
     }
-}
-
-pub struct S3Client {
-
 }
 
 #[cfg(test)]

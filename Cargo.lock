@@ -1357,6 +1357,9 @@ name = "bytes"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bytestring"
@@ -1662,6 +1665,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
+name = "div_cloud"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dotenv",
+ "rusoto_cognito_identity",
+ "rusoto_cognito_idp",
+ "rusoto_core",
+ "rusoto_credential",
+ "rusoto_dynamodb",
+ "rusoto_s3",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "divapi"
 version = "0.1.0"
 dependencies = [
@@ -1681,6 +1701,7 @@ dependencies = [
  "chrono",
  "com",
  "derive_more",
+ "div_cloud",
  "divdb",
  "futures 0.3.5",
  "log",
@@ -3357,6 +3378,33 @@ dependencies = [
  "shlex",
  "tokio",
  "zeroize",
+]
+
+[[package]]
+name = "rusoto_dynamodb"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a1473bb1c1dd54f61c5e150aec47bcbf4a992963dcc3c60e12be5af3245cefc"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures 0.3.5",
+ "rusoto_core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rusoto_s3"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1146e37a7c1df56471ea67825fe09bbbd37984b5f6e201d8b2e0be4ee15643d8"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures 0.3.5",
+ "rusoto_core",
+ "xml-rs",
 ]
 
 [[package]]

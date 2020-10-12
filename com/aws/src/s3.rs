@@ -13,11 +13,14 @@ impl Client {
     pub fn new() -> Client {
         let region = Region::default();
 
+        /*
         Client {
             region: region.to_owned(),
             s3: S3Client::new(region),
             bucket_name: std::env::var("AWS_S3_BUCKET_NAME").unwrap(),
         }
+        */
+        Self {}
     }
 
     pub async fn put() -> () {}

@@ -1,5 +1,5 @@
 [package]
-name = "aws"
+name = "div_cloud"
 version = "0.1.0"
 authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
@@ -17,8 +17,8 @@ serde_json = "*"
 rusoto_core="*"
 rusoto_dynamodb="*"
 rusoto_credential="*"
-rusoto_cognito_identity="*"
-rusoto_cognito_idp="*"
+rusoto_cognito_idp= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
+rusoto_cognito_identity= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
 rusoto_s3="*"
 dotenv="*"
 

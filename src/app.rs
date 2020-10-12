@@ -33,8 +33,8 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
 pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::io::Result<()> {
     let mut sys = actix_rt::System::new("api");
     let srv = HttpServer::new(move || create_app())
-    .listen(listener)?
-    .run();
+        .listen(listener)?
+        .run();
     let _ = tx.send(srv.clone());
     sys.block_on(srv)
 }
@@ -68,3 +68,4 @@ pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResp
     println!("REQ: {:?}", req);
     HttpResponse::Ok().body(&test.string)
 }
+

@@ -1,4 +1,7 @@
 mod common;
+
+use common::*;
+
 use divapi::{
     models::{User, UserIn, UserQuery, UserRequest},
     handlers::user::{
@@ -19,7 +22,8 @@ async fn get_all_users_ok() {}
 async fn get_user_by_id_ok() {}
 
 #[actix_rt::test]
-async fn get_user_by_username_ok() {}
+async fn get_user_by_username_ok() {
+}
 
 
 #[actix_rt::test]
