@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use div_cloud::auth::{cognito::CognitoClient, types::*};
 use actix::{Actor, Addr, Context, Handler};
 use std::collections::HashMap;
 use divdb::db::Db;
@@ -6,7 +7,7 @@ use actix_web::{self, web, HttpRequest, HttpResponse};
 
 pub fn state() -> State {
     let db = Db::new_blocking().unwrap();
-    let state = State { db: Arc::new(Mutex::new(db)) };
+    let state = State { db: Arc::new(Mutex::new(db)), cognito: CognitoClient::new() };
     state
 }
 
@@ -30,6 +31,7 @@ impl Config {
 
 #[derive(Clone)]
 pub struct State {
+    pub cognito: CognitoClient,
     pub db: Arc<Mutex<Db>>,
 }
 
@@ -37,7 +39,8 @@ impl State {
 
     pub async fn new() -> Self {
         let db = Db::new().await.expect("Could not get DB");
-        Self { db: Arc::new(Mutex::new(db)) }
+        let idp = CognitoClient::new();
+        Self { db: Arc::new(Mutex::new(db)), cognito: idp, }
     }
 }
 

@@ -45,23 +45,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
-name = "aws"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dotenv",
- "rusoto_cognito_identity",
- "rusoto_cognito_idp",
- "rusoto_core",
- "rusoto_credential",
- "rusoto_dynamodb",
- "rusoto_s3",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "base-x"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -239,6 +222,23 @@ name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
+
+[[package]]
+name = "div_cloud"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dotenv",
+ "rusoto_cognito_identity",
+ "rusoto_cognito_idp",
+ "rusoto_core",
+ "rusoto_credential",
+ "rusoto_dynamodb",
+ "rusoto_s3",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "dotenv"

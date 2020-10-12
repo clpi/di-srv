@@ -1,4 +1,5 @@
 use actix_web::client::Client;
+use div_cloud::auth::{cognito::CognitoClient, types::*};
 use actix_session::{Session, SessionStatus};
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
@@ -44,11 +45,22 @@ pub fn routes() -> Scope {
 
 pub fn cognito_routes() -> Scope {
         scope("/cognito")
-            .service(resource("/login").route(get().to(cognito_login)))
-            .service(resource("/logout").route(get().to(cognito_logout)))
-            .service(resource("/signup").route(get().to(cognito_signup)))
-            .service(resource("/authorize").route(get().to(cognito_authorize)))
-            .service(resource("/token").route(get().to(cognito_token)))
+            //.wrap_fn(validate)
+            .service(resource("/login").route(post().to(cognito_login_user)))
+            .service(resource("/logout").route(post().to(cognito_logout_user)))
+            .service(resource("/signup").route(post().to(cognito_signup)))
+            .service(resource("/create").route(post().to(cognito_create_user)))
+            .service(resource("/authorize").route(post().to(cognito_authorize)))
+            .service(resource("/token").route(post().to(cognito_token)))
+            .service(scope("/{username}")
+                .service(resource("")
+                    .route(get().to(cognito_get_user))
+                    .route(delete().to(cognito_delete_user))
+                )
+                .service(resource("/confirm")
+                    .route(post().to(cognito_confirm_signup))
+                )
+            )
 }
 
 pub fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
@@ -194,20 +206,6 @@ pub async fn check_session(
     }
 }
 
-pub async fn cognito_login(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
-{
-    let payload = body.into_inner();
-    match Client::new()
-        .get("https://in.div.is/oauth2/login")
-        .send_json(&payload).await {
-        Ok(res) => HttpResponse::Ok()
-            .content_type("application/json")
-            .json(true),
-        Err(_) => HttpResponse::NotFound().finish()
-    }
-}
-
 pub async fn cognito_authorize(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
@@ -222,38 +220,79 @@ pub async fn cognito_authorize(
     }
 }
 
-pub async fn cognito_logout(
-    (req,  data, body): (HttpRequest, web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
+pub async fn cognito_get_user(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
 {
-    let payload = body.into_inner();
-    match Client::new()
-        .get("https://in.div.is/oauth2/logout")
-        .send_json(&payload).await {
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
             .content_type("application/json")
-            .json(true),
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn cognito_confirm_signup(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.confirm_signup(username.into_inner()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn cognito_delete_user(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.delete_user(username.into_inner()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn cognito_create_user(
+    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
+{
+    match &data.cognito.create_user(user.into_inner(), true).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
         Err(_) => HttpResponse::NotFound().finish()
     }
 }
 
 pub async fn cognito_signup(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
+    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
 {
-        HttpResponse::NotFound()
-            .set_header("authorization", "false")
-            .json(false)
-}
-
-pub async fn cognito_userinfo(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
-{
-    let payload = body.into_inner();
-    match Client::new()
-        .get("https://in.div.is/oauth2/userinfo")
-        .send_json(&payload).await {
+    match &data.cognito.signup_user(user.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
             .content_type("application/json")
-            .json(true),
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn cognito_login_user(
+    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse 
+{
+    match &data.cognito.login_user(user.into_inner()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn cognito_logout_user(
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<String>) ) -> HttpResponse 
+{
+    match &data.cognito.signout_user(body.into_inner()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
         Err(_) => HttpResponse::NotFound().finish()
     }
 }

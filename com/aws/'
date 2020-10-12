@@ -1,10 +1,10 @@
 use rusoto_core::{Region, RusotoResult, RusotoError, request::BufferedHttpResponse};
 
-use super::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge, CgUserSignup, CgUserLogin};
+use super::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge};
 use std::collections::HashMap;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient};
 use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType, UserPoolDescriptionType,
-    GlobalSignOutResponse,
+.GlobalSignOutResponse
     AdminGetUserRequest, AdminGetUserResponse, AdminGetUserError, AuthenticationResultType,
     AdminInitiateAuthError, AdminInitiateAuthRequest, AdminInitiateAuthResponse,
     AdminConfirmSignUpRequest, AdminConfirmSignUpResponse, AdminConfirmSignUpError, 
@@ -14,7 +14,9 @@ use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType, UserPoolDescript
     SignUpRequest, ConfirmSignUpRequest, SignUpError, SignUpResponse,
     ListUsersRequest, ListUsersResponse, ListUsersError, 
     ListUserPoolsRequest, ListUserPoolsResponse, ListUserPoolsError, 
-    GlobalSignOutRequest,  GlobalSignOutError, InitiateAuthRequest,
+    GlobalSignOutRequest, GlobalSignOutResponse,
+    GlobalSignOutError,
+    InitiateAuthRequest,
 };
 use rusoto_cognito_identity::{
     SetIdentityPoolRolesInput, GetIdInput, Credentials, IdentityPool, GetOpenIdTokenInput,
@@ -32,19 +34,14 @@ fn get_user_pool_id() -> String {
     dotenv::var("AWS_COGNITO_USER_POOL_ID").expect("Cognito user pool ID not set")
 }
 
-fn get_client_id(di_srv: bool) -> String {
-    if di_srv {
-        dotenv::var("AWS_COGNITO_CLIENT_ID_DI_SRV").expect("No client ID set")
-    } else {
-        dotenv::var("AWS_COGNITO_CLIENT_ID").expect("No client ID set")
-    }
+fn get_client_id() -> String {
+    dotenv::var("AWS_COGNITO_CLIENT_ID").expect("No client ID set")
 }
 
 fn get_client_secret() -> String {
     dotenv::var("AWS_COGNITO_CLIENT_SECRET").expect("No client secret set")
 }
 
-#[derive(Clone)]
 pub struct CognitoClient {
     id: CognitoIdentityClient,
     idp: CognitoIdentityProviderClient,
@@ -58,10 +55,11 @@ impl CognitoClient {
         Self { idp, id}
     }
 
-    pub async fn get_user(&self, username: &str) ->  Result<CgUser, AdminGetUserError> 
+    pub async fn get_user(&self,
+        username: String) ->  Result<CgUser, AdminGetUserError> 
     {
         let req = AdminGetUserRequest {
-            username: username.to_string(), user_pool_id: get_user_pool_id(),
+            username, user_pool_id: get_user_pool_id(),
         };
         match self.idp.admin_get_user(req).await {
             Ok(user) =>  Ok(CgUser::from(user)),
@@ -69,16 +67,16 @@ impl CognitoClient {
         }
     }
 
-    pub async fn login_user(&self, user: CgUserLogin)
+    pub async fn login_user(&self, username: String, password: String) 
         ->  Result<CgAuthRes, AdminInitiateAuthError> 
     {
         let mut params = HashMap::new();
-        params.insert("USERNAME".to_string(), user.username);
-        params.insert("PASSWORD".to_string(), user.password);
-        //params.insert("SECRET_HASH".to_string(), get_client_secret());
+        params.insert("USERNAME".to_string(), username);
+        params.insert("PASSWORD".to_string(), password);
+        params.insert("SECRET_HASH".to_string(), get_client_secret());
         let req = AdminInitiateAuthRequest {
             auth_flow: "USERPASSWORDAUTH".to_string(),
-            client_id: get_client_id(true),
+            client_id: get_client_id(),
             user_pool_id: get_user_pool_id(),
             auth_parameters: Some(params),
             ..Default::default()
@@ -100,21 +98,22 @@ impl CognitoClient {
     }
 
     pub async fn create_user(&self, 
-        user: CgUserSignup, email_verified: bool) -> Result<CgUser, String> 
+        username: String, 
+        temp_pass: String, 
+        email_verified: bool,
+        email: String) -> Result<CgUser, String> 
     {
-        let attrib = vec![
-            AttributeType { 
-                name: "email".into(), 
-                value: Some(user.email) 
-            },
-            AttributeType { 
-                name: "email_verified".into(), 
-                value: Some(email_verified.to_string()),
-            }
+        let mut attrib = vec![
+            AttributeType { name: "email", value: Some(email) }
         ];
+        if email_verified {
+            attrib.insert(AttributeType {
+                name: "email", value: Some(email),
+            });
+        }
         let req = AdminCreateUserRequest {
-            username: user.username,
-            temporary_password: Some(user.password),
+            username,
+            temporary_password: Some(temp_pass),
             desired_delivery_mediums: Some(vec!["EMAIL".to_string()]),
             validation_data: None,
             user_attributes: Some(attrib),
@@ -123,7 +122,7 @@ impl CognitoClient {
             ..Default::default()
         };
         match self.idp.admin_create_user(req).await {
-            Ok(res) => Ok(CgUser::from(res.user.unwrap())),
+            Ok(res) => Ok(CgUser::from(res)),
             Err(err) => Err(err.to_string())
         }
     }
@@ -166,26 +165,23 @@ impl CognitoClient {
         }
     }
 
-    pub async fn list_users(&self) -> () {}
-    pub async fn validate_token(&self) -> () {}
-    pub async fn update_user_attrib(&self) -> () {}
-    pub async fn confirm_email(&self) -> () {}
-
-    pub async fn signup_user(&self, user: CgUserSignup)
+    pub async fn signup_user(&self, 
+        username: String, 
+        password: String, 
+        email: String)
         ->  RusotoResult<CgSignupRes, SignUpError>
     {
         let attrib = Some(vec![
-            AttributeType { 
-                name: "email".into(), 
-                value: Some(user.email) 
-            },
+            AttributeType { name: "email".to_string(), value: Some(email) }
         ]);
         let req = SignUpRequest {
-            client_id: get_client_id(true),
-            //secret_hash: Some(get_client_secret()),
-            username: user.username, 
-            password: user.password, 
+            client_id: get_client_id(),
+            secret_hash: Some(get_client_secret()),
+            username, password, 
             user_attributes: attrib,
+            validation_data: None,
+            client_metadata: None,
+            user_context_data: None,
             ..Default::default()
         };
         match self.idp.sign_up(req).await {
@@ -201,6 +197,16 @@ fn get_provider() -> CognitoProvider {
          .region(region.clone())
          .build();
     provider
+}
+
+async fn register_user_cognito() {
+    let client = get_idp_client();
+    let create_identity_input = CreateIdentityPoolInput {
+        identity_pool_name: "divisid".to_string(),
+        developer_provider_name: Some("test".to_string()),
+        ..Default::default()
+    };
+
 }
 
 #[cfg(test)]
