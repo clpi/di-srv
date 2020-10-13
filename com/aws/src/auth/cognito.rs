@@ -18,7 +18,7 @@ use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType, UserPoolDescript
 };
 use rusoto_cognito_identity::{
     SetIdentityPoolRolesInput, GetIdInput, Credentials, IdentityPool, GetOpenIdTokenInput,
-    CognitoIdentity, 
+    CognitoIdentity, GetCredentialsForIdentityInput, GetCredentialsForIdentityResponse,
     CognitoIdentityClient, 
     ListIdentitiesInput, 
     ListIdentityPoolsInput, 
@@ -185,6 +185,10 @@ impl CognitoClient {
             Ok(resp) => Ok(CgSignupRes::from(resp)),
             Err(err) => Err(err)
         }
+    }
+
+    pub async fn get_credentials_for_id(id: String) -> Credentials {
+       Credentials::default() 
     }
 }
 

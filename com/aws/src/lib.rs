@@ -1,4 +1,6 @@
 pub mod auth;
+pub mod dynamo;
+pub mod s3;
 
 use rusoto_core::Region;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
@@ -20,3 +22,4 @@ pub async fn connect_dynamodb() {
     };
     let t = 3;
 }
+

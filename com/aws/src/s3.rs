@@ -1,17 +1,21 @@
 use rusoto_core::Region;
-use rusoto_s3::S3;
-use rusoto_s3::{DeleteObjectRequest, PutObjectRequest, S3Client};
+use rusoto_s3::{
+    S3, S3Client, DeleteObjectRequest, PutObjectRequest, GetObjectRequest,
+    JSONInput, JSONTypeSerializer, CSVInput, S3Error, Object, Rule, Bucket,
+    ListObjectsRequest, 
+};
 use std::io::Read;
 
+#[derive(Clone)]
 pub struct Client {
-
-    
+    s3: S3Client,
 }
 
 impl Client {
 
     pub fn new() -> Client {
-        let region = Region::default();
+        let region = Region::UsWest2;
+        let client = S3Client::new(region);
 
         /*
         Client {
@@ -20,7 +24,7 @@ impl Client {
             bucket_name: std::env::var("AWS_S3_BUCKET_NAME").unwrap(),
         }
         */
-        Self {}
+        Self { s3: client }
     }
 
     pub async fn put() -> () {}
