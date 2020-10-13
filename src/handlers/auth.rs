@@ -276,7 +276,7 @@ pub async fn cognito_signup(
 }
 
 pub async fn cognito_login_user(
-    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse 
+    (data, user): (web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse 
 {
     match &data.cognito.login_user(user.into_inner()).await {
         Ok(res) => HttpResponse::Ok()

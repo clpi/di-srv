@@ -21,8 +21,8 @@ pub struct User {
     #[serde(skip_serializing_if="Option::is_none")]
     pub id: Option<i32>,
     pub email: String,
-    #[serde(skip_serializing)]
     pub username: String,
+    #[serde(skip_serializing)]
     pub password: String,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,

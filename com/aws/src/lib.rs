@@ -20,11 +20,3 @@ pub async fn connect_dynamodb() {
     };
     let t = 3;
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

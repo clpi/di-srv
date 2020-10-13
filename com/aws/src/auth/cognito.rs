@@ -4,9 +4,9 @@ use super::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge, CgUs
 use std::collections::HashMap;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient};
 use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType, UserPoolDescriptionType,
-    GlobalSignOutResponse,
+    GlobalSignOutResponse, InitiateAuthError, 
     AdminGetUserRequest, AdminGetUserResponse, AdminGetUserError, AuthenticationResultType,
-    AdminInitiateAuthError, AdminInitiateAuthRequest, AdminInitiateAuthResponse,
+    AdminInitiateAuthRequest, AdminInitiateAuthResponse,
     AdminConfirmSignUpRequest, AdminConfirmSignUpResponse, AdminConfirmSignUpError, 
     AdminDeleteUserError, AdminDeleteUserRequest,
     AdminCreateUserError, AdminCreateUserRequest, AdminCreateUserResponse,
@@ -70,32 +70,24 @@ impl CognitoClient {
     }
 
     pub async fn login_user(&self, user: CgUserLogin)
-        ->  Result<CgAuthRes, AdminInitiateAuthError> 
+        ->  Result<CgAuthRes, String> 
     {
         let mut params = HashMap::new();
         params.insert("USERNAME".to_string(), user.username);
         params.insert("PASSWORD".to_string(), user.password);
         //params.insert("SECRET_HASH".to_string(), get_client_secret());
-        let req = AdminInitiateAuthRequest {
-            auth_flow: "USERPASSWORDAUTH".to_string(),
+        let req = InitiateAuthRequest {
+            auth_flow: "USER_PASSWORD_AUTH".to_string(),
             client_id: get_client_id(true),
-            user_pool_id: get_user_pool_id(),
             auth_parameters: Some(params),
             ..Default::default()
         };
-        match self.idp.admin_initiate_auth(req).await {
+        match self.idp.initiate_auth(req).await {
             Ok(resp) => match resp.authentication_result {
                 Some(res) => { return Ok(CgAuthRes::from(res)); },
-                None => {
-                    return Err(
-                        AdminInitiateAuthError::
-                        NotAuthorized("Couldnt authorize".to_string())); 
-                }
+                None => Err("".to_string()),
             },
-            Err(err) => Err(
-                AdminInitiateAuthError::
-                NotAuthorized("Couldnt authorize".to_string()))
-                
+            Err(err) => Err(err.to_string())
         }
     }
 
@@ -134,7 +126,7 @@ impl CognitoClient {
             client_metadata: None,
         };
         match self.idp.admin_confirm_sign_up(req).await {
-            Ok(res) => Ok(format!("Confirmed user {:?}", &username)),
+            Ok(_res) => Ok(format!("Confirmed user {:?}", &username)),
             Err(err) => Err(err.to_string())
         }
     }
@@ -168,6 +160,7 @@ impl CognitoClient {
 
     pub async fn list_users(&self) -> () {}
     pub async fn validate_token(&self) -> () {}
+    pub async fn validate_session(&self) -> () {}
     pub async fn update_user_attrib(&self) -> () {}
     pub async fn confirm_email(&self) -> () {}
 
