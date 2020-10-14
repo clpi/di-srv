@@ -40,6 +40,7 @@ impl User {
         }
     }
 
+    // NOTE deprecated -- user auth data stored in cognito, user info in dynamodb
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
         let res: i32 = sqlx::query

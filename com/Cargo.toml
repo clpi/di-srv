@@ -10,7 +10,6 @@ edition = "2018"
 tokio = { version = "*", features = ["full"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-argonautica="*"
 chrono = { version="*", features = ["serde"] }
 async-trait = "*"
 #jsonwebtoken = "*"

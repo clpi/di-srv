@@ -15,3 +15,22 @@ FROM scratch
 COPY --from=builder /usr/local/cargo/bin/divapi .
 USER 1000
 CMD ["./divapi"]
+
+
+#FROM alpine:latest AS builder
+#RUN apk update --quiet
+#RUN apk add curl
+#RUN apk add build-base
+#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#WORKDIR .
+#COPY . .
+#RUN $HOME/.cargo/bin/cargo build --release
+
+## Run
+#FROM alpine:latest
+#RUN apk add -q --no-cache libgcc tini
+#COPY --from=compiler /meilisearch/target/release/meilisearch .
+#ENV PORT 0.0.0.0:7777
+#EXPOSE  7777/tcp
+#ENTRYPOINT ["tini", "--"]
+#CMD     ./meilisearch

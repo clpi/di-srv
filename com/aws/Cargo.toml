@@ -8,18 +8,16 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "0.2", features = ["rt-core"] }
-#hyper = { version = "0.13.6", features = ["runtime"] }
 serde = { version = "*", features = ["derive"] }
 chrono = { version = "*", features = ["serde"] }
 serde_json = "*"
 
-#lambda_runtime="*"
 rusoto_core="*"
-rusoto_dynamodb="*"
 rusoto_credential="*"
+rusoto_dynamodb= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
 rusoto_cognito_idp= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
 rusoto_cognito_identity= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
-rusoto_s3="*"
+rusoto_s3= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
 dotenv="*"
 
 #dynomite="*"

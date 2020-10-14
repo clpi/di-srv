@@ -17,22 +17,17 @@ pub struct CognitoIn {}
 pub fn routes() -> Scope {
     scope("/auth")
         .service(cognito_routes())
-        .service(resource("")
-            .route(get().to(|| HttpResponse::Ok().body("GET /auth")))
-            .route(get().to(|| HttpResponse::Ok().body("POST /auth")))
-            .route(get().to(|| HttpResponse::Ok().body("DELETE /auth"))),
-        )
         .service(resource("/login")
             .route(get().to(|| HttpResponse::Ok().body("GET /auth/login")))
-            .route(post().to(login)),
+            .route(post().to(cognito_login_user)),
         )
         .service(resource("/signup")
             .route(get().to(|| HttpResponse::Ok().body("GET /auth/signup")))
-            .route(post().to(signup)),
+            .route(post().to(cognito_signup)),
         )
         .service(resource("/logout")
             .route(get().to(logout_session))
-            .route(post().to(logout)),
+            .route(post().to(cognito_logout_user)),
         )
         .service(resource("/refresh")
             .route(get().to(check_id))
@@ -79,64 +74,11 @@ pub fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpResponse> {
     }
 }
 
-pub async fn signup(
-    (req, user, data): (HttpRequest, web::Json<User>, web::Data<State>),
-) -> HttpResponse {
-    //let user = user.clone();
-    let hashed_user = User {
-        password: Auth::new().hash(&user.password).unwrap(), ..user.clone()
-    };
-    println!("SIGNUP: {}", serde_json::to_string(&hashed_user).unwrap());
-    match hashed_user.insert(&data.db.lock().unwrap()).await {
-        Ok(_uid) => {
-            HttpResponse::Ok()
-                .body("User signed up")
-        },
-        Err(_) => HttpResponse::NotAcceptable().finish()
-    }
-}
-
-pub async fn login(
-    (id, session, req, user, data): 
-    (Identity, Session, HttpRequest, web::Json<UserLogin>, web::Data<State>),
-) -> Result<HttpResponse, HttpResponse> {
-    let user = user.into_inner().clone();
-    match User::get_by_username(&data.db.lock().unwrap(), user.username).await {
-        Ok(Some(db_user)) => {
-            if Auth::new().verify(user.password, &db_user.password).unwrap() {
-                let user_in = UserIn::from(db_user.clone());
-                let login_str = serde_json::to_string(&user_in).unwrap();
-                id.remember(login_str.clone());
-                session.set("uid", &user_in).unwrap();
-                Ok(HttpResponse::Ok()
-                    .set_header("authorization", "true")
-                    .content_type("application/json")
-                    .json(&user_in))
-            } else { Err(HttpResponse::NotFound().body("Couldn't login")) }
-        }
-        _ => Err(HttpResponse::NotFound().body("COuldn't login"))
-    }
-}
-
-pub async fn logout(id: Identity, session: Session) -> HttpResponse {
-    match id.identity() {
-        Some(_ident) => {
-            id.forget();
-            session.purge();
-            HttpResponse::Ok()
-                .set_header("authorization", "false")
-                .del_cookie(&Cookie::named("r-auth-cookie"))
-                .del_cookie(&Cookie::named("auth-session"))
-                .body("User logged out")
-        }
-        None => HttpResponse::NotFound().body("No user to log out"),
-    }
-}
-
-pub async fn logout_session(session: Session) -> Result<HttpResponse, HttpResponse> {
+pub async fn logout_session(id: Identity, session: Session) -> Result<HttpResponse, HttpResponse> {
     let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
         Ok(Some(user)) => { 
+            id.forget();
             session.purge();
             Ok(HttpResponse::Ok()
                 .set_header("authorization", "false")
