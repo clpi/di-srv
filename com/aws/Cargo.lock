@@ -1001,6 +1001,8 @@ dependencies = [
  "bytes",
  "futures",
  "rusoto_core",
+ "serde",
+ "serde_derive",
  "xml-rs",
 ]
 

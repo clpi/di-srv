@@ -22,7 +22,6 @@ pub fn routes(cfg: &mut ServiceConfig) {
         .service(user::uid_routes())
         .service(user::username_routes())
         .service(auth::routes())
-        .service(auth::cognito_routes())
         .service(record::base_routes())
         .service(record::user_record_routes())
         .service(item::base_routes())

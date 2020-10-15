@@ -8,7 +8,6 @@ use actix_web::{ Error, cookie::Cookie,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
-use com::auth::Auth;
 use divdb::models::user::*;
 
 #[derive(Serialize, Deserialize)]
@@ -16,49 +15,35 @@ pub struct CognitoIn {}
 
 pub fn routes() -> Scope {
     scope("/auth")
-        .service(cognito_routes())
-        .service(resource("/login")
-            .route(get().to(|| HttpResponse::Ok().body("GET /auth/login")))
-            .route(post().to(cognito_login_user)),
+        //.wrap_fn(validate)
+        .service(resource("/login").route(post().to(login_user)))
+        .service(resource("/logout").route(post().to(logout_user)))
+        .service(resource("/signup").route(post().to(signup_user)))
+        .service(resource("/authorize").route(post().to(authorize_user)))
+        .service(resource("/token").route(post().to(get_token)))
+        // ADMIN ROUTES -- wrap_fn(validate_admin)
+        .service(resource("")
+            .route(post().to(create_user))
+            .route(get().to(get_users))
         )
-        .service(resource("/signup")
-            .route(get().to(|| HttpResponse::Ok().body("GET /auth/signup")))
-            .route(post().to(cognito_signup)),
-        )
-        .service(resource("/logout")
-            .route(get().to(logout_session))
-            .route(post().to(cognito_logout_user)),
-        )
-        .service(resource("/refresh")
-            .route(get().to(check_id))
-            .route(post().to(refresh_login)),
-        )
-        .service(resource("/check")
-            .route(get().to(check_session))
-        )
-}
-
-pub fn cognito_routes() -> Scope {
-        scope("/cognito")
-            //.wrap_fn(validate)
-            .service(resource("/login").route(post().to(cognito_login_user)))
-            .service(resource("/logout").route(post().to(cognito_logout_user)))
-            .service(resource("/signup").route(post().to(cognito_signup)))
-            .service(resource("/create").route(post().to(cognito_create_user)))
-            .service(resource("/authorize").route(post().to(cognito_authorize)))
-            .service(resource("/token").route(post().to(cognito_token)))
-            .service(scope("/{username}")
-                .service(resource("")
-                    .route(get().to(cognito_get_user))
-                    .route(delete().to(cognito_delete_user))
-                )
-                .service(resource("/confirm")
-                    .route(post().to(cognito_confirm_signup))
-                )
+        .service(scope("/{username}")
+            .service(resource("")
+                .route(get().to(get_user))
+                .route(delete().to(delete_user))
             )
+            .service(resource("/confirm")
+                .route(post().to(confirm_signup))
+            )
+            .service(resource("/{attribute}")
+                .route(get().to(get_attribute))
+                .route(post().to(add_attribute))
+                .route(delete().to(delete_attribute))
+                .route(put().to(set_attribute))
+            )
+        )
 }
 
-pub fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
+pub(crate) fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
     let user: Option<UserIn> = session.get("uid").unwrap_or(None);
     match user {
         Some(user) => { session.renew(); Ok(user) },
@@ -66,7 +51,7 @@ pub fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
     }
 }
 
-pub fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpResponse> {
+pub(crate) fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpResponse> {
     let user: Option<String> = id.identity();
     match user {
         Some(user) => { Ok(serde_json::from_str(&user).unwrap()) },
@@ -148,7 +133,7 @@ pub async fn check_session(
     }
 }
 
-pub async fn cognito_authorize(
+pub async fn authorize_user(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
 {
     let payload = body.into_inner();
@@ -162,7 +147,7 @@ pub async fn cognito_authorize(
     }
 }
 
-pub async fn cognito_get_user(
+pub async fn get_user(
     (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
@@ -173,7 +158,7 @@ pub async fn cognito_get_user(
     }
 }
 
-pub async fn cognito_confirm_signup(
+pub async fn confirm_signup(
     (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
 {
     match &data.cognito.confirm_signup(username.into_inner()).await {
@@ -184,7 +169,7 @@ pub async fn cognito_confirm_signup(
     }
 }
 
-pub async fn cognito_delete_user(
+pub async fn delete_user(
     (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
 {
     match &data.cognito.delete_user(username.into_inner()).await {
@@ -195,7 +180,7 @@ pub async fn cognito_delete_user(
     }
 }
 
-pub async fn cognito_create_user(
+pub async fn create_user(
     (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
 {
     match &data.cognito.create_user(user.into_inner(), true).await {
@@ -206,7 +191,7 @@ pub async fn cognito_create_user(
     }
 }
 
-pub async fn cognito_signup(
+pub async fn signup_user(
     (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
 {
     match &data.cognito.signup_user(user.into_inner()).await {
@@ -217,10 +202,10 @@ pub async fn cognito_signup(
     }
 }
 
-pub async fn cognito_login_user(
+pub async fn login_user(
     (data, user): (web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse 
 {
-    match &data.cognito.login_user(user.into_inner()).await {
+    match &data.cognito.login_user(user.into_inner()).await{
         Ok(res) => HttpResponse::Ok()
             .content_type("application/json")
             .json(res),
@@ -228,7 +213,7 @@ pub async fn cognito_login_user(
     }
 }
 
-pub async fn cognito_logout_user(
+pub async fn logout_user(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<String>) ) -> HttpResponse 
 {
     match &data.cognito.signout_user(body.into_inner()).await {
@@ -239,7 +224,7 @@ pub async fn cognito_logout_user(
     }
 }
 
-pub async fn cognito_token(
+pub async fn get_token(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>), ) -> HttpResponse 
 {
     let payload = body.into_inner();
@@ -254,3 +239,61 @@ pub async fn cognito_token(
         Err(_) => HttpResponse::NotFound().finish()
     }
 }
+
+pub async fn get_users(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+
+pub async fn set_attribute(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn get_attribute(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+pub async fn add_attribute(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+
+
+pub async fn delete_attribute(
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+{
+    match &data.cognito.get_user(username.into_inner().as_str()).await {
+        Ok(res) => HttpResponse::Ok()
+            .content_type("application/json")
+            .json(res),
+        Err(_) => HttpResponse::NotFound().finish()
+    }
+}
+

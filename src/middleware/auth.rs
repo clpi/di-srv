@@ -18,8 +18,15 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+use actix_web_httpauth::extractors::basic::BasicAuth;
 
-pub struct Auth;
+pub(crate) async fn validator_fn(req: ServiceRequest, cred: BasicAuth,) 
+    -> Result<ServiceRequest, Error> 
+{
+    Ok(req)
+}
+
+pub(crate) struct Auth;
 impl<S, B> Transform<S> for Auth
 where
     S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
@@ -37,9 +44,11 @@ where
         ok(AuthMiddleware { service })
     }
 }
-pub struct AuthMiddleware<S> {
+
+pub(crate) struct AuthMiddleware<S> {
     service: S,
 }
+
 impl<S, B> Service for AuthMiddleware<S>
 where
     S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,

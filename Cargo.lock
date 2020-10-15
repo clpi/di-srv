@@ -300,6 +300,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-protobuf"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af362615b2f93a278580d218b6485cb2afa4e7a22cbc9ab36e44ba3d79c66967"
+dependencies = [
+ "actix-rt",
+ "actix-web 3.0.2",
+ "bytes",
+ "derive_more",
+ "futures-util",
+ "prost",
+]
+
+[[package]]
 name = "actix-redis"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -623,6 +637,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-web-httpauth"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "536a75d767c5c2b3e64d3f569621f38ed7609359a0c82d149c88290a6ba41b22"
+dependencies = [
+ "actix-service",
+ "actix-web 3.0.2",
+ "base64 0.12.3",
+ "bytes",
+ "futures-util",
+]
+
+[[package]]
 name = "actix_derive"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -808,7 +835,7 @@ dependencies = [
  "http",
  "httparse",
  "indexmap",
- "itertools",
+ "itertools 0.9.0",
  "log",
  "multer",
  "once_cell",
@@ -849,7 +876,7 @@ checksum = "1a5abf43fe40a9620458abd93178499aa336445abbd48fba8e25a1a8a7fd5415"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
- "itertools",
+ "itertools 0.9.0",
  "proc-macro-crate",
  "proc-macro2",
  "quote",
@@ -1571,12 +1598,14 @@ dependencies = [
  "actix-files",
  "actix-identity",
  "actix-multipart",
+ "actix-protobuf",
  "actix-redis",
  "actix-rt",
  "actix-service",
  "actix-session",
  "actix-web 3.0.2",
  "actix-web-actors 3.0.0",
+ "actix-web-httpauth",
  "async-graphql",
  "async-graphql-actix-web",
  "chrono",
@@ -2151,6 +2180,15 @@ name = "ipnet"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47be2f14c678be2fdcab04ab1171db51b2762ce6f0a8ee87c8dd4a04ed216135"
+
+[[package]]
+name = "itertools"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
+dependencies = [
+ "either",
+]
 
 [[package]]
 name = "itertools"
@@ -2790,6 +2828,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51ef7cd2518ead700af67bf9d1a658d90b6037d77110fd9c0445429d0ba1c6c9"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "prost"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce49aefe0a6144a45de32927c77bd2859a5f7677b55f220ae5b744e87389c212"
+dependencies = [
+ "bytes",
+ "prost-derive",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "537aa19b95acde10a12fec4301466386f757403de4cd4e5b4fa78fb5ecb18f72"
+dependencies = [
+ "anyhow",
+ "itertools 0.8.2",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

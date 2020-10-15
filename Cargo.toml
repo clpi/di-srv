@@ -36,11 +36,18 @@ actix-web-actors = "3.0.0"
 actix-multipart = "*"
 derive_more = "*"
 actix-redis = "*"
+actix-protobuf="*"
+actix-web-httpauth="*"
+#openssl="*"
 #oxide-auth="*"
+#oauth2="*"
 #oxide-auth-actix="*"
+#jsonwebtokens="*"
+#jsonwebtokens-cognito="*"
 reqwest = { version="*", features = ["json"] }
 #jsonwebtoken = "*"
 #actix-casbin-auth="*"
+#rustls="*"
 
 async-graphql = { version = "*", optional= true }
 async-graphql-actix-web = { version = "*", optional = true }
@@ -55,6 +62,7 @@ div_cloud = { path = "./com/aws/" }
 
 [dev-dependencies]
 log = "*"
+#env_logger="*"
 #listenfd = "*"
 #dotenv="*"
 
