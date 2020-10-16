@@ -21,6 +21,7 @@ required-features= ["gql"]
 tokio = { version = "*", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
 chrono = { version = "*", features= [ "serde" ] }
+#uuid = { version = "*", features= [ "v5", "serde" ] }
 #validator = { version = "*", features = [ "derive" ] }
 futures = "*"
 serde_json = "*"
@@ -38,7 +39,9 @@ derive_more = "*"
 actix-redis = "*"
 actix-protobuf="*"
 actix-web-httpauth="*"
+#actix_ws = "*"
 #openssl="*"
+#redis-async="*"
 #oxide-auth="*"
 #oauth2="*"
 #oxide-auth-actix="*"
