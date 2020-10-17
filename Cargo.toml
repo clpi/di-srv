@@ -61,7 +61,7 @@ rusoto_cognito_identity = { version = "*", optional = true }
 
 divdb = { path = "./db/" }
 com = { path = "./com/" }
-div_cloud = { path = "./com/aws/" }
+div_cloud = { path = "./cloud/" }
 
 [dev-dependencies]
 log = "*"

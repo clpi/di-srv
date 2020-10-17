@@ -1597,6 +1597,7 @@ dependencies = [
  "rusoto_credential",
  "rusoto_dynamodb",
  "rusoto_s3",
+ "rusoto_sts",
  "serde",
  "serde_json",
  "tokio",
@@ -3187,6 +3188,24 @@ dependencies = [
  "sha2 0.9.1",
  "time 0.2.22",
  "tokio",
+]
+
+[[package]]
+name = "rusoto_sts"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3815b8c0fc1c50caf9e87603f23daadfedb18d854de287b361c69f68dc9d49e0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "futures",
+ "rusoto_core",
+ "serde",
+ "serde_derive",
+ "serde_urlencoded",
+ "tempfile",
+ "xml-rs",
 ]
 
 [[package]]

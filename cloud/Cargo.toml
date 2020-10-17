@@ -13,14 +13,34 @@ serde = { version = "*", features = ["derive"] }
 chrono = { version = "*", features = ["serde"] }
 serde_json = "*"
 futures = "*"
-#rusoto_core= { version = "*", features = ["rustls"] }
+#rusoto_core= { version = "*", features = [] }
 rusoto_core= "*"
 rusoto_credential="*"
 dynomite = "0.10"
-rusoto_dynamodb= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
-rusoto_cognito_idp= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
-rusoto_cognito_identity= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
-rusoto_s3= { version = "*", features = ["serialize_structs", "deserialize_structs"] }
+rusoto_dynamodb= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
+rusoto_cognito_idp= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
+rusoto_cognito_identity= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
+rusoto_s3= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
+rusoto_sts = { version = "*", features = ["serialize_structs"] }
 dotenv="*"
 
 #dynomite="*"
+#rusoto_iam="*"
+#rusoto_dynamodb_stream="*"
+#rusoto_glacier="*"
+#rusoto_kms="*"
+#rusoto_kinesis="*"
+#rusoto_sns
+#rusoto_secretsmanager
+#rusoto_ses
+#rusoto_sts
+#rusoto_sqs
+#rusoto_mq
+#rusoto_secretsmanager
+#risuto_signature
+#risuto_kineesis
+#rusoto_logs
+#rusoto_firehose
+#rusoto_ec2
+#rusoto_ecs
+#rusoto_cognito_sync="*"
