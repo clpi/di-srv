@@ -1,13 +1,13 @@
 pub mod types;
 
 use rusoto_core::{Region, ByteStream};
-use tokio::io::AsyncRead;
+use tokio::io::{AsyncRead, BufReader, AsyncReadExt};
 use rusoto_s3::{
     S3, S3Client, DeleteObjectRequest, PutObjectRequest, GetObjectRequest,
     JSONInput, JSONTypeSerializer, CSVInput, S3Error, Object, Rule, Bucket,
     ListObjectsV2Request, CreateBucketRequest, DeleteBucketRequest,
 };
-use std::io::Read;
+use std::{io::Read, collections::HashMap};
 
 #[derive(Clone)]
 pub struct Client {
@@ -40,12 +40,31 @@ impl Client {
         }
     }
 
-    pub async fn get_object(&self, bucket: &str, key: &str) -> Result<ByteStream, String> {
+    pub async fn get_object(&self, bucket: &str, key: &str) 
+        -> tokio::io::Result<Vec<u8>> 
+    {
         match self.s3.get_object(GetObjectRequest {
             bucket: bucket.into(),
             key: key.into(), ..Default::default()
         }).await {
-            Ok(obj) => Ok(obj.body.unwrap()),
+            Ok(obj) => match obj.body {
+                Some(content) => {
+                    let mut buf: Vec<u8> = Vec::new();
+                    content.into_async_read().read_to_end(&mut buf).await?;
+                    Ok(buf)
+                },
+                None => Err(tokio::io::ErrorKind::WriteZero.into())
+            },
+            Err(_err) => Err(tokio::io::ErrorKind::NotFound.into())
+        }
+    }
+
+    pub async fn delete_object(&self, bucket: &str, key: &str) -> Result<String, String> {
+        match self.s3.delete_object(DeleteObjectRequest {
+            bucket: bucket.into(),
+            key: key.into(), ..Default::default()
+        }).await {
+            Ok(_obj) => Ok("Deleted object".into()),
             Err(err) => Err(err.to_string())
         }
     }
@@ -75,9 +94,47 @@ impl Client {
         }
     }
 
-    pub async fn put(&self) -> () {}
+    pub async fn put(
+        &self, bucket: &str, 
+        path: &str, 
+        object: Vec<u8>,
+        metadata: Option<HashMap<String, String>>
+        ) -> Result<String, String> 
+    {
+        match self.s3.put_object(PutObjectRequest {
+            bucket: bucket.into(),
+            body: Some(object.into()),
+            key: path.into(),
+            metadata, ..Default::default()
+        }).await {
+            Ok(resp) => Ok(resp.e_tag.unwrap()),
+            Err(err) => Err(err.to_string())
+        }
+    }
 
     pub async fn get(&self) -> () {}
 
     pub async fn delete(&self) -> () {}
+}
+
+/// Represents an S3 client concerned with a single bucket in a region
+#[derive(Clone)]
+pub struct S3Bucket {
+    client: S3Client,
+    bucket: String,
+}
+
+impl S3Bucket {
+
+    pub fn new(bucket: &str) -> Self { 
+        let region = Region::UsWest2;
+        Self {
+            client: S3Client::new(region),
+            bucket: bucket.into(),
+        }
+    }
+    
+    pub async fn get_object(key: &str) -> Result<Object, String> {
+        Ok(Object::default())
+    }
 }

@@ -43,6 +43,13 @@ pub fn routes() -> Scope {
         )
 }
 
+pub fn ext_cognito_routes() -> Scope {
+    scope("/cognito")
+        .service(resource("/authorize").route(post().to(cognito_authorize)))
+        .service(resource("/token").route(post().to(cognito_token)))
+        .service(resource("/userinfo").route(post().to(cognito_userinfo)))
+}
+
 pub(crate) fn validate(session: &Session) -> Result<UserIn, actix_web::HttpResponse> {
     let user: Option<UserIn> = session.get("uid").unwrap_or(None);
     match user {
@@ -297,3 +304,15 @@ pub async fn delete_attribute(
     }
 }
 
+
+pub async fn cognito_authorize() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
+
+pub async fn cognito_token() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
+
+pub async fn cognito_userinfo() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
