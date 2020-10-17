@@ -49,7 +49,7 @@ impl DynamoClient {
 
     pub async fn create_table(&self, 
         table: &str, 
-        attrs_types: Vec<(&str, &str, bool)>, // name, type, is_key
+        attrs_types: Vec<(&str, &str, Option<&str>)>, // name, type, key_type
     ) -> Result<(), String> 
     {
         let (attrs, keys): (Vec<AttributeDefinition>, Vec<KeySchemaElement>) 
@@ -61,10 +61,10 @@ impl DynamoClient {
                     attribute_name: att.0.into(),
                     attribute_type: att.1.into(), ..Default::default()
                 });
-                if att.2 {
-                    keys.push(KeySchemaElement { //TODO deal with range key type
+                if let Some(key_type) = att.2 {
+                    keys.push(KeySchemaElement { //NOTE key_type = HASH or RANGE
                         attribute_name: att.0.into(),
-                        key_type: "HASH".into(), ..Default::default()
+                        key_type: key_type.into(), ..Default::default()
                     });
                 }
                 (attrs, keys)
@@ -106,5 +106,9 @@ impl DynamoClient {
         Ok(())
     }
 }
+
+/// Represents a specific table containing user info for IDP data
+#[derive(Clone)]
+pub struct UserTable {}
 
 
