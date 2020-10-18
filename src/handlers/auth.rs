@@ -100,6 +100,8 @@ pub async fn refresh_login(
     }
 }
 
+pub async fn check_auth() {}
+
 pub async fn check_id(
     (id, req, user, data): (
         Identity,

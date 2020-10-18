@@ -102,6 +102,10 @@ impl DynamoClient {
         }
     }
 
+    pub async fn list_items(&self, table: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     pub async fn write_user(&self, user: CgUser) -> Result<(), String> {
         Ok(())
     }

@@ -40,7 +40,6 @@ pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::i
     sys.block_on(srv)
 }
 
-
 pub fn create_app() -> App<impl ServiceFactory<
         Config = (),
         Request = dev::ServiceRequest,
