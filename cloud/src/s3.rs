@@ -2,6 +2,7 @@ pub mod types;
 
 use rusoto_core::{Region, ByteStream};
 use tokio::io::{AsyncRead, BufReader, AsyncReadExt};
+use futures::{FutureExt, TryStreamExt};
 use rusoto_s3::{
     S3, S3Client, DeleteObjectRequest, PutObjectRequest, GetObjectRequest,
     JSONInput, JSONTypeSerializer, CSVInput, S3Error, Object, Rule, Bucket,
@@ -12,6 +13,7 @@ use std::{io::Read, collections::HashMap};
 #[derive(Clone)]
 pub struct Client {
     s3: S3Client,
+    bucket: Option<&'static str>, // Take this out?
 }
 
 impl Client {
@@ -19,7 +21,13 @@ impl Client {
     pub fn new() -> Client {
         let region = Region::UsWest2;
         let client = S3Client::new(region);
-        Self { s3: client }
+        Self { s3: client, bucket: None }
+    }
+
+    pub fn with_bucket(bucket: &'static str) -> Self {
+        let region = Region::UsWest2;
+        let client = S3Client::new(region);
+        Self { s3: client, bucket: Some(bucket.into()) }
     }
 
     pub async fn create_bucket(&self, name: &str) -> Result<String, String> {
@@ -94,7 +102,7 @@ impl Client {
         }
     }
 
-    pub async fn put(
+    pub async fn put_item(
         &self, bucket: &str, 
         path: &str, 
         object: Vec<u8>,

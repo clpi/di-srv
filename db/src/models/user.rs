@@ -1,5 +1,6 @@
 use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
 use serde::{Serialize, Deserialize};
+use dynomite::{Item as DItem, FromAttributes, Attribute, attr_map};
 use crate::{
     db::Db, 
     models::{ Group, Model,
@@ -7,22 +8,23 @@ use crate::{
     },
 };
 use sqlx::Postgres;
-use async_trait::async_trait;
+use div_cloud::dynamo::DynamoClient;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct UserLogin { pub username: String, pub password: String }
+pub struct UserLogin { pub username: String, pub password: String}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UserRegister { pub email: String, pub username: String, pub password: String }
 
 #[serde(rename_all="camelCase")]
-#[derive(Serialize, Deserialize, FromRow, Clone)]
+#[derive(DItem, Serialize, Deserialize, FromRow, Clone)]
 pub struct User {
     #[serde(skip_serializing_if="Option::is_none")]
+    #[dynomite(partition_key)]
     pub id: Option<i32>,
     pub email: String,
     pub username: String,
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     pub password: String,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
@@ -40,8 +42,7 @@ impl User {
         }
     }
 
-    // NOTE deprecated -- user auth data stored in cognito, user info in dynamodb
-    pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
+    pub async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
         println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
         let res: i32 = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
@@ -55,6 +56,10 @@ impl User {
         let user_with_id = User { id: Some(res), ..self };
         //UserInfo::from(user_with_id.clone()).insert(db).await?;
         Ok(user_with_id)
+    }
+
+    pub async fn insert_dynamo(self, db: &DynamoClient) -> Result<(), String> {
+        db.insert("diuser", self).await
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {

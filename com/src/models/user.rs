@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use serde::{Serialize, Deserialize};
 use sqlx::{types::chrono::{Utc, DateTime}, FromRow, Type};
 

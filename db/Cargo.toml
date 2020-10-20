@@ -19,7 +19,7 @@ path = "src/bin/main.rs"
 com = { path = "./../com" }
 async-std = { version = "1.6.0", features = ["attributes"] }
 async-trait = "*"
-async-sqlx-session = { version = "*", features = ["pg"] }
+#async-sqlx-session = { version = "*", features = ["pg"] }
 futures = "0.3.1"
 #tokio = { version = "*", features = ["full"] , optional=true}
 serde = { version = "*", features = ["derive"] }
@@ -27,13 +27,16 @@ serde_json = "*"
 chrono = { version = "*", features = ["serde"] }
 uuid = { version = "*", features = ["serde", "v4"] }
 async-graphql= {version="*", optional=true}
-validator = { version = "0.11", features = ["derive"] }
+#validator = { version = "0.11", features = ["derive"] }
+dynomite = "*"
 #juniper="*"
 dotenv="*"
 #walkdir = "*"
 #juniper = { version = "*" }
 #refinery = { version = "0.3.0", features = ["postgres"] }
 #barrel = { version = "0.6.5", features = ["pg"] }
+
+div_cloud = { path = "../cloud/" }
 
 [dependencies.sqlx]
 version = "0.4.0-beta.1"

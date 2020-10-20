@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use dynomite::{self, Item as DItem, Attribute, FromAttributes, attr_map, AttributeValue, AttributeError};
+use div_cloud::dynamo::DynamoClient;
 use sqlx::{
     types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json},
     FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
@@ -9,10 +11,12 @@ use crate::{ Db,
 };
 
 #[serde(rename_all="camelCase")]
-#[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, FromRow, DItem, Clone, PartialEq)]
 pub struct UserInfo { 
     #[serde(skip_serializing_if="Option::is_none")]
+    #[dynomite(default)]
     pub id: Option<i32>,
+    #[dynomite(partition_key)]
     pub uid: i32,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -71,6 +75,10 @@ impl UserInfo {
             .fetch_all(&db.pool)
             .await?;
         Ok(res)
+    }
+
+    pub async fn insert_dynamo(self, db: &DynamoClient) -> Result<(), String> {
+        db.insert("diuser", self).await
     }
 
     pub async fn insert_empty(db: &Db, uid: i32) -> sqlx::Result<i32> {
@@ -148,6 +156,21 @@ pub enum UserType {
     User,
 }
 
+impl UserType {
+
+}
+
+impl Into<String> for UserType {
+    fn into(self) -> String {
+        match self {
+            UserType::Administrator => "admin".to_string(),
+            UserType::Associate => "associate".to_string(),
+            UserType::Moderator => "mod".to_string(),
+            UserType::User => "user".to_string(),
+        }
+    }
+}
+
 impl From<&'static PgRow> for UserInfo {
     fn from(row: &'static PgRow) -> Self {
         UserInfo::from_row(row).expect("Couldn't map to UserInfo")
@@ -156,6 +179,19 @@ impl From<&'static PgRow> for UserInfo {
 
 impl Default for UserType {
     fn default() -> Self { UserType::User }
+}
+
+impl Attribute for UserType {
+
+    fn from_attr(value: AttributeValue) -> Result<Self, AttributeError> {
+        Ok(UserType::default())
+    }
+
+    fn into_attr(self: Self) -> AttributeValue {
+        AttributeValue {
+            s: Some(self.into()), ..Default::default()
+        }    
+    }
 }
 
 impl Model for UserInfo {

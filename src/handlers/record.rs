@@ -1,11 +1,13 @@
 use divdb::models::{Model, Record, User, Item};
 use crate::state::State;
+use actix_session::Session;
 use actix_identity::Identity;
 use actix_web::{ Scope,
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse,
 };
+
 pub fn base_routes() -> Scope {
     scope("/record")
         .service(resource("")
@@ -69,7 +71,6 @@ pub fn user_record_routes() -> Scope {
         )
 }
 
-
 pub async fn get_user_records(
     data: web::Data<State>, uid: web::Path<i32>
 ) -> HttpResponse {
@@ -82,6 +83,9 @@ pub async fn get_user_records(
         },
         _ => HttpResponse::NotFound().body(""),
     }
+}
+
+pub async fn add_new_record_to_user_auth(id: web::Path<i32>, user: Session) {
 }
 
 pub async fn get_by_id(id: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
@@ -220,3 +224,15 @@ pub async fn delete_record_by_id(path: web::Path<(i32, String)>, data: web::Data
     HttpResponse::Ok().json("{}")
 }
 
+// pub async fn delete_record_by_username_record_name(path: web::Path<(String, String))
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    async fn can_add_record_to_user() -> Result<(), String> {
+        Ok(()) 
+
+    }
+}

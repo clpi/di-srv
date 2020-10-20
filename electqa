@@ -1,0 +1,10 @@
++------+----------------+------------+-------------------------------------------------------------------------------------------------------------------------+-------------------------------+
+| [38;5;47;01mid[39;00m   | [38;5;47;01memail[39;00m          | [38;5;47;01musername[39;00m   | [38;5;47;01mpassword[39;00m                                                                                                                | [38;5;47;01mcreated_at[39;00m                    |
+|------+----------------+------------+-------------------------------------------------------------------------------------------------------------------------+-------------------------------|
+| 6    | mister@div.is  | mister     | $argon2id$v=19$m=4096,t=192,p=8$i+WqAT3o2sX4f/fPpWUbL4JOFmJbu31e8JQ/cjH2g5I$s6PBYk4a3PmhXo9QO0U85NLLs7MfkWNfKTmAs9HutcU | 2020-10-08 06:20:14.969935+00 |
+| 7    | testman@div.is | testman    | $argon2id$v=19$m=4096,t=192,p=8$NTrzjJPjdLEh9VpNJvALRSHQbSik6y+kOWbTHtQNpuo$QxKGM/mpwIh9wurYFqlKWR+8J9O6/GAEA/PhVDNbWcM | 2020-10-09 05:55:53.252901+00 |
+| 9    | dude@div.is    | dude       | $argon2id$v=19$m=4096,t=192,p=8$uA7U+vD9jbmQp8hOcop7feNL+xCAL6WUCSLDxoliOtk$YZJmsUZn8bwD3HUmY+kgvAS2psfJA9DXVNnfEmx83X4 | 2020-10-09 06:00:33.29591+00  |
+| 10   | man@div.is     | man        | $argon2id$v=19$m=4096,t=192,p=8$gdcPjC6dXXr+d0MMVJiCn/xVKL9uMg8h/6mWw1nDbMM$dXxsDJYnCsqCXjHbtOpeemtQwXnihEmpZvZiD0xnl4s | 2020-10-09 06:02:26.289019+00 |
+| 11   | chris@div.is   | chris      | $argon2id$v=19$m=4096,t=192,p=8$qZkVOkwMKycX4X/IURmtgC8CGt/TnZlCGJUlcANDtgQ$tFSc7Nu1NuZrvTEN7iN+GBzanMt0tPUSXHOLCwFmWxU | 2020-10-10 09:21:40.003242+00 |
++------+----------------+------------+-------------------------------------------------------------------------------------------------------------------------+-------------------------------+
+SELECT 5

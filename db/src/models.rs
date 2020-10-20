@@ -19,8 +19,8 @@ pub mod logic;
 pub mod types;
 pub mod attrib;
 
+pub use dynomite::{Attribute, Attributes, AttributeValue};
 pub use types::{Visibility, Status, Priority};
-pub use attrib::Attribute;
 
 use async_trait::async_trait;
 use sqlx::{postgres::PgRow, prelude::*, Postgres, Encode};

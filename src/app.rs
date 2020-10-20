@@ -12,17 +12,20 @@
 //       docker build -> create binary w/o rust toolchain) to deploy to io.div.is, along
 //       side scaffolded frontend web interface
 //
-// TODO: Add route protection with authentication (actix-http-auth) as well as CORS
 
 use crate::{handlers, middleware, state,};
+use actix_web::web;
 use actix_service::ServiceFactory;
 use actix_session::{Session, UserSession};
+use actix_web::web::to;
+use actix_protobuf::*;
 use actix_web::{
     body, dev, get, 
     web, App, Error, HttpRequest, HttpResponse, HttpServer, 
 };
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
+use tokio::*;
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
@@ -70,3 +73,5 @@ pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResp
     HttpResponse::Ok().body(&test.string)
 }
 
+
+pub async fn test() {}

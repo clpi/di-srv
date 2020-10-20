@@ -47,6 +47,18 @@ impl DynamoClient {
         }
     }
 
+    pub async fn insert(&self, table: &str, item: impl Item) -> Result<(), String> {
+        match self.db.put_item(PutItemInput {
+            table_name: table.into(),
+            item: item.into(), ..Default::default()
+        }).await {
+            Ok(resp) => Ok(()),
+            Err(err) => Err(err.to_string()),
+        }
+    }
+
+    pub async fn delete_table(&self, table: &str) -> () {}
+
     pub async fn create_table(&self, 
         table: &str, 
         attrs_types: Vec<(&str, &str, Option<&str>)>, // name, type, key_type
