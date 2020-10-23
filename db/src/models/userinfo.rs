@@ -11,12 +11,12 @@ use crate::{ Db,
 };
 
 #[serde(rename_all="camelCase")]
-#[derive(Serialize, Deserialize, FromRow, DItem, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct UserInfo { 
-    #[serde(skip_serializing_if="Option::is_none")]
-    #[dynomite(default)]
+    //#[serde(skip_serializing_if="Option::is_none")]
+    // #[dynomite(default)]
     pub id: Option<i32>,
-    #[dynomite(partition_key)]
+    // #[dynomite(partition_key)]
     pub uid: i32,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -77,9 +77,9 @@ impl UserInfo {
         Ok(res)
     }
 
-    pub async fn insert_dynamo(self, db: &DynamoClient) -> Result<(), String> {
-        db.insert("diuser", self).await
-    }
+    // pub async fn insert_dynamo(self, db: &DynamoClient) -> Result<(), String> {
+    //     db.insert("diuser", self).await
+    // }
 
     pub async fn insert_empty(db: &Db, uid: i32) -> sqlx::Result<i32> {
         let res = sqlx::query("INSERT INTO UserInfo (
@@ -181,6 +181,7 @@ impl Default for UserType {
     fn default() -> Self { UserType::User }
 }
 
+/*
 impl Attribute for UserType {
 
     fn from_attr(value: AttributeValue) -> Result<Self, AttributeError> {
@@ -194,6 +195,7 @@ impl Attribute for UserType {
     }
 }
 
+*/
 impl Model for UserInfo {
     fn table() -> String { "UserInfo".to_string() }
     fn foreign_id() -> String {

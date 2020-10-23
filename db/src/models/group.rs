@@ -4,7 +4,9 @@ use crate::{Db, models::{
 }};
 use serde::{Serialize, Deserialize};
 use sqlx::{
-    types::chrono::{Utc, DateTime}, 
+    types::{
+        chrono::{Utc, DateTime}, uuid::{Uuid, Variant},
+    }, 
     FromRow, Type, postgres::{Postgres, PgRow}, Decode
 };
 
@@ -12,8 +14,8 @@ use sqlx::{
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct Group {
     #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<i32>,
-    pub uid: i32,
+    pub id: Option<Uuid>,
+    pub uid: Uuid,
     pub name: String,
     #[serde(default="Visibility::default")]
     pub visibility: Visibility,

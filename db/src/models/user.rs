@@ -1,4 +1,11 @@
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
+use sqlx::{
+    FromRow, 
+    types::{
+        chrono::{DateTime, Utc}, 
+        uuid::{Uuid, Variant}
+    }, 
+    postgres::PgRow, prelude::*
+};
 use serde::{Serialize, Deserialize};
 use dynomite::{Item as DItem, FromAttributes, Attribute, attr_map};
 use crate::{
@@ -19,32 +26,31 @@ pub struct UserRegister { pub email: String, pub username: String, pub password:
 #[serde(rename_all="camelCase")]
 #[derive(DItem, Serialize, Deserialize, FromRow, Clone)]
 pub struct User {
-    #[serde(skip_serializing_if="Option::is_none")]
     #[dynomite(partition_key)]
-    pub id: Option<i32>,
+    pub id: Option<Uuid>,
     pub email: String,
     pub username: String,
     #[serde(skip)]
-    pub password: String,
+    pub password: Option<String>,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
 
 impl User {
 
-    pub fn new<T, U, V>(email: T, username: U, password: V,) -> User
+    pub fn new<T, U, V>(email: T, username: U, password: Option<V>) -> User
         where T: Into<String>, U: Into<String>, V: Into<String> {
         User { 
+            id: Some(Uuid::new_v4()),
             email: email.into(), 
             username: username.into(), 
-            password: password.into(),
+            password: Some(password.into()),
             ..User::default()
         }
     }
 
     pub async fn insert_db(self, db: &Db) -> sqlx::Result<Self> {
-        println!("INSERTING {} {} {}", &self.username, &self.email, &self.password);
-        let res: i32 = sqlx::query
+        let res: Uuid = sqlx::query
             ("INSERT INTO Users (email, username, password, created_at)
               VALUES ($1, $2, $3, $4) RETURNING id") 
             .bind(&self.email)
@@ -53,13 +59,13 @@ impl User {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        let user_with_id = User { id: Some(res), ..self };
+        let user_with_id = User { id: res, ..self };
         //UserInfo::from(user_with_id.clone()).insert(db).await?;
         Ok(user_with_id)
     }
 
     pub async fn insert_dynamo(self, db: &DynamoClient) -> Result<(), String> {
-        db.insert("diuser", self).await
+        db.insert("diuser".into(), self).await
     }
 
     pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {
@@ -216,7 +222,7 @@ impl User {
 impl Default for User {
     fn default() -> Self {
         User {
-            id: None,
+            id: Uuid::new_v4(),
             username: String::from(""),
             email: String::from(""),
             password: String::from(""),

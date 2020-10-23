@@ -5,7 +5,7 @@ use actix_web::test;
 use divapi::models::user::User;
 use divdb::models::user::{UserRegister, UserLogin};
 use divapi::{
-    app::create_app, handlers::auth::{signup, login, logout, refresh_login},
+    app::create_app, handlers::auth::{refresh_login},
 };
 
 /*

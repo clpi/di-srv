@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate validator;
-
 pub mod db;
 pub mod config;
 pub mod query;
