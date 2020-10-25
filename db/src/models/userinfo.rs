@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use dynomite::{self, Item as DItem, Attribute, FromAttributes, attr_map, AttributeValue, AttributeError};
 use div_cloud::dynamo::DynamoClient;
 use sqlx::{
-    types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json},
+    types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json, uuid::Uuid},
     FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
 };
 use crate::{ Db,
@@ -15,7 +15,7 @@ use crate::{ Db,
 pub struct UserInfo { 
     //#[serde(skip_serializing_if="Option::is_none")]
     // #[dynomite(default)]
-    pub id: Option<i32>,
+    pub id: Option<Uuid>,
     // #[dynomite(partition_key)]
     pub uid: i32,
     pub first_name: Option<String>,
@@ -110,6 +110,7 @@ impl UserInfo {
 impl Default for UserInfo {
     fn default() -> Self {
         Self { 
+            id: Some(Uuid::new_v4()),
             user_type: UserType::default(),
             updated_at: Utc::now(),
             experience: 0_i32,

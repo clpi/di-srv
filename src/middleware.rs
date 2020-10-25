@@ -15,7 +15,8 @@ use actix_web::{
 use actix_session::{Session, UserSession, CookieSession};
 
 pub fn logger() -> Logger {
-    Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#)
+    let _log = Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#);
+    Logger::default()
 }
 
 pub fn cors() -> Cors {

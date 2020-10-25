@@ -14,16 +14,18 @@ pub use field::Field;
 pub use group::Group;
 
 pub mod relation;
-pub mod entity;
-pub mod logic;
 pub mod types;
-pub mod attrib;
 
 pub use dynomite::{Attribute, Attributes, AttributeValue};
 pub use types::{Visibility, Status, Priority};
 
 use async_trait::async_trait;
-use sqlx::{postgres::PgRow, prelude::*, Postgres, Encode};
+use sqlx::{
+    types::{
+        chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
+    }, 
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode
+};
 use crate::Db;
 
 #[async_trait]
@@ -35,13 +37,13 @@ pub trait Model: Sized + Default + From<&'static PgRow> + Send + Sync {
 
     fn foreign_keys() -> Vec<String> { vec!["".to_string()] }
 
-    fn id(self) -> i32;
+    fn id(self) -> Uuid;
 
     fn fields() -> Vec<String> { vec!["".to_string()] }
 
     fn values() -> Vec<String> { vec!["".to_string()] }
 
-    async fn insert(&self, db: &Db) -> sqlx::Result<i32> { Ok(0i32) }
+    async fn insert(&self, db: &Db) -> sqlx::Result<Uuid> { Ok(Uuid::new_v4()) }
 
     async fn delete(self, db: &Db) -> sqlx::Result<i32> {
         let res: i32 = sqlx::query("DELETE FROM $1 WHERE id = $2 RETURNING id")

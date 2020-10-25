@@ -7,16 +7,18 @@ use crate::{Db,
 use serde::{Serialize, Deserialize};
 use chrono::Duration;
 use sqlx::{
-    types::chrono::{Utc, DateTime, NaiveDateTime, NaiveDate, NaiveTime}, 
-    FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
+    types::{
+        chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
+    }, 
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode
 };
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct Field { 
     #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<i32>,
-    pub uid: i32,
+    pub id: Option<Uuid>,
+    pub uid: Uuid,
     pub name: String,
     #[serde(default="FieldType::default")]
     pub field_type: FieldType,

@@ -50,6 +50,8 @@ actix-protobuf="*"
 reqwest = { version="*", features = ["json"] }
 #jsonwebtoken = "*"
 #actix-casbin-auth="*"
+#tinyvec="*"
+#smolstr="*"
 #rustls="*"
 
 async-graphql = { version = "*", optional= true }
@@ -65,7 +67,7 @@ div_cloud = { path = "./cloud/" }
 
 [dev-dependencies]
 log = "*"
-#env_logger="*"
+env_logger="*"
 #listenfd = "*"
 #dotenv="*"
 

@@ -6,7 +6,10 @@ pub mod field;
 
 use super::{Model, Status, Visibility, relation::Relation,};
 use crate::Db;
-use sqlx::{prelude::*, postgres::*, types::chrono::{DateTime, Utc}};
+use sqlx::{ postgres::*,
+    types::{ chrono::{Utc, DateTime}, uuid::{Uuid, Variant}, }, 
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
+};
 use serde::{Serialize, Deserialize};
 
 //TODO consolidate some of these structs/traits
@@ -24,7 +27,6 @@ pub enum LinkType {
     ItemField,
     FieldField,
 }
-
 
 #[async_trait::async_trait]
 pub trait LinkModel : Default + Sized {
@@ -55,7 +57,7 @@ pub trait LinkedTo<T: Model + 'static> : Model {
     // NOTE special case, won't work for ItemItemRels or FieldField ex.
     //      since foreign id won't be specified as such for either, so needs
     //      to be manually implemented for these cases or put in a condiitonal here
-    async fn get_links_from_id(db: &Db, id: i32) -> sqlx::Result<Vec<PgRow>> {
+    async fn get_links_from_id(db: &Db, id: Uuid) -> sqlx::Result<Vec<PgRow>> {
         let (fid1, fid2): (String, String);
         if Self::foreign_id() == T::foreign_id() { 
             fid1= format!("{}1", Self::foreign_id());
@@ -78,7 +80,7 @@ pub trait LinkedTo<T: Model + 'static> : Model {
         Ok(res)
     }
 
-    async fn linked_to_id_of_other(db: &Db, id: i32) -> sqlx::Result<Vec<PgRow>> {
+    async fn linked_to_id_of_other(db: &Db, id: Uuid) -> sqlx::Result<Vec<PgRow>> {
         let (fid1, fid2): (String, String);
         if Self::foreign_id() == T::foreign_id() { 
             fid1= format!("{}1", Self::foreign_id());
@@ -102,11 +104,11 @@ pub trait LinkedTo<T: Model + 'static> : Model {
     }
 }
 
-pub struct Link(Option<i32>, Option<i32>);
+pub struct Link(Option<Uuid>, Option<Uuid>);
 
 impl Link {
 
-    pub fn new(id1: Option<i32>, id2: Option<i32>) -> Self { Self(id1, id2) }
+    pub fn new(id1: Option<Uuid>, id2: Option<Uuid>) -> Self { Self(id1, id2) }
 
     pub fn check_foreign_id<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>() -> (String, String) {
         let (mut fid1, mut fid2): (String, String) = (T::foreign_id(), U::foreign_id());
@@ -117,10 +119,10 @@ impl Link {
         (fid1, fid2)
     }
 
-    pub async fn insert<'a, T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>(self, db: &Db) -> sqlx::Result<i32> {
+    pub async fn insert<'a, T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>(self, db: &Db) -> sqlx::Result<Uuid> {
         let table: String = LinkType::from((T::table(), U::table())).into();
         let (fid1, fid2) = Self::check_foreign_id::<T, U>();
-        let res: i32 = sqlx::query
+        let res: Uuid = sqlx::query
             ("INSERT INTO $1 ($2, $3, relation, status, created_at)
             VALUES ($4, $5, $6, $7) RETURNING id")
             .bind(table)
@@ -133,13 +135,13 @@ impl Link {
             .bind(Utc::now())
             .fetch_one(&db.pool).await?
             .get("id");
-        Ok(res as i32)
+        Ok(res as Uuid)
     }
 
-    pub async fn insert_relation<'a, T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>(self, db: &Db, relation: String) -> sqlx::Result<i32> {
+    pub async fn insert_relation<'a, T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>(self, db: &Db, relation: String) -> sqlx::Result<Uuid> {
         let table: String = LinkType::from((T::table(), U::table())).into();
         let (fid1, fid2) = Self::check_foreign_id::<T, U>();
-        let res: i32 = sqlx::query
+        let res: Uuid = sqlx::query
             ("INSERT INTO $1 ($2, $3, relation, status, created_at)
             VALUES ($4, $4, $6) RETURNING id")
             .bind(table)
@@ -152,7 +154,7 @@ impl Link {
             .bind(Utc::now())
             .fetch_one(&db.pool).await?
             .get("id");
-        Ok(res as i32)
+        Ok(res)
     }
 }
 

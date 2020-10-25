@@ -1,5 +1,4 @@
-use sqlx::{
-    FromRow, 
+use sqlx::{FromRow, 
     types::{
         chrono::{DateTime, Utc}, 
         uuid::{Uuid, Variant}
@@ -10,8 +9,9 @@ use serde::{Serialize, Deserialize};
 use dynomite::{Item as DItem, FromAttributes, Attribute, attr_map};
 use crate::{
     db::Db, 
-    models::{ Group, Model,
-        Record, UserInfo, Item, link::{Link, LinkedTo},
+    models::{ 
+        Group, Model, Record, UserInfo, Item, 
+        link::{Link, LinkedTo},
     },
 };
 use sqlx::Postgres;
@@ -38,13 +38,13 @@ pub struct User {
 
 impl User {
 
-    pub fn new<T, U, V>(email: T, username: U, password: Option<V>) -> User
+    pub fn new<T, U, V>(email: T, username: U, password: Option<String>) -> User
         where T: Into<String>, U: Into<String>, V: Into<String> {
         User { 
             id: Some(Uuid::new_v4()),
             email: email.into(), 
             username: username.into(), 
-            password: Some(password.into()),
+            password,
             ..User::default()
         }
     }
@@ -59,7 +59,7 @@ impl User {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        let user_with_id = User { id: res, ..self };
+        let user_with_id = User { id: Some(res), ..self };
         //UserInfo::from(user_with_id.clone()).insert(db).await?;
         Ok(user_with_id)
     }
@@ -68,16 +68,16 @@ impl User {
         db.insert("diuser".into(), self).await
     }
 
-    pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<i32> {
-        let res: i32 = sqlx::query_scalar
+    pub async fn delete_by_username(db: &Db, username: String) -> sqlx::Result<Uuid> {
+        let res: Uuid = sqlx::query_scalar
             ("DELETE FROM Users WHERE username=$1 RETURNING id")
             .bind(username)
             .fetch_one(&db.pool).await?;
-        Ok(res as i32)
+        Ok(res as Uuid)
     }
 
-    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<Option<i32>> {
-        let res: Option<i32> = sqlx::query_scalar
+    pub async fn delete_by_id(db: &Db, id: Uuid) -> sqlx::Result<Option<Uuid>> {
+        let res: Option<Uuid> = sqlx::query_scalar
             ("DELETE FROM Users WHERE id=$1 RETURNING id")
             .bind(id)
             .fetch_optional(&db.pool).await?;
@@ -92,7 +92,7 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<User>> {
+    pub async fn get_by_id(db: &Db, id: Uuid) -> sqlx::Result<Option<User>> {
         let res: Option<User> = sqlx::query_as::<Postgres, User>
             ("SELECT * FROM Users WHERE id=$1") 
             .bind(id)
@@ -112,7 +112,7 @@ impl User {
     }
 
     // Get all records created by user
-    pub async fn get_all_records(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
+    pub async fn get_all_records(db: &Db, id: Uuid) -> sqlx::Result<Vec<Record>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>
             ("SELECT * FROM Records r WHERE r.uid = $1")
             .bind(id)
@@ -121,7 +121,7 @@ impl User {
     }
 
     pub async fn get_item_by_name(
-        db: &Db, uid: i32, item_name: String
+        db: &Db, uid: Uuid, item_name: String
         ) -> sqlx::Result<Option<Item>> 
     {
         let res: Option<Item> = sqlx::query_as::<Postgres, Item>
@@ -133,10 +133,10 @@ impl User {
     }
 
     pub async fn delete_item_by_name(
-        db: &Db, uid: i32, item_name: String
-        ) -> sqlx::Result<i32>
+        db: &Db, uid: Uuid, item_name: String
+        ) -> sqlx::Result<Uuid>
     {
-        let res: i32 = sqlx::query(
+        let res: Uuid = sqlx::query(
             "DELETE FROM Items i WHERE i.uid = $1 AND i.name = $2 RETURNING id")
             .bind(uid)
             .bind(item_name)
@@ -145,7 +145,7 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_all_items(db: &Db, id: i32) -> sqlx::Result<Vec<Item>> {
+    pub async fn get_all_items(db: &Db, id: Uuid) -> sqlx::Result<Vec<Item>> {
         let res: Vec<Item> = sqlx::query_as::<Postgres, Item>
             ("SELECT * FROM Items i WHERE i.uid = $1")
             .bind(id)
@@ -153,7 +153,7 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_linked_records(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
+    pub async fn get_linked_records(db: &Db, id: Uuid) -> sqlx::Result<Vec<Record>> {
         let res = sqlx::query_as::<Postgres, Record>
             ("SELECT r.id, r.name, r.status, r.visibility, r.created_at
               FROM Records r INNER JOIN UserRecordLinks ur ON r.id = ur.rid
@@ -164,7 +164,7 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_linked_items(db: &Db, id: i32) -> sqlx::Result<Vec<Record>> {
+    pub async fn get_linked_items(db: &Db, id: Uuid) -> sqlx::Result<Vec<Record>> {
         let res = sqlx::query_as::<Postgres, Record>
             ("SELECT i.id, i.name, i.status, i.visibility, i.created_at
               FROM Items i INNER JOIN UserItemLinks ui ON ui.iid = i.id
@@ -175,19 +175,19 @@ impl User {
         Ok(res)
     }
 
-    pub async fn get_named_record(db: &Db, uid: i32, rec_name: String,
+    pub async fn get_named_record(db: &Db, uid: Uuid, rec_name: String,
         ) -> sqlx::Result<Record> 
     {
         Ok(Record::default())
     }
 
-    pub async fn get_named_item(db: &Db, uid: i32, item_name: String,
+    pub async fn get_named_item(db: &Db, uid: Uuid, item_name: String,
         ) -> sqlx::Result<Item> 
     {
         Ok(Item::default())
     }
 
-    pub async fn add_new_record(db: &Db, uid: i32, rec_name: String,
+    pub async fn add_new_record(db: &Db, uid: Uuid, rec_name: String,
         ) -> sqlx::Result<Record> 
     {
         let rec: Record = Record::new(uid, rec_name).insert(db).await?;
@@ -195,7 +195,7 @@ impl User {
         Ok(rec)
     }
 
-    pub async fn add_existing_record(db: &Db, uid: i32, record: Record) 
+    pub async fn add_existing_record(db: &Db, uid: Uuid, record: Record) 
         -> sqlx::Result<Option<Record>> {
         if uid == record.id.unwrap() { return Ok(None); }
         let res = Link::new(Some(uid), record.id).insert::<User, Record>(db).await?;
@@ -203,14 +203,14 @@ impl User {
     }
 
     pub async fn add_new_item(
-        db: &Db, uid: i32, item_name: String,
+        db: &Db, uid: Uuid, item_name: String,
     ) -> sqlx::Result<Item> {
         let item = Item::new(uid, item_name).insert(db).await?;
         Link::new(Some(uid), item.id).insert::<User, Item>(db).await?;
         Ok(item)
     }
 
-    pub async fn add_existing_item(db: &Db, uid: i32, item: Item) 
+    pub async fn add_existing_item(db: &Db, uid: Uuid, item: Item) 
         -> sqlx::Result<Option<Item>> 
     {
         if uid == item.id.unwrap() { return Ok(None); }
@@ -247,7 +247,7 @@ impl Model for User {
             .map(|field| field.to_string())
             .collect::<Vec<String>>()
     }
-    fn id(self) -> i32 { self.id.expect("ID not set for Item") }
+    fn id(self) -> Uuid { self.id.expect("ID not set for Item") }
     
 }
 

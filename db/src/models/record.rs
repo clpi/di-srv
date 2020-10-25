@@ -1,6 +1,9 @@
 use std::rc::Weak;
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*, Postgres, postgres::PgRow};
 use serde::{Serialize, Deserialize};
+use sqlx::{
+    types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json, uuid::Uuid},
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
+};
 use crate::{Db, 
     models::{Model, User, Status, Visibility, Priority, Item, Group,
         link::{LinkedTo, Link},
@@ -12,8 +15,8 @@ use crate::{Db,
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Record {
     #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<i32>,
-    pub uid: i32,
+    pub id: Option<Uuid>,
+    pub uid: Uuid,
     pub name: String,
     #[serde(default="Status::default")]
     pub status: Status,
@@ -25,13 +28,9 @@ pub struct Record {
 
 impl Record {
 
-    pub fn new<T, U>(uid: T, name: U) -> Self 
-    where T: Into<i32>, U: Into<String> {
-        Self { 
-            name: name.into(),  
-            uid: uid.into(),
-            ..Self::default()
-        }
+    pub fn new<U>(uid: Uuid, name: U) -> Self 
+    where U: Into<String> {
+        Self { name: name.into(), uid, ..Self::default() }
     }
 
     pub fn create<T, U, V, W>
@@ -181,8 +180,8 @@ impl Record {
 impl Default for Record {
     fn default() -> Self {
         Self { 
-            id: None, 
-            uid: -1, 
+            id: Some(Uuid::new_v4()), 
+            uid: -1_i32,
             name: String::new(), 
             status: Status::Active.into(),
             visibility: Visibility::Private.into(),
@@ -213,7 +212,7 @@ impl From<&'static PgRow> for Record {
 impl Model for Record {
     fn table() -> String { String::from("Records") }
     fn foreign_id() -> String { String::from("rid") }
-    fn id(self) -> i32 { self.id.unwrap() }
+    fn id(self) -> Uuid { self.id.unwrap() }
     fn fields() ->  Vec<String> { 
         let fields = vec!["id", "uid", "name", "status", "visibility", "created_at"];
         fields.into_iter()

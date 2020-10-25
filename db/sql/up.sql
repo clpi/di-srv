@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS ItemTags (
     tid UUID NOT NULL REFERENCES Tags(id),
     iid UUID NOT NULL REFERENCES Items(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (key, uid)
+    UNIQUE (key, uid, iid)
 );
 
 CREATE TABLE IF NOT EXISTS RecordTags (
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS RecordTags (
     tid UUID NOT NULL REFERENCES Tags(id),
     rid VARCHAR(40) NOT NULL REFERENCES Records(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (key, uid)
+    UNIQUE (key, uid, rid)
 );
 
 CREATE TABLE IF NOT EXISTS FieldTags (
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS FieldTags (
     tid UUID NOT NULL REFERENCES Tags(id),
     fid VARCHAR(40) NOT NULL REFERENCES Fields(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (key, uid)
+    UNIQUE (key, uid, fid)
 );
 
 --------- USER LINKS ---------------------------

@@ -1,3 +1,6 @@
+// NOTE: This is a library which will act as an interface to any cloud apis necessary
+// TODO: Implement 
+
 pub mod auth;
 pub mod dynamo;
 pub mod s3;
@@ -20,6 +23,5 @@ pub async fn connect_dynamodb() {
         },
         Err(e) => { println!("Error {:?}", e) }
     };
-    let t = 3;
 }
 

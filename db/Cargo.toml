@@ -49,7 +49,7 @@ features = ["postgres", "json", "uuid", "chrono", "macros", "runtime-async-std",
 [dev-dependencies]
 dotenv="*"
 #fake="*"
-#log="*"
+log="*"
 
 [features]
 default=[]

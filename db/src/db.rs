@@ -1,13 +1,18 @@
 use std::marker::{Send, Unpin};
-use std::boxed::Box;
-use serde::{Serialize, Deserialize};
 use crate::models::{user::User, Model};
-use sqlx::{
-    prelude::*, types::chrono::{DateTime, Utc},
-    postgres::{Postgres, PgPool, PgRow, PgPoolOptions},
-    FromRow,
+use sqlx::{ 
+    FromRow, Database,  prelude::*, error::DatabaseError,
+    types::{
+        chrono::{DateTime, Utc},
+        uuid::Uuid, Json,
+    },
+    postgres::{
+        Postgres, PgPool, PgRow, PgPoolOptions,
+        PgDatabaseError, PgListener, PgNotification,
+    },
 };
 
+// TODO implement listener/notifications for sse
 #[derive(Clone)]
 pub struct Db {
     pub pool: sqlx::postgres::PgPool,
@@ -32,6 +37,10 @@ impl Db {
             .connect(dburl);
         let pool = async_std::task::block_on(pool);
         Ok( Self { pool: pool.unwrap() } )
+    }
+
+    pub async fn query(self, query: &str) -> sqlx::Result<()> {
+        Ok(())
     }
 
     pub async fn init(self) -> sqlx::Result<Self> {

@@ -27,12 +27,12 @@ pub struct Group {
 
 impl Group {
 
-    pub fn new<T: Into<String>, U: Into<i32>>(name: T, uid: U) -> Self {
+    pub fn new<T: Into<String>, U: Into<Uuid>>(name: T, uid: U) -> Self {
         Self { name: name.into(), uid: uid.into(), ..Self::default() }
     }
 
-    pub async fn insert(self, db: &Db) -> sqlx::Result<i32> {
-        let res: i32 = sqlx::query_scalar(
+    pub async fn insert(self, db: &Db) -> sqlx::Result<Uuid> {
+        let res: Uuid = sqlx::query_scalar(
             "INSERT INTO Groups (uid, name, visibility, status, created_at)
             VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -45,12 +45,12 @@ impl Group {
         Ok(res)
     }
 
-    pub async fn add_member(self, db: &Db, user: User) -> sqlx::Result<i32> {
+    pub async fn add_member(self, db: &Db, user: User) -> sqlx::Result<Uuid> {
         let link = Link::new(user.id, self.id).insert::<Group, User>(db).await?;
         Ok(link) //to implement
     }
 
-    pub async fn add_admin(self, db: &Db, admin: User) -> sqlx::Result<i32> {
+    pub async fn add_admin(self, db: &Db, admin: User) -> sqlx::Result<Uuid> {
         let link = Link::new(admin.id, self.id).insert::<Group, User>(db).await?;
         Ok(link) //to implement
     }
@@ -85,7 +85,7 @@ impl Model for Group {
     fn foreign_id() -> String {
        String::from("gid") 
     }
-    fn id(self) -> i32 { self.id.expect("ID not set for group") }
+    fn id(self) -> Uuid { self.id.expect("ID not set for group") }
 }
 impl LinkedTo<User> for Group {}
 impl LinkedTo<Record> for Group {}

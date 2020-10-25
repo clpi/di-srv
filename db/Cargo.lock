@@ -668,6 +668,7 @@ dependencies = [
  "dotenv",
  "dynomite",
  "futures",
+ "log",
  "serde",
  "serde_json",
  "sqlx",

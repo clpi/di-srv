@@ -7,3 +7,5 @@ enum AuthError {
     DoesNotExist,
     Internal,
 }
+
+
