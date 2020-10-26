@@ -1,5 +1,10 @@
 use serde::{Serialize, Deserialize};
-use sqlx::{Postgres, FromRow, types::chrono::{DateTime, Utc}, postgres::PgRow, prelude::*};
+use sqlx::{ prelude::*,
+    types::{
+        chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
+    }, 
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode
+};
 use crate::{
     Db, 
     models::{Model, User, Record, Status, Visibility, Priority, Field, Group,
@@ -10,9 +15,9 @@ use crate::{
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct Item {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<i32>,
-    pub uid: i32,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub uid: Uuid,
     pub name: String,
     #[serde(default="Status::default")]
     pub status: Status,
@@ -24,17 +29,16 @@ pub struct Item {
 
 impl Item {
 
-    pub fn new<T: Into<i32>, U: Into<String>>(uid: T, name: U) -> Self {
-        Self { uid: uid.into(), name: name.into(), ..Self::default() }
+    pub fn new<U: Into<String>>(uid: Uuid, name: U) -> Self {
+        Self { uid, name: name.into(), ..Self::default() }
     } 
 
-    pub fn create<T, U, V, W>
-        (uid: T, name: U, status: V, visibility: W) -> Self    
-        where T: Into<i32>, U: Into<String>, 
+    pub fn create<U, V, W>
+        (uid: Uuid, name: U, status: V, visibility: W) -> Self    
+        where U: Into<String>, 
               V: Into<Status>, W: Into<Visibility> {
         Self { 
-            name: name.into(),
-            uid: uid.into(),
+            name: name.into(), uid,
             status: status.into(),
             visibility: visibility.into(),
             ..Self::default()
@@ -49,7 +53,7 @@ impl Item {
         Self { status, ..self.to_owned() }
     }
 
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+    pub async fn get_by_id(db: &Db, id: Uuid) -> sqlx::Result<Option<Self>> {
         let res: Option<Item> = sqlx::query_as::<Postgres, Item>(
             "SELECT * FROM Items WHERE id=$1")
             .bind(id)
@@ -57,7 +61,7 @@ impl Item {
         Ok(res)
     }
 
-    pub async fn delete_by_id(db: &Db, id: i32) -> sqlx::Result<i32> {
+    pub async fn delete_by_id(db: &Db, id: Uuid) -> sqlx::Result<Uuid> {
         let res = sqlx::query(
             "DELETE FROM Items WHERE id=$1 RETURNING id")
             .bind(&id)
@@ -65,7 +69,7 @@ impl Item {
         Ok(res.get("id"))
     }
 
-    pub async fn update_by_id(db: &Db, id: i32, item: Item) -> sqlx::Result<Option<Self>> {
+    pub async fn update_by_id(db: &Db, id: Uuid, item: Item) -> sqlx::Result<Option<Self>> {
         let res: Option<Item> = sqlx::query_as::<Postgres, Item>(
             "SELECT * FROM Items WHERE id=$1")
             .bind(id)
@@ -74,7 +78,7 @@ impl Item {
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
-        let res: i32 = sqlx::query(
+        let res: Uuid = sqlx::query(
             "INSERT INTO Items (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -84,30 +88,30 @@ impl Item {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        Ok( Self { id: Some(res), ..self })
+        Ok( Self { id: res, ..self })
     }
 
     pub async fn add_new_field(
         self, db: &Db, field_name: String, field_type: Option<FieldType>,
-    ) -> sqlx::Result<i32> 
+    ) -> sqlx::Result<Uuid> 
     {
-        let field = Field::new(self.id.expect("No ID set"), field_name, field_type)
+        let field: Field = Field::new(self.id, field_name, field_type)
             .insert(db).await?;
         let link = Link::new(self.id, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
-    pub async fn add_existing_field(db: &Db, iid: i32, field: Field) -> sqlx::Result<i32> {
-        let link = Link::new(Some(iid), field.id).insert::<Item, Field>(db).await?;
+    pub async fn add_existing_field(db: &Db, iid: Uuid, field: Field) -> sqlx::Result<Uuid> {
+        let link = Link::new(iid, field.id).insert::<Item, Field>(db).await?;
         Ok(link)
     }
 
-    pub async fn add_to_record(self, db: &Db, rid: i32) -> sqlx::Result<u32> {
-        Link::new(self.id, Some(rid)).insert::<Record, Item>(db).await?;
+    pub async fn add_to_record(self, db: &Db, rid: Uuid) -> sqlx::Result<u32> {
+        Link::new(self.id, rid).insert::<Record, Item>(db).await?;
         Ok(0)
     }
 
-    pub async fn get_all_by_user(db: &Db, uid: i32) -> sqlx::Result<Vec<Item>> {
+    pub async fn get_all_by_user(db: &Db, uid: Uuid) -> sqlx::Result<Vec<Item>> {
         let res: Vec<Item> = sqlx::query_as::<Postgres, Item>(
             "SELECT * FROM Items i WHERE i.uid=$1")
             .bind(uid)
@@ -115,7 +119,7 @@ impl Item {
         Ok(res)
     }
 
-    pub async fn get_all_from_record(db: &Db, rid: i32) -> sqlx::Result<Vec<Item>> {
+    pub async fn get_all_from_record(db: &Db, rid: Uuid) -> sqlx::Result<Vec<Item>> {
         let res: Vec<Item> = sqlx::query_as::<Postgres, Item>(
             "SELECT * FROM Items i WHERE i.uid=$1") //IMPLEMENT
             .bind(rid)
@@ -131,8 +135,8 @@ pub struct ItemEntry {
 impl Default for Item {
     fn default() -> Self {
         Self {
-            id: None,
-            uid: -1,
+            id: Uuid::new_v4(),
+            uid: Uuid::new_v4(),
             name: String::new(),
             status: Status::Active,
             visibility: Visibility::Private,
@@ -149,7 +153,7 @@ impl From<Record> for Item {
 
 impl From<User> for Item {
     fn from(user: User) -> Self {
-        Self { uid: user.id.expect("User ID not set"), ..Self::default() }
+        Self { uid: user.id, ..Default::default() }
     }
 }
 
@@ -169,7 +173,7 @@ impl From<&'static PgRow> for Item {
 impl Model for Item {
     fn table() -> String { String::from("Items") }
     fn foreign_id() -> String { String::from("iid") }
-    fn id(self) -> i32 { self.id.expect("ID not set for Item") }
+    fn id(self) -> Uuid { self.id }
 
 }
 

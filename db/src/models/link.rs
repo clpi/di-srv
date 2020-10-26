@@ -1,9 +1,3 @@
-pub mod group;
-pub mod user;
-pub mod record;
-pub mod item;
-pub mod field;
-
 use super::{Model, Status, Visibility, relation::Relation,};
 use crate::Db;
 use sqlx::{ postgres::*,
@@ -104,11 +98,11 @@ pub trait LinkedTo<T: Model + 'static> : Model {
     }
 }
 
-pub struct Link(Option<Uuid>, Option<Uuid>);
+pub struct Link(Uuid, Uuid);
 
 impl Link {
 
-    pub fn new(id1: Option<Uuid>, id2: Option<Uuid>) -> Self { Self(id1, id2) }
+    pub fn new(id1: Uuid, id2: Uuid) -> Self { Self(id1, id2) }
 
     pub fn check_foreign_id<T: LinkedTo<U> + 'static, U: LinkedTo<T> + 'static>() -> (String, String) {
         let (mut fid1, mut fid2): (String, String) = (T::foreign_id(), U::foreign_id());

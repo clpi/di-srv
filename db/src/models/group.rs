@@ -13,8 +13,8 @@ use sqlx::{
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct Group {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     pub uid: Uuid,
     pub name: String,
     #[serde(default="Visibility::default")]
@@ -27,8 +27,8 @@ pub struct Group {
 
 impl Group {
 
-    pub fn new<T: Into<String>, U: Into<Uuid>>(name: T, uid: U) -> Self {
-        Self { name: name.into(), uid: uid.into(), ..Self::default() }
+    pub fn new<T: Into<String>>(name: T, uid: Uuid) -> Self {
+        Self { name: name.into(), uid, ..Self::default() }
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<Uuid> {
@@ -41,7 +41,7 @@ impl Group {
             .bind(&self.status)
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?;
-        let link = Link::new(Some(self.uid), self.id).insert::<Group, User>(db).await?;
+        let link = Link::new(self.uid, self.id).insert::<Group, User>(db).await?;
         Ok(res)
     }
 
@@ -85,7 +85,7 @@ impl Model for Group {
     fn foreign_id() -> String {
        String::from("gid") 
     }
-    fn id(self) -> Uuid { self.id.expect("ID not set for group") }
+    fn id(self) -> Uuid { self.id }
 }
 impl LinkedTo<User> for Group {}
 impl LinkedTo<Record> for Group {}

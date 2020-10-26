@@ -13,11 +13,11 @@ use crate::{ Db,
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct UserInfo { 
-    //#[serde(skip_serializing_if="Option::is_none")]
     // #[dynomite(default)]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     // #[dynomite(partition_key)]
-    pub uid: i32,
+    pub uid: Uuid,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub mid_initial: Option<i8>,
@@ -110,7 +110,7 @@ impl UserInfo {
 impl Default for UserInfo {
     fn default() -> Self {
         Self { 
-            id: Some(Uuid::new_v4()),
+            id: Uuid::new_v4(),
             user_type: UserType::default(),
             updated_at: Utc::now(),
             experience: 0_i32,
@@ -122,10 +122,7 @@ impl Default for UserInfo {
 
 impl From<User> for UserInfo {
     fn from(user: User) -> Self {
-        Self { 
-            uid: user.id.expect("User ID not set"), 
-            ..Self::default()
-        }
+        Self { uid: user.id, ..Self::default() }
     }
 }
 
@@ -202,5 +199,5 @@ impl Model for UserInfo {
     fn foreign_id() -> String {
         "uiid".to_string()
     }
-    fn id(self) -> i32 { self.id.expect("ID not set for UserInfo") }
+    fn id(self) -> Uuid { self.id }
 }

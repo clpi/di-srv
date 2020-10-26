@@ -1,4 +1,5 @@
 use std::rc::Weak;
+use std::io::*;
 use serde::{Serialize, Deserialize};
 use sqlx::{
     types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json, uuid::Uuid},
@@ -14,8 +15,8 @@ use crate::{Db,
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Record {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     pub uid: Uuid,
     pub name: String,
     #[serde(default="Status::default")]
@@ -33,13 +34,11 @@ impl Record {
         Self { name: name.into(), uid, ..Self::default() }
     }
 
-    pub fn create<T, U, V, W>
-        (uid: T, name: U, status: V, visibility: W) -> Self    
-        where T: Into<i32>, U: Into<String>, 
-              V: Into<Status>, W: Into<Visibility> {
+    pub fn create<U, V, W>
+        (uid: Uuid, name: U, status: V, visibility: W) -> Self    
+        where  U: Into<String>, V: Into<Status>, W: Into<Visibility> {
         Self { 
-            name: name.into(),
-            uid: uid.into(),
+            name: name.into(), uid,
             status: status.into(),
             visibility: visibility.into(),
             ..Self::default()
@@ -61,7 +60,7 @@ impl Record {
     }
 
     pub async fn update_visibility<T>(
-        self, db: &Db, visibility: T, id: i32,
+        self, db: &Db, visibility: T, id: Uuid,
     ) -> sqlx::Result<Self> where T: Into<Visibility>{
         let vis = visibility.into();
         sqlx::query("UPDATE Records SET visibility=$1 WHERE id=$2")
@@ -72,7 +71,7 @@ impl Record {
     }
 
     pub async fn update_status<T>(
-        self, db: &Db, status: T, id: i32,
+        self, db: &Db, status: T, id: Uuid,
     ) -> sqlx::Result<Self> where T: Into<Status>{
         let stat = status.into();
         sqlx::query("UPDATE Records SET visibility=$1 WHERE id=$2")
@@ -89,7 +88,7 @@ impl Record {
         Ok(res)
     }
 
-    pub async fn get_all_by_user(db: &Db, uid: i32) -> sqlx::Result<Vec<Self>> {
+    pub async fn get_all_by_user(db: &Db, uid: Uuid) -> sqlx::Result<Vec<Self>> {
         let res: Vec<Record> = sqlx::query_as::<Postgres, Record>(
             "SELECT * FROM Records r WHERE r.uid=$1")
             .bind(uid)
@@ -98,7 +97,7 @@ impl Record {
     }
 
     // implemented in model trait -- remove?
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+    pub async fn get_by_id(db: &Db, id: Uuid) -> sqlx::Result<Option<Self>> {
         let res: Option<Record> = sqlx::query_as::<Postgres, Record>(
             "SELECT * FROM Records WHERE id=$1")
             .bind(id)
@@ -120,7 +119,7 @@ impl Record {
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
-        let res: i32 = sqlx::query(
+        let res: Uuid = sqlx::query(
             "INSERT INTO Records (uid, name, status, visibility, created_at)
              VALUES ($1, $2, $3, $4, $5) RETURNING id")
             .bind(&self.uid)
@@ -130,11 +129,11 @@ impl Record {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        Ok( Self { id: Some(res), ..self })
+        Ok( Self { id: res, ..self })
     }
 
     // implemented in linkedto trait -- remove?
-    pub async fn get_linked_users(db: &Db, rid: i32) -> sqlx::Result<Vec<User>> {
+    pub async fn get_linked_users(db: &Db, rid: Uuid) -> sqlx::Result<Vec<User>> {
         let res = sqlx::query_as::<Postgres, User>
             ("SELECT u.id, u.username, u.email, u.created_at
               FROM Users u INNER JOIN UserRecordLinks ur ON u.id = ur.uid
@@ -147,20 +146,20 @@ impl Record {
     }
 
     pub async fn add_new_item<T: Into<String>>
-        (db: &Db, rid: i32, item_name: T) -> sqlx::Result<Item> 
+        (db: &Db, rid: Uuid, item_name: T) -> sqlx::Result<Item> 
     {
         let item = Item::new(rid, item_name.into()).insert(db).await?;
-        let link = Link::new(Some(rid), item.id).insert::<Record, Item>(db).await?;
+        let link = Link::new(rid, item.id).insert::<Record, Item>(db).await?;
         Ok(item)
     }
 
-    pub async fn add_existing_item(db: &Db, rid: i32, iid: i32) -> sqlx::Result<i32> 
+    pub async fn add_existing_item(db: &Db, rid: Uuid, iid: Uuid) -> sqlx::Result<Uuid> 
     {
-        let link = Link::new(Some(rid), Some(iid)).insert::<Record, Item>(db).await?;
+        let link = Link::new(rid, iid).insert::<Record, Item>(db).await?;
         Ok(link)
     }
 
-    pub async fn delete_by_id(db: &Db, id:  i32) -> sqlx::Result<i32> {
+    pub async fn delete_by_id(db: &Db, id:  Uuid) -> sqlx::Result<Uuid> {
         let res = sqlx::query(
             "DELETE FROM Records WHERE id=$1 RETURNING id")
             .bind(id)
@@ -168,7 +167,7 @@ impl Record {
         Ok( res.get("id") )
     }
 
-    pub async fn update_by_id(db: &Db, id: i32, record: Record) -> sqlx::Result<i32> {
+    pub async fn update_by_id(db: &Db, id: Uuid, record: Record) -> sqlx::Result<Uuid> {
         let res = sqlx::query(
             "DELETE FROM Records WHERE id=$1 RETURNING id")
             .bind(id)
@@ -180,8 +179,8 @@ impl Record {
 impl Default for Record {
     fn default() -> Self {
         Self { 
-            id: Some(Uuid::new_v4()), 
-            uid: -1_i32,
+            id: Uuid::new_v4(), 
+            uid: Uuid::new_v4(),
             name: String::new(), 
             status: Status::Active.into(),
             visibility: Visibility::Private.into(),
@@ -190,15 +189,15 @@ impl Default for Record {
     }
 }
 
-impl From<Option<i32>> for Record {
-    fn from(uid: Option<i32>) -> Self {
-        Record { uid: uid.unwrap(), ..Record::default() }
+impl From<Uuid> for Record {
+    fn from(uid: Uuid) -> Self {
+        Record { uid, ..Record::default() }
     }
 }
 
 impl From<User> for Record {
     fn from(user: User) -> Self {
-        Record { uid: user.id.unwrap(), ..Record::default() }
+        Record { uid: user.id, ..Record::default() }
     }
 }
 
@@ -212,7 +211,7 @@ impl From<&'static PgRow> for Record {
 impl Model for Record {
     fn table() -> String { String::from("Records") }
     fn foreign_id() -> String { String::from("rid") }
-    fn id(self) -> Uuid { self.id.unwrap() }
+    fn id(self) -> Uuid { self.id }
     fn fields() ->  Vec<String> { 
         let fields = vec!["id", "uid", "name", "status", "visibility", "created_at"];
         fields.into_iter()

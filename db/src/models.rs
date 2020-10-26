@@ -20,7 +20,7 @@ pub use dynomite::{Attribute, Attributes, AttributeValue};
 pub use types::{Visibility, Status, Priority};
 
 use async_trait::async_trait;
-use sqlx::{
+use sqlx::{ prelude::*,
     types::{
         chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
     }, 
@@ -45,8 +45,8 @@ pub trait Model: Sized + Default + From<&'static PgRow> + Send + Sync {
 
     async fn insert(&self, db: &Db) -> sqlx::Result<Uuid> { Ok(Uuid::new_v4()) }
 
-    async fn delete(self, db: &Db) -> sqlx::Result<i32> {
-        let res: i32 = sqlx::query("DELETE FROM $1 WHERE id = $2 RETURNING id")
+    async fn delete(self, db: &Db) -> sqlx::Result<Uuid> {
+        let res: Uuid = sqlx::query("DELETE FROM $1 WHERE id = $2 RETURNING id")
             .bind(Self::table())
             .bind(self.id())
             .fetch_one(&db.pool)
@@ -55,7 +55,7 @@ pub trait Model: Sized + Default + From<&'static PgRow> + Send + Sync {
         Ok(res)
     }
 
-    async fn fetch_from_id(db: &Db, id: i32) -> sqlx::Result<()> {
+    async fn fetch_from_id(db: &Db, id: Uuid) -> sqlx::Result<()> {
         let res: PgRow = sqlx::query("SELECT * FROM $1 WHERE id = $2")
             .bind(Self::table())
             .bind(id)
@@ -64,8 +64,8 @@ pub trait Model: Sized + Default + From<&'static PgRow> + Send + Sync {
         Ok(())
     }
 
-    async fn delete_from_id(db: &Db, id: i32) -> sqlx::Result<i32> {
-        let res: i32 = sqlx::query_scalar
+    async fn delete_from_id(db: &Db, id: Uuid) -> sqlx::Result<Uuid> {
+        let res: Uuid = sqlx::query_scalar
             ("DELETE FROM $1 WHERE id=$2 RETURNING id")
             .bind(Self::table())
             .bind(id)
@@ -73,7 +73,7 @@ pub trait Model: Sized + Default + From<&'static PgRow> + Send + Sync {
         Ok(res)
     }
 
-    async fn fetch_all(db: &Db, id: i32) -> sqlx::Result<Vec<PgRow>> {
+    async fn fetch_all(db: &Db, id: Uuid) -> sqlx::Result<Vec<PgRow>> {
         let res: Vec<PgRow> = sqlx::query("SELECT * FROM $1 where id=$1") 
             .bind(Self::table())
             .bind(id)

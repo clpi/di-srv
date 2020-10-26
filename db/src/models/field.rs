@@ -6,7 +6,7 @@ use crate::{Db,
 };
 use serde::{Serialize, Deserialize};
 use chrono::Duration;
-use sqlx::{
+use sqlx::{ prelude::*,
     types::{
         chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
     }, 
@@ -16,8 +16,8 @@ use sqlx::{
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
 pub struct Field { 
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     pub uid: Uuid,
     pub name: String,
     #[serde(default="FieldType::default")]
@@ -30,23 +30,22 @@ pub struct Field {
 
 impl Field {
 
-    pub fn build<T, U>(uid: T, name: U) -> Field 
-    where T: Into<i32>, U: Into<String> {
-        Field { uid:  uid.into(), name: name.into(), ..Self::default() }
+    pub fn build<U>(uid: Uuid, name: U) -> Field 
+    where U: Into<String> {
+        Field { uid, name: name.into(), ..Self::default() }
     }
 
-    pub fn new<T, U> (uid: T, name: U, field_type: Option<FieldType>) 
-        -> Field where T: Into<i32>, U: Into<String>,
+    pub fn new<U> (uid: Uuid, name: U, field_type: Option<FieldType>) 
+        -> Field where U: Into<String>
     {
-        Field { 
-            uid:  uid.into(), 
+        Field {  uid,
             name: name.into(), 
             field_type: field_type.unwrap_or_default(),
             visibility: Visibility::Private,
             ..Self::default() }
     }
 
-    pub async fn get_by_id(db: &Db, id: i32) -> sqlx::Result<Option<Self>> {
+    pub async fn get_by_id(db: &Db, id: Uuid) -> sqlx::Result<Option<Self>> {
         let res: Option<Self> = sqlx::query_as::<Postgres, Self>(
             "SELECT * FROM Fields WHERE id=$1")
             .bind(id)
@@ -63,7 +62,7 @@ impl Field {
     }
 
     pub async fn insert(self, db: &Db) -> sqlx::Result<Self> {
-        let res: i32 = sqlx::query(
+        let res: Uuid = sqlx::query(
             "INSERT INTO Fields 
             (uid, name, field_type, visibility, created_at) 
             VALUES ($1, $2, $3, $4, $5)")
@@ -74,15 +73,13 @@ impl Field {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        Ok( Self { id: Some(res), ..self })
+        Ok( Self { id: res, ..self })
     }
 
-    pub async fn add_to_item(db: &Db, fid: i32, iid: i32) -> sqlx::Result<i32> {
-        let link = Link::new(Some(iid), Some(fid)).insert::<Item, Field>(db).await?;
+    pub async fn add_to_item(db: &Db, fid: Uuid, iid: Uuid) -> sqlx::Result<Uuid> {
+        let link = Link::new(iid, fid).insert::<Item, Field>(db).await?;
         Ok(link)
     }
-
-    pub fn is_in_db(self) -> bool { self.id.is_some() }
 }
 
 pub struct FieldBuilder {
@@ -96,8 +93,8 @@ pub struct FieldEntry {
 impl Default for Field {
     fn default() -> Self {
         Self {
-            id: None,
-            uid: -1,
+            id: Uuid::new_v4(),
+            uid: Uuid::new_v4(),
             name: String::new(),
             field_type: FieldType::default(),
             visibility: Visibility::Private,
@@ -250,7 +247,7 @@ impl Model for Field {
     fn foreign_id() -> String {
        String::from("fid") 
     }
-    fn id(self) -> i32 { self.id.expect("ID not set for field") }
+    fn id(self) -> Uuid { self.id  }
 }
 
 impl LinkedTo<Item> for Field {}

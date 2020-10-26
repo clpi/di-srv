@@ -27,7 +27,8 @@ pub struct UserRegister { pub email: String, pub username: String, pub password:
 #[derive(DItem, Serialize, Deserialize, FromRow, Clone)]
 pub struct User {
     #[dynomite(partition_key)]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     pub email: String,
     pub username: String,
     #[serde(skip)]
@@ -41,7 +42,7 @@ impl User {
     pub fn new<T, U, V>(email: T, username: U, password: Option<String>) -> User
         where T: Into<String>, U: Into<String>, V: Into<String> {
         User { 
-            id: Some(Uuid::new_v4()),
+            id: Uuid::new_v4(),
             email: email.into(), 
             username: username.into(), 
             password,
@@ -59,7 +60,7 @@ impl User {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?
             .get("id");
-        let user_with_id = User { id: Some(res), ..self };
+        let user_with_id = User { id: res, ..self };
         //UserInfo::from(user_with_id.clone()).insert(db).await?;
         Ok(user_with_id)
     }
@@ -191,14 +192,14 @@ impl User {
         ) -> sqlx::Result<Record> 
     {
         let rec: Record = Record::new(uid, rec_name).insert(db).await?;
-        Link::new(Some(uid), rec.id).insert::<User, Record>(db).await?;
+        Link::new(uid, rec.id).insert::<User, Record>(db).await?;
         Ok(rec)
     }
 
     pub async fn add_existing_record(db: &Db, uid: Uuid, record: Record) 
         -> sqlx::Result<Option<Record>> {
-        if uid == record.id.unwrap() { return Ok(None); }
-        let res = Link::new(Some(uid), record.id).insert::<User, Record>(db).await?;
+        if uid == record.id { return Ok(None); }
+        let res = Link::new(uid, record.id).insert::<User, Record>(db).await?;
         Ok(Some(record))
     }
 
@@ -206,15 +207,15 @@ impl User {
         db: &Db, uid: Uuid, item_name: String,
     ) -> sqlx::Result<Item> {
         let item = Item::new(uid, item_name).insert(db).await?;
-        Link::new(Some(uid), item.id).insert::<User, Item>(db).await?;
+        Link::new(uid, item.id).insert::<User, Item>(db).await?;
         Ok(item)
     }
 
     pub async fn add_existing_item(db: &Db, uid: Uuid, item: Item) 
         -> sqlx::Result<Option<Item>> 
     {
-        if uid == item.id.unwrap() { return Ok(None); }
-        let link = Link::new(Some(uid), item.id).insert::<User, Item>(db).await?;
+        if uid == item.id { return Ok(None); }
+        let link = Link::new(uid, item.id).insert::<User, Item>(db).await?;
         Ok(Some(item))
     }
 }
@@ -225,7 +226,7 @@ impl Default for User {
             id: Uuid::new_v4(),
             username: String::from(""),
             email: String::from(""),
-            password: String::from(""),
+            password: None,
             created_at: Utc::now(),
         }   
     }
@@ -247,8 +248,7 @@ impl Model for User {
             .map(|field| field.to_string())
             .collect::<Vec<String>>()
     }
-    fn id(self) -> Uuid { self.id.expect("ID not set for Item") }
-    
+    fn id(self) -> Uuid { self.id }
 }
 
 impl LinkedTo<Record> for User {}
