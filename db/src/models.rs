@@ -6,6 +6,8 @@ pub mod userinfo;
 pub mod link;
 pub mod field;
 pub mod tag;
+pub mod relation;
+pub mod types;
 
 pub use user::User;
 pub use userinfo::UserInfo;
@@ -13,9 +15,8 @@ pub use record::Record;
 pub use item::Item;
 pub use field::Field;
 pub use group::Group;
+pub use tag::{Tag, ItemTag, FieldTag, RecordTag};
 
-pub mod relation;
-pub mod types;
 
 pub use dynomite::{Attribute, Attributes, AttributeValue};
 pub use types::{Visibility, Status, Priority};

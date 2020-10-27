@@ -2,7 +2,12 @@
 //     relationships probably looks so stupid to the outside, but i guess it's more important
 //     to get it working first and then optimize later!
 
-use sqlx::{Type, Postgres, types::chrono::{DateTime, Utc}};
+use sqlx::{ prelude::*,
+    types::{
+        chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, uuid::{Uuid, Variant},
+    }, 
+    FromRow, Type, postgres::{Postgres, PgRow}, Decode
+};
 use serde::{Serialize, Deserialize};
 use crate::models::{
     Group, User, Record, Item, Model, Status,
@@ -12,8 +17,8 @@ use crate::models::{
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, sqlx::FromRow, Clone, PartialEq)]
 pub struct CustomRelation {
-    pub id: Option<i32>,
-    pub uid: i32,
+    pub id: Option<Uuid>,
+    pub uid: Uuid,
     pub name: String,
     pub value: Option<Vec<u8>>,
     pub status: Status,

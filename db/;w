@@ -1,0 +1,100 @@
+use sqlx::{FromRow, 
+    types::{
+        chrono::{DateTime, Utc}, 
+        uuid::{Uuid, Variant}
+    }, 
+    postgres::PgRow, prelude::*
+};
+use serde::{Serialize, Deserialize};
+use crate::{Db, 
+    models::{Model, User, Status, Visibility, Priority, Item, Group,
+        link::{LinkedTo, Link},
+    },
+};
+
+#[serde(rename_all="camelCase")]
+#[derive(Serialize, Deserialize, FromRow, Clone)]
+pub struct Tag {
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub name: String,
+    pub value: Option<String>,
+    #[serde(default="Utc::now")]
+    pub created_at: DateTime<Utc>,
+}
+
+#[serde(rename_all="camelCase")]
+#[derive(Serialize, Deserialize, FromRow, Clone)]
+pub struct ItemTag {
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub tid: Uuid,
+    pub iid: Uuid,
+    #[serde(default="Utc::now")]
+    pub created_at: DateTime<Utc>,
+}
+
+#[serde(rename_all="camelCase")]
+#[derive(Serialize, Deserialize, FromRow, Clone)]
+pub struct RecordTag {
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub tid: Uuid,
+    pub rid: Uuid,
+    #[serde(default="Utc::now")]
+    pub created_at: DateTime<Utc>,
+}
+
+#[serde(rename_all="camelCase")]
+#[derive(Serialize, Deserialize, FromRow, Clone)]
+pub struct FieldTag{
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub tid: Uuid,
+    pub fid: Uuid,
+    #[serde(default="Utc::now")]
+    pub created_at: DateTime<Utc>,
+}
+
+impl Default for Tag {
+    fn default() -> Self {
+        Tag {
+            id: Uuid::new_v4(),
+            name: String::new(),
+            value: None,
+            created_at: Utc::now(),
+        }
+    }
+}
+
+impl Default for FieldTag {
+    fn default() -> Self {
+        FieldTag { created_at: Utc::now(), ..Default::default() }
+    }
+}
+
+impl Default for ItemTag {
+    fn default() -> Self {
+        ItemTag { created_at: Utc::now(), ..Default::default() }
+    }
+}
+
+impl Default for RecordTag {
+    fn default() -> Self {
+        RecordTag { created_at: Utc::now(), ..Default::default() }
+    }
+}
+
+impl Tag {
+
+    pub fn new<T, U>(name: T, value: Option<String>) -> Self 
+    where T: Into<String> {
+        Self { name: name.into(), value, ..Default::default() }
+    }
+
+    pub async fn tag_user(uid: Uuid) -> Self {
+                
+    }
+}
+
+
