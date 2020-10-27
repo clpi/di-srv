@@ -13,14 +13,11 @@
 //       side scaffolded frontend web interface
 //
 
-use crate::{handlers, middleware, state,};
+use crate::{handlers, middleware, state};
 use actix_service::ServiceFactory;
 use actix_session::{Session, UserSession};
 use actix_web::*;
-use actix_web::{
-    body, dev, get, post,
-    web, App, Error, HttpRequest, HttpResponse, HttpServer, 
-};
+use actix_web::{body, dev, get, post, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 use tokio::*;
@@ -43,7 +40,8 @@ pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::i
     sys.block_on(srv)
 }
 
-pub fn create_app() -> App<impl ServiceFactory<
+pub fn create_app() -> App<
+    impl ServiceFactory<
         Config = (),
         Request = dev::ServiceRequest,
         Response = dev::ServiceResponse<body::Body>,
@@ -72,6 +70,5 @@ pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResp
     println!("REQ: {:?}", req);
     HttpResponse::Ok().body(&test.string)
 }
-
 
 pub async fn test() {}

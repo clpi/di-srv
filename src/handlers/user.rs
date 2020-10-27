@@ -1,3 +1,4 @@
+use uuid::Uuid;
 use crate::{state::State, models::request::AuthRequest};
 use actix_identity::Identity;
 use actix_web::{FromRequest, Scope,

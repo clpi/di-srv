@@ -19,8 +19,6 @@ pub struct Db {
     pub pool: sqlx::postgres::PgPool,
 }
 
-pub async fn init() -> () {}
-
 impl Db {
 
     pub async fn new() -> sqlx::Result<Self> {

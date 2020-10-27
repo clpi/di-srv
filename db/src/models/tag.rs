@@ -1,4 +1,10 @@
-use sqlx::{FromRow, types::chrono::{DateTime, Utc}, prelude::*, Postgres, postgres::PgRow};
+use sqlx::{FromRow, 
+    types::{
+        chrono::{DateTime, Utc}, 
+        uuid::{Uuid, Variant}
+    }, 
+    postgres::PgRow, prelude::*
+};
 use serde::{Serialize, Deserialize};
 use crate::{Db, 
     models::{Model, User, Status, Visibility, Priority, Item, Group,
@@ -9,10 +15,10 @@ use crate::{Db,
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Tag {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
-    pub rid: Uuid,
-    pub iid: Uuid,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub name: String,
+    pub value: String,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -20,9 +26,9 @@ pub struct Tag {
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct ItemTag {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
-    pub rid: Uuid,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub tid: Uuid,
     pub iid: Uuid,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
@@ -31,10 +37,10 @@ pub struct ItemTag {
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct RecordTag {
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
+    pub tid: Uuid,
     pub rid: Uuid,
-    pub fid: Uuid,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
 }
@@ -42,10 +48,30 @@ pub struct RecordTag {
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct FieldTag{
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub id: Option<Uuid>,
+    #[serde(default="Uuid::new_v4")]
+    pub id: Uuid,
     pub tid: Uuid,
     pub fid: Uuid,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
+}
+
+impl Tag {
+    pub fn new(name: &str, val: &str)  -> Self {
+        Tag { 
+            name: name.into(), value: val.into(),
+            ..Default::default()
+        }
+    }
+}
+
+impl Default for Tag {
+    fn default() -> Self {
+        Tag {
+            id: Uuid::new_v4(),
+            name: String::new(),
+            value: String::new(),
+            created_at: Utc::now(),
+        }
+    }
 }

@@ -5,6 +5,7 @@ pub mod group;
 pub mod userinfo;
 pub mod link;
 pub mod field;
+pub mod tag;
 
 pub use user::User;
 pub use userinfo::UserInfo;
