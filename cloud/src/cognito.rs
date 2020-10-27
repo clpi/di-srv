@@ -1,3 +1,5 @@
+pub mod types;
+
 use rusoto_core::{Region, RusotoResult, RusotoError, request::BufferedHttpResponse};
 
 use super::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge, CgUserSignup, CgUserLogin};

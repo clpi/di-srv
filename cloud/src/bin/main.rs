@@ -2,20 +2,11 @@ use serde_json::json;
 use rusoto_core::Region;
 use rusoto_s3::{S3Client, S3, Bucket, ListBucketsOutput};
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
-use div_cloud::{
-    s3, dynamo,
-    auth::{
-        cognito::*, 
-        types::*,
-    }
-
-};
+use div_cloud::auth::{cognito::*, types::*};
 
 #[tokio::main]
 pub async fn main() {
-    let cg_cli = CognitoClient::new();
-    let s3_cli = s3::Client::new();
-    let dd_cli + n
+    let client = CognitoClient::new();
     let pools =  client.list_user_pools().await.unwrap();
     pools.iter().for_each(|pool| { println!("Pool: {:?}", pool.name) });
     //client.delete_user("new".to_string()).await.unwrap();

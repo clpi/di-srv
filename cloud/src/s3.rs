@@ -1,5 +1,6 @@
 pub mod types;
 
+use std::fs::File;
 use rusoto_core::{Region, ByteStream};
 use tokio::io::{AsyncRead, BufReader, AsyncReadExt};
 use futures::{FutureExt, TryStreamExt};
@@ -39,6 +40,25 @@ impl Client {
         }
     }
 
+    pub async fn put_object(&self, local_path: &str, key: &str) -> String {
+        let mut buf: Vec<u8> = Vec::new();
+        File::open(local_path).unwrap()
+            .read_to_end(&mut buf);
+        let put_request = PutObjectRequest {
+            bucket: self.bucket_name.to_owned(),
+            key: key.to_owned(),
+            body: Some(buf.into()),
+            ..Default::default()
+        };
+        let _res = self
+            .s3
+            .put_object(put_request)
+            .await
+            .expect("Failed to put test object");
+
+        self.url(key)
+    }
+
     pub async fn delete_bucket(&self, name: &str) -> Result<(), String> {
         match self.s3.delete_bucket(DeleteBucketRequest {
             bucket: name.into(), ..Default::default()
@@ -67,7 +87,7 @@ impl Client {
         }
     }
 
-    pub async fn delete_object(&self, bucket: &str, key: &str) -> Result<String, String> {
+    pub async fn delete(&self, bucket: &str, key: &str) -> Result<String, String> {
         match self.s3.delete_object(DeleteObjectRequest {
             bucket: bucket.into(),
             key: key.into(), ..Default::default()

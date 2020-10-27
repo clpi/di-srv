@@ -1,7 +1,7 @@
 // NOTE: This is a library which will act as an interface to any cloud apis necessary
 // TODO: Implement 
 
-pub mod auth;
+pub mod cognito;
 pub mod dynamo;
 pub mod s3;
 
