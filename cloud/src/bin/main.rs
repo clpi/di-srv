@@ -2,7 +2,7 @@ use serde_json::json;
 use rusoto_core::Region;
 use rusoto_s3::{S3Client, S3, Bucket, ListBucketsOutput};
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, ListTablesInput};
-use div_cloud::auth::{cognito::*, types::*};
+use div_cloud::cognito::*;
 
 #[tokio::main]
 pub async fn main() {

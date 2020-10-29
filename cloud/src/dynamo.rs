@@ -1,7 +1,7 @@
 pub mod types;
 
 use std::collections::hash_map::{HashMap, RandomState};
-use super::auth::types::CgUser;
+use crate::cognito::types::CgUser;
 use rusoto_core::Region;
 use dynomite::{
     retry::{Retries, Policy}, dynamodb::{DynamoDbClient, DynamoDb, KeySchemaElement,

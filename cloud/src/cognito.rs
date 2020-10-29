@@ -2,7 +2,7 @@ pub mod types;
 
 use rusoto_core::{Region, RusotoResult, RusotoError, request::BufferedHttpResponse};
 
-use super::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge, CgUserSignup, CgUserLogin};
+use crate::cognito::types::{CgUser, CgAuthRes, CgDeviceMeta, CgSignupRes, Challenge, CgUserSignup, CgUserLogin};
 use std::collections::HashMap;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient};
 use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType, UserPoolDescriptionType,
