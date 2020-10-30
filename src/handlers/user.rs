@@ -77,8 +77,9 @@ pub async fn get_all(
     }
 }
 
-pub async fn get_by_id(data: web::Data<State>, id: web::Path<i32>) -> HttpResponse {
-    match User::get_by_id(&data.db.lock().unwrap(), *id).await {
+pub async fn get_by_id(data: web::Data<State>, id: web::Path<String>) -> HttpResponse {
+    let id: Uuid = Uuid::parse_str(id.into_inner().as_mut_str()).unwrap();
+    match User::get_by_id(&data.db.lock().unwrap(), id).await {
         Ok(maybe_user) => match maybe_user {
             Some(user) => HttpResponse::Ok()
                 .content_type("application/json")
@@ -90,7 +91,7 @@ pub async fn get_by_id(data: web::Data<State>, id: web::Path<i32>) -> HttpRespon
 }
 
 pub async fn update_by_id(
-    path: web::Path<i32>, req: HttpRequest, data: web::Data<State>
+    path: web::Path<Uuid>, req: HttpRequest, data: web::Data<State>
         ) -> HttpResponse 
 {
     match User::delete_by_id(&data.db.lock().unwrap(), *path).await {
@@ -103,7 +104,7 @@ pub async fn update_by_id(
 
 pub async fn delete_by_id(
     data: web::Data<State>, 
-    id: web::Path<i32>
+    id: web::Path<Uuid>
 ) -> HttpResponse {
     match User::delete_by_id(&data.db.lock().unwrap(), *id).await {
         Ok(Some(id)) => HttpResponse::Ok()
@@ -154,14 +155,14 @@ pub async fn update_by_username(
 }
 
 
-pub async fn get_user_info(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+pub async fn get_user_info(data: web::Data<State>, rid: web::Path<Uuid>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")
 }
 
-pub async fn update_user_info(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+pub async fn update_user_info(data: web::Data<State>, rid: web::Path<Uuid>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")
 }
 
-pub async fn get_user_feed(data: web::Data<State>, rid: web::Path<i32>) -> HttpResponse {
+pub async fn get_user_feed(data: web::Data<State>, rid: web::Path<Uuid>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")
 }

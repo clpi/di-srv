@@ -1,5 +1,5 @@
 use actix_web::client::Client;
-use div_cloud::auth::{cognito::CognitoClient, types::*};
+use div_cloud::cognito::{types::*, self};
 use actix_session::{Session, SessionStatus};
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};

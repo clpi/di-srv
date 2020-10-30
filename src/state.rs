@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use div_cloud::auth::{cognito::CognitoClient, types::*};
+use div_cloud::cognito::{types::*, CognitoClient};
 use actix::{Actor, Addr, Context, Handler};
 use std::collections::HashMap;
 use divdb::db::Db;

@@ -71,4 +71,3 @@ pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResp
     HttpResponse::Ok().body(&test.string)
 }
 
-pub async fn test() {}

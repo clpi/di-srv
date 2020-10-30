@@ -1,4 +1,5 @@
 pub use divdb::models::{Record, User, Item};
+use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 use actix_identity::{Identity, RequestIdentity};
@@ -8,26 +9,26 @@ use futures::future::ready;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserIn {
-    id: i32,
+    id: Uuid,
     email: String,
     username: String,
 }
 
 impl From<User> for UserIn {
     fn from(user: User) -> Self { 
-        UserIn { id: user.id.unwrap(), email: user.email, username: user.username }
+        UserIn { id: user.id, email: user.email, username: user.username }
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct UserQuery {
-    id: Option<i32>,
+    id: Option<Uuid>,
     username: Option<String>,
     email: Option<String>
 }
 
 pub struct UserData {
-    id: i32,
+    id: Uuid,
     username: String,
     email: String,
     records: Vec<Record>,

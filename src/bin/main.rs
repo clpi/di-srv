@@ -1,4 +1,5 @@
 use divapi::app;
+use env_logger;
 use std::net::TcpListener;
 
 #[actix_rt::main]

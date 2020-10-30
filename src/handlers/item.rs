@@ -51,42 +51,39 @@ pub fn user_item_routes() -> Scope {
         )
 }
 
-pub async fn get_by_id(id: Identity, iid: web::Path<i32>, data: web::Data<State>) -> HttpResponse {
-    match Item::get_by_id(&data.db.lock().unwrap(), *iid).await {
+pub async fn get_by_id(id: Identity, iid: web::Path<String>, data: web::Data<State>) -> HttpResponse {
+    let id: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
+    match Item::get_by_id(&data.db.lock().unwrap(), id).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}"),
     }
 }
 
 pub async fn delete_by_id(
-    id: Identity,
-    iid: web::Path<i32>,
-    data: web::Data<State>,
+    id: Identity, iid: web::Path<String>, data: web::Data<State>,
 ) -> HttpResponse {
-    match Item::delete_by_id(&&data.db.lock().unwrap(), *iid).await {
+    let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
+    match Item::delete_by_id(&data.db.lock().unwrap(), iid).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}"),
     }
 }
 
 pub async fn update_by_id(
-    id: Identity,
-    iid: web::Path<i32>,
-    data: web::Data<State>,
-    item: web::Json<Item>,
+    id: Identity, iid: web::Path<String>, data: web::Data<State>, item: web::Json<Item>,
 ) -> HttpResponse {
-    match Item::update_by_id(&data.db.lock().unwrap(), *iid, item.into_inner()).await {
+    let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
+    match Item::update_by_id(&data.db.lock().unwrap(), iid, item.into_inner()).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}"),
     }
 }
 
 pub async fn get_user_item(
-    id: Identity,
-    path: web::Path<(i32, String)>,
-    data: web::Data<State>,
+    id: Identity, path: web::Path<(String, String)>, data: web::Data<State>,
 ) -> HttpResponse {
-    let (uid, item_name) = path.into_inner();
+    let (mut uid, item_name) = path.into_inner();
+    let uid = Uuid::parse_str(uid.as_mut_str()).unwrap();
     match User::get_item_by_name(&data.db.lock().unwrap(), uid, item_name).await {
         Ok(Some(item)) => HttpResponse::Ok().json(&item),
         _ => HttpResponse::NotFound().json("{}"),
@@ -94,11 +91,10 @@ pub async fn get_user_item(
 }
 
 pub async fn delete_user_item(
-    id: Identity,
-    path: web::Path<(i32, String)>,
-    data: web::Data<State>,
+    id: Identity, path: web::Path<(String, String)>, data: web::Data<State>,
 ) -> HttpResponse {
-    let (uid, item_name) = path.into_inner();
+    let (mut uid, item_name) = path.into_inner();
+    let uid = Uuid::parse_str(uid.as_mut_str()).unwrap();
     match User::delete_item_by_name(&data.db.lock().unwrap(), uid, item_name).await {
         Ok(iid) => HttpResponse::Ok().json(&iid),
         _ => HttpResponse::NotFound().json("{}"),
@@ -106,25 +102,19 @@ pub async fn delete_user_item(
 }
 
 pub async fn get_user_items(
-    id: Identity,
-    uid: web::Path<i32>,
-    data: web::Data<State>,
+    id: Identity, uid: web::Path<String>, data: web::Data<State>,
 ) -> HttpResponse {
-    println!("GET USER ITEMS: From {:?}", id.identity());
-    match User::get_all_items(&data.db.lock().unwrap(), *uid).await {
+    let uid = Uuid::parse_str(uid.into_inner().as_mut_str()).unwrap();
+    match User::get_all_items(&data.db.lock().unwrap(), uid).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
         Err(_) => HttpResponse::NotFound().json("{}"),
     }
 }
 
 pub async fn add_item_to_user(
-    id: Identity,
-    uid: web::Path<i32>,
-    data: web::Data<State>,
-    item: web::Json<Item>,
+    id: Identity, uid: web::Path<Uuid>, data: web::Data<State>, item: web::Json<Item>,
 ) -> HttpResponse {
-    println!("ADD ITEM: From {:?}", id.identity());
-    match User::add_existing_item(&data.db.lock().unwrap(), *uid, item.into_inner()).await {
+    match User::add_existing_item(&data.db.lock().unwrap(), uid.into_inner(), item.into_inner()).await {
         Ok(item) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&item), //PgRow -> JSon?
@@ -134,12 +124,11 @@ pub async fn add_item_to_user(
 
 pub async fn add_new_item_to_user(
     id: Identity,
-    path: web::Path<(i32, String)>,
+    path: web::Path<(Uuid, String)>,
     data: web::Data<State>,
 ) -> HttpResponse {
-    println!("ADD NEW ITEM: From {:?}", id.identity());
-    let (id, name) = path.into_inner();
-    match User::add_new_item(&data.db.lock().unwrap(), id, name).await {
+    let (mut uid, name) = path.into_inner();
+    match User::add_new_item(&data.db.lock().unwrap(), uid, name).await {
         Ok(item) => HttpResponse::Ok()
             .content_type("application/json")
             .json(&item), //PgRow -> JSon?
