@@ -29,6 +29,8 @@ pub fn uid_routes() -> Scope {
         )
 }
 
+pub async fn test() {}
+
 pub fn username_routes() -> Scope {
     // -------------- /u ------------------------- ///
     scope("/u")

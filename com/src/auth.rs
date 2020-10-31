@@ -1,3 +1,6 @@
+pub mod jwt;
+pub mod oauth;
+
 #[derive(Clone)]
 pub struct Auth {
     key: String,

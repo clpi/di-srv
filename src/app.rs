@@ -29,10 +29,9 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn test() {}
-
 pub fn spawn_api(listener: TcpListener, tx: mpsc::Sender<dev::Server>) -> std::io::Result<()> {
     let mut sys = actix_rt::System::new("api");
+    let db = sys.block_on(divdb::Db::new()).unwrap();
     let srv = HttpServer::new(move || create_app())
         .listen(listener)?
         .run();
