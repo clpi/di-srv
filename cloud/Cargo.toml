@@ -13,15 +13,17 @@ serde = { version = "*", features = ["derive"] }
 chrono = { version = "*", features = ["serde"] }
 serde_json = "*"
 futures = "*"
+dynomite = "0.10"
 #rusoto_core= { version = "*", features = [] }
 rusoto_core= "*"
 rusoto_credential="*"
-dynomite = "0.10"
 rusoto_dynamodb= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
 rusoto_cognito_idp= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
 rusoto_cognito_identity= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
 rusoto_s3= { version = "*", features = ["serialize_structs", "deserialize_structs", ] }
-rusoto_sts = { version = "*", features = ["serialize_structs"] }
+reqwest = {version = "0.10", default-features = false, features = ["json", "stream"]}
+# rust-s3 = "*"
+#rusoto_sts = { version = "*", features = ["serialize_structs"] }
 dotenv="*"
 
 #dynomite="*"

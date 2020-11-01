@@ -1,0 +1,18 @@
+[package]
+name = "lambda"
+version = "0.1.0"
+authors = ["Chris P <chrisp1877@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aws_lmabda_events = "*"
+aws_lambda_runtime = "*"
+aws_lambda_http = "*"
+rust-s3="*"
+rusoto_core = "*"
+rusoto_credentials = "*"
+rusoto_cognito_idp = "*"
+rusoto_cognito_identity = "*"
+rusoto_secrets_manager = "*"

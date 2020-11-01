@@ -9,8 +9,13 @@ services:
       - ./data:/data
     depends_on:
       - redis
+      - postgres
   redis:
     image: bitnami/redis:latest-alpine
+  postgres:
+    image: postgre/postgresql:latest-alpine
+    depends_on: redis
 
 volumes:
+
 

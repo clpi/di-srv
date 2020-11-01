@@ -28,3 +28,7 @@ pub fn spawn_api() -> std::io::Result<()> {
     Ok(())
 }
 
+
+pub async fn spawn_test_server(port: i32, host: &str) -> () {
+
+}
