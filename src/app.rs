@@ -15,12 +15,9 @@
 
 use crate::{handlers, middleware, state};
 use actix_service::ServiceFactory;
-use actix_session::{Session, UserSession};
-use actix_web::*;
-use actix_web::{body, dev, get, post, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
-use tokio::*;
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");

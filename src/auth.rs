@@ -1,7 +1,4 @@
-use tokio::*;
 use serde::{Serialize, Deserialize};
-use div_cloud::cognito::*;
-use derive_more::*;
 use oxide_auth::{
     code_grant::{
         authorization::{
@@ -20,18 +17,15 @@ use oxide_auth_actix::{Refresh, Token, WebError, Resource, Authorize,
 
 #[derive(Default, Debug, PartialEq, PartialOrd, Serialize, Deserialize, Clone)]
 pub struct OAuthReq {
-    auth_url: AuthUrl,
-    client_id: ClientId,
-    client_secret: ClientSecret,
-    resource: Resource,
+    auth_url: String,
+    client_id: String,
+    client_secret: String,
+    resource: String,
 }
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct Req(OAuthRequest);
 
 impl OAuthReq {
     pub fn new() -> Self {
-
+        Self { ..Default::default() }
     }
 }
 

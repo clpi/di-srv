@@ -1,8 +1,10 @@
 use std::marker::{Send, Unpin};
 use std::io::*;
+use futures::{TryStreamExt, StreamExt};
+use std::time::Duration;
 use crate::models::{user::User, Model};
-use sqlx::{ 
-    FromRow, Database,  prelude::*, error::DatabaseError,
+use sqlx::{
+    Executor, FromRow, Database,  prelude::*, error::DatabaseError,
     types::{
         chrono::{DateTime, Utc},
         uuid::Uuid, Json,
@@ -21,12 +23,24 @@ pub struct Db {
 
 impl Db {
 
+    pub fn url() -> dotenv::Result<String> {
+        //TODO handle for dev/prod environmental variables
+        dotenv::var("DATABASE_URL")
+    }
+
     pub async fn new() -> sqlx::Result<Self> {
-        let dburl = &dotenv::var("DATABASE_URL").expect("DB URL not set");
+        let dburl = Db::url().expect("Could not get DB URL");
         let pool = PgPoolOptions::new()
             .max_connections(5)
-            .connect(dburl).await?;
+            .connect(&dburl).await?;
         Ok( Self { pool } )
+    }
+
+    pub async fn listener() -> sqlx::Result<PgListener> {
+        let dburl = Db::url().expect("Could not get DB URL");
+        let listener = PgListener::connect(&dburl)
+            .await?;
+        Ok(listener)
     }
 
     pub fn new_blocking() -> sqlx::Result<Self> {
@@ -91,7 +105,7 @@ pub async fn add_user(pool: &PgPool, user: User) -> sqlx::Result<i32> {
             VALUES ( $1, $2, $3 )
             RETURNING id
         "#,
-       user.email, user.username, user.password 
+       user.email, user.username, user.password
     )
         .fetch_one(pool)
         .await?;

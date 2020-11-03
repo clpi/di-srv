@@ -27,8 +27,10 @@ serde_json = "*"
 chrono = { version = "*", features = ["serde"] }
 uuid = { version = "*", features = ["serde", "v4"] }
 async-graphql= {version="*", optional=true}
-refinery ="*"
+refinery = { version = "*", features = ["postgres"] }
+#barrel = { version = "*", features = ["pg"] }
 #validator = { version = "0.11", features = ["derive"] }
+
 dynomite = "*"
 #juniper="*"
 dotenv="*"
@@ -54,7 +56,7 @@ log="*"
 
 [features]
 default=[]
-gql=["async-graphql"] 
+gql=["async-graphql"]
 #sqlite
 
 [alias]

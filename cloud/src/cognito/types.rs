@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use rusoto_cognito_idp::{ AttributeType, NewDeviceMetadataType,
-    AdminInitiateAuthError, AdminInitiateAuthRequest, AdminInitiateAuthResponse,
-    AdminCreateUserResponse,
-    SignUpError, SignUpResponse, SignUpRequest, AdminGetUserResponse,
+     SignUpResponse,  AdminGetUserResponse,
     AuthenticationResultType, CodeDeliveryDetailsType, UserType
 };
 
@@ -58,12 +56,12 @@ pub struct CgDeviceMeta {
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct Challenge {
-    pub name: String, 
+    pub name: String,
     pub params: HashMap<String, String>,
 }
 
 impl From<AdminGetUserResponse> for CgUser  {
-    fn from(user: AdminGetUserResponse) -> Self { 
+    fn from(user: AdminGetUserResponse) -> Self {
         Self {
             username: user.username,
             attributes: user.user_attributes,
@@ -76,7 +74,7 @@ impl From<AdminGetUserResponse> for CgUser  {
 }
 
 impl From<UserType> for CgUser  {
-    fn from(user: UserType) -> Self { 
+    fn from(user: UserType) -> Self {
         Self {
             username: user.username.unwrap(),
             enabled: user.enabled.unwrap(),
@@ -102,9 +100,9 @@ impl From<AuthenticationResultType> for CgAuthRes {
 }
 
 impl From<Option<NewDeviceMetadataType>> for CgDeviceMeta  {
-    fn from(data: Option<NewDeviceMetadataType>) -> Self { 
+    fn from(data: Option<NewDeviceMetadataType>) -> Self {
         let data = data.expect("Could not get device metadata");
-        Self { 
+        Self {
             device_key: data.device_key.unwrap(),
             device_group_key: data.device_group_key.unwrap(),
         }

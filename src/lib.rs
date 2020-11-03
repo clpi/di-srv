@@ -21,4 +21,3 @@ pub mod auth;
 use actix_web::*;
 
 pub use handlers::*;
-
