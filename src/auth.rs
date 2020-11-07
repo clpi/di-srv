@@ -1,37 +1,60 @@
-use serde::{Serialize, Deserialize};
-use oxide_auth::{
-    code_grant::{
-        authorization::{
-            Input, Authorization, authorization_code,
-            Request, Pending, Output, Extension, Endpoint,
-        },
+pub mod support;
+pub mod oauth;
+pub mod jwt;
+use actix_web::{
+    web::{
+        Payload, PayloadConfig, get
     },
-    primitives::prelude::*,
+    http::HeaderName,
 };
-use oxide_auth::endpoint::{self, Issuer, Registrar};
-use oxide_auth::*;
-use oxide_auth_actix::{Refresh, Token, WebError, Resource, Authorize,
-    OAuthRequest, OAuthMessage,
-    OAuthResponse,
+use serde::{Serialize, Deserialize};
+use url::Url;
+use actix::{
+    Actor,  Context, Handler,
+};
+use actix_web::middleware::{
+        Logger,
+        normalize::{NormalizePath, TrailingSlash}
+    };
+use oxide_auth::{
+    primitives::prelude::{
+        AuthMap, Client, ClientMap,
+        RandomGenerator, Scope, TokenMap
+    },
+    endpoint::{
+        Endpoint, OwnerConsent, OwnerSolicitor,
+        Solicitation,
+    },
+    frontends::simple::endpoint::{
+        ErrorInto, FnSolicitor, Generic, Vacant
+    },
+};
+use oxide_auth_actix::{
+    Authorize, OAuthMessage, OAuthOperation,
+    OAuthRequest, OAuthResource, OAuthResponse,
+    Refresh, Resource, Token, WebError,
 };
 
-#[derive(Default, Debug, PartialEq, PartialOrd, Serialize, Deserialize, Clone)]
-pub struct OAuthReq {
-    auth_url: String,
-    client_id: String,
-    client_secret: String,
-    resource: String,
+#[derive(Debug, Default)]
+pub(crate) struct State {
+    pub token: Option<String>,
+    pub refresh: Option<String>,
+    pub until: Option<i64>,
 }
 
-impl OAuthReq {
-    pub fn new() -> Self {
-        Self { ..Default::default() }
+impl State {
+
+    pub fn new(
+        token: Option<String>, refresh: Option<String>, until: Option<i64>) -> Self { Self { token, refresh, until }
+    }
+
+
+    pub async fn test() {
+        let _web = web::to("dfd");
     }
 }
 
-pub struct ApiError {}
-
-pub enum ApiErrorKind {
-
+pub struct Request {
+    id: Uuid,
+    val: String,
 }
-

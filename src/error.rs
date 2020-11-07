@@ -9,4 +9,14 @@ enum AuthError {
     Internal,
 }
 
+#[derive(Debug)]
+pub enum OAuthError {
+    AccessFailed,
+    NoToken,
+    AuthorizationFailed,
+    RefreshFailed,
+    Invalid(serde_json::Error),
+    MissingToken,
+    Response(String),
+}
 

@@ -6,6 +6,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 
+
 pub async fn req_get(url: &str) {
     let mut client = Client::default();
     let mut res = client.get(url).send().await.unwrap();

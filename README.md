@@ -1,5 +1,7 @@
 # di-srv (div.is server/backend)
 
+# Let
+
 ## components
 1. API written using actix-web (Rust)
 2. DB interface using sqlx (Rust)
@@ -18,7 +20,7 @@
 
 ## tasks for down the road
 - [x] Make the models be in teh db crate, not in com crate
-- [ ] Make API run command take DB as input, so all exec is handled in root crate 
+- [ ] Make API run command take DB as input, so all exec is handled in root crate
 
 ## ways to run (eventually)
 1. run application on bare metal, or run it serverless (generally), or on AWS Lambda (specifically), while sacrificing as little functionality as possible

@@ -44,6 +44,6 @@ impl State {
     }
 }
 
-impl Actor for State { 
+impl Actor for State {
     type Context = Context<Self>;
 }

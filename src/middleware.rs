@@ -1,22 +1,23 @@
 pub mod auth;
 
-use std::time::Duration;
-use actix_redis::{RedisActor, RedisSession};
-use actix_cors::{Cors, AllOrSome};
+use actix_redis::RedisSession;
+use actix_cors::Cors;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
     cookie::SameSite,
-    http::{self, HeaderName, HeaderValue},
-    client::Client, 
-    middleware::{Logger, 
+    client::Client,
+    middleware::{Logger,
         normalize::{NormalizePath, TrailingSlash},
     },
 };
-use actix_session::{Session, UserSession, CookieSession};
+use actix_session::CookieSession;
 
 pub fn logger() -> Logger {
     let _log = Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#);
     Logger::default()
+}
+
+pub fn oauth_middleware() {
 }
 
 pub fn cors() -> Cors {

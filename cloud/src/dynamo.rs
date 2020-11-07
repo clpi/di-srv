@@ -4,10 +4,10 @@ use std::collections::hash_map::{HashMap, RandomState};
 use crate::cognito::types::CgUser;
 use rusoto_core::Region;
 use dynomite::{
-    retry::{Retries, Policy}, dynamodb::{DynamoDbClient, DynamoDb, KeySchemaElement,
-        PutRequest, DeleteItemInput, QueryInput, ExpectedAttributeValue, 
-        AttributeDefinition,  GetItemInput, WriteRequest, PutItemInput, DeleteRequest, 
-        UpdateItemInput, ListTablesInput, CreateTableInput, AttributeValue, 
+    retry::Policy, dynamodb::{DynamoDbClient, DynamoDb, KeySchemaElement,
+        PutRequest, DeleteItemInput, QueryInput, ExpectedAttributeValue,
+        AttributeDefinition,  GetItemInput, WriteRequest, PutItemInput, DeleteRequest,
+        UpdateItemInput, ListTablesInput, CreateTableInput, AttributeValue,
     },
     Attribute, Item, FromAttributes, DynamoDbExt, attr_map,
 };
@@ -17,7 +17,7 @@ pub struct DynamoClient {
     db: DynamoDbClient,
 }
 
-impl DynamoClient { 
+impl DynamoClient {
 
     pub fn new() -> Result<Self, String> {
         let region = Region::UsWest2;
@@ -29,20 +29,20 @@ impl DynamoClient {
     pub async fn insert_user(&self, cuser: CgUser) -> Result<(), String> {
         let mut user: HashMap<String, AttributeValue> = HashMap::new();
         let mut attr: HashMap<String, AttributeValue> = HashMap::new();
-        attr.insert("enabled".into(), AttributeValue { 
-                bool: Some(cuser.enabled), ..Default::default() 
+        attr.insert("enabled".into(), AttributeValue {
+                bool: Some(cuser.enabled), ..Default::default()
             });
-        user.insert("attr".into(), AttributeValue { 
-                m: Some(attr),  ..Default::default()  
+        user.insert("attr".into(), AttributeValue {
+                m: Some(attr),  ..Default::default()
             }).unwrap();
-        user.insert("username".into(), AttributeValue { 
-                s: Some(cuser.username), ..Default::default() 
+        user.insert("username".into(), AttributeValue {
+                s: Some(cuser.username), ..Default::default()
             });
         match self.db.put_item(PutItemInput {
             table_name: "diuser".into(),
             item: user, ..Default::default()
         }).await {
-           Ok(res) => Ok(()),
+           Ok(_res) => Ok(()),
            Err(e) => Err(e.to_string())
         }
     }
@@ -52,22 +52,22 @@ impl DynamoClient {
             table_name: table.into(),
             item: item.into(), ..Default::default()
         }).await {
-            Ok(resp) => Ok(()),
+            Ok(_resp) => Ok(()),
             Err(err) => Err(err.to_string()),
         }
     }
 
-    pub async fn delete_table(&self, table: &str) -> () {}
+    pub async fn delete_table(&self, _table: &str) -> () {}
 
-    pub async fn create_table(&self, 
-        table: &str, 
+    pub async fn create_table(&self,
+        table: &str,
         attrs_types: Vec<(&str, &str, Option<&str>)>, // name, type, key_type
-    ) -> Result<(), String> 
+    ) -> Result<(), String>
     {
-        let (attrs, keys): (Vec<AttributeDefinition>, Vec<KeySchemaElement>) 
+        let (attrs, keys): (Vec<AttributeDefinition>, Vec<KeySchemaElement>)
             = attrs_types.into_iter().fold(
-                (Vec::<AttributeDefinition>::new(), Vec::<KeySchemaElement>::new()), 
-                |(mut attrs, mut keys), att| 
+                (Vec::<AttributeDefinition>::new(), Vec::<KeySchemaElement>::new()),
+                |(mut attrs, mut keys), att|
             {
                 attrs.push(AttributeDefinition {
                     attribute_name: att.0.into(),
@@ -110,7 +110,7 @@ impl DynamoClient {
         match self.db.list_tables(ListTablesInput { ..Default::default() }).await{
             Ok(res) => Ok(res.table_names.unwrap()),
             Err(e) => Err(e.to_string())
-                
+
         }
     }
 

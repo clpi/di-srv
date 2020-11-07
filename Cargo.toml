@@ -12,6 +12,7 @@ path = "src/lib.rs"
 name = "main"
 path = "src/bin/main.rs"
 
+
 [[bin]]
 name = "gql"
 path = "src/bin/gql.rs"
@@ -23,7 +24,8 @@ serde = { version = "*", features = [ "derive" ] }
 chrono = { version = "*", features= [ "serde" ] }
 uuid = { version = "*", features= [ "v4", "serde" ] }
 validator = { version = "*", features = [ "derive" ] }
-futures = "*"
+url = "2"
+futures = "0.3"
 serde_json = "*"
 actix-service = "*"
 actix = "*"
@@ -96,9 +98,11 @@ divdb = { path = "./db/" }
 com = { path = "./com/" }
 div_cloud = { path = "./cloud/" }
 
-[dev-dependencies]
 log = "*"
 env_logger="*"
+# refinery = "*"
+
+[dev-dependencies]
 #listenfd = "*"
 #dotenv="*"
 

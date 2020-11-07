@@ -69,7 +69,7 @@ pub(crate) fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpRespon
 pub async fn logout_session(id: Identity, session: Session) -> Result<HttpResponse, HttpResponse> {
     let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
-        Ok(Some(user)) => { 
+        Ok(Some(user)) => {
             id.forget();
             session.purge();
             Ok(HttpResponse::Ok()
@@ -83,7 +83,7 @@ pub async fn logout_session(id: Identity, session: Session) -> Result<HttpRespon
 }
 
 pub async fn refresh_login(
-    (id,  data): (Identity, web::Data<State>)) -> HttpResponse 
+    (id,  data): (Identity, web::Data<State>)) -> HttpResponse
 {
     match id.identity() {
         Some(id) => {
@@ -96,7 +96,7 @@ pub async fn refresh_login(
         None => HttpResponse::Gone()
             .set_header("authorization", "false")
             .json(false)
-        
+
     }
 }
 
@@ -143,7 +143,7 @@ pub async fn check_session(
 }
 
 pub async fn authorize_user(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse 
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse
 {
     let payload = body.into_inner();
     match Client::new()
@@ -157,7 +157,7 @@ pub async fn authorize_user(
 }
 
 pub async fn get_user(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -168,7 +168,7 @@ pub async fn get_user(
 }
 
 pub async fn confirm_signup(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.confirm_signup(username.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -179,7 +179,7 @@ pub async fn confirm_signup(
 }
 
 pub async fn delete_user(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.delete_user(username.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -190,7 +190,7 @@ pub async fn delete_user(
 }
 
 pub async fn create_user(
-    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
+    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
 {
     match &data.cognito.create_user(user.into_inner(), true).await {
         Ok(res) => HttpResponse::Ok()
@@ -201,7 +201,7 @@ pub async fn create_user(
 }
 
 pub async fn signup_user(
-    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse 
+    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
 {
     match &data.cognito.signup_user(user.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -212,7 +212,7 @@ pub async fn signup_user(
 }
 
 pub async fn login_user(
-    (data, user): (web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse 
+    (data, user): (web::Data<State>, web::Json<CgUserLogin>) ) -> HttpResponse
 {
     match &data.cognito.login_user(user.into_inner()).await{
         Ok(res) => HttpResponse::Ok()
@@ -223,7 +223,7 @@ pub async fn login_user(
 }
 
 pub async fn logout_user(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<String>) ) -> HttpResponse 
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<String>) ) -> HttpResponse
 {
     match &data.cognito.signout_user(body.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -234,7 +234,7 @@ pub async fn logout_user(
 }
 
 pub async fn get_token(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>), ) -> HttpResponse 
+    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>), ) -> HttpResponse
 {
     let payload = body.into_inner();
     let res = Client::new()
@@ -250,7 +250,7 @@ pub async fn get_token(
 }
 
 pub async fn get_users(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -262,7 +262,7 @@ pub async fn get_users(
 
 
 pub async fn set_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -273,7 +273,7 @@ pub async fn set_attribute(
 }
 
 pub async fn get_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -284,7 +284,7 @@ pub async fn get_attribute(
 }
 
 pub async fn add_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -296,7 +296,7 @@ pub async fn add_attribute(
 
 
 pub async fn delete_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse 
+    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
