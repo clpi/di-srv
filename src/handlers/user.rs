@@ -11,6 +11,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize)]
 pub struct UserApi(User);
 
+
 pub fn uid_routes() -> Scope {
     scope("/user")
     // -------------- /user ------------------------- ///
@@ -94,7 +95,7 @@ pub async fn get_by_id(data: web::Data<State>, id: web::Path<String>) -> HttpRes
 
 pub async fn update_by_id(
     path: web::Path<Uuid>, req: HttpRequest, data: web::Data<State>
-        ) -> HttpResponse 
+        ) -> HttpResponse
 {
     match User::delete_by_id(&data.db.lock().unwrap(), *path).await {
         Ok(Some(id)) => HttpResponse::Ok()
@@ -105,7 +106,7 @@ pub async fn update_by_id(
 }
 
 pub async fn delete_by_id(
-    data: web::Data<State>, 
+    data: web::Data<State>,
     id: web::Path<Uuid>
 ) -> HttpResponse {
     match User::delete_by_id(&data.db.lock().unwrap(), *id).await {
@@ -117,7 +118,7 @@ pub async fn delete_by_id(
 }
 
 pub async fn get_by_username(
-    data: web::Data<State>, 
+    data: web::Data<State>,
     username: web::Path<String>
 ) -> HttpResponse {
     match User::get_by_username(&data.db.lock().unwrap(), username.to_string()).await {
@@ -144,7 +145,7 @@ pub async fn delete_by_username(
 
 pub async fn update_by_username(
     id: Identity,
-    data: web::Data<State>, 
+    data: web::Data<State>,
     username: web::Path<String>
 ) -> HttpResponse {
     println!("UPDATE USER BY USERNAME: From {:?}", id.identity());

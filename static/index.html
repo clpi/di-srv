@@ -45,8 +45,8 @@ body {
   top: 0;
   position: sticky;
   position: -webkit-sticky; /* Safari */
-  overflow: hidden; 
-  list-style-type: none; 
+  overflow: hidden;
+  list-style-type: none;
   display: inline-block;
 }
 .nav-h ul li { float: left; background: rgba(255,255,255,0.05); padding: 10px; }
@@ -74,7 +74,7 @@ li a:hover {
 }
   </style>
   <script>
-    const get_all_users = async () => { 
+    const get_all_users = async () => {
       const data = await fetch("http://localhost:7777/user",
         { method: "GET" })
         .then(res => res.json())
@@ -96,9 +96,9 @@ li a:hover {
       })
         .then(res => {
           if (res.ok()) { console.log("signup successful")
-          } else { console.log("signup unsuccessful") } 
+          } else { console.log("signup unsuccessful") }
         });
-    }   
+    }
     document.getElementById("getUsers").onclick() = get_all_users();
   </script>
 </head>
@@ -140,8 +140,8 @@ li a:hover {
         <p>Get all users: <button id="getUsers">Get users</button></p>
         <p id="users"></p>
       <form target="/" method="post" enctype="multipart/form-data" id="myForm" >
-          <input type="text"  id="text" name="text" value="test_text"/>    
-          <input type="number"  id="number" name="number" value="123123"/>    
+          <input type="text"  id="text" name="text" value="test_text"/>
+          <input type="number"  id="number" name="number" value="123123"/>
           <input type="button" value="Submit" onclick="myFunction()"></button>
       </form>
       <input type="file" multiple name="file" id="myFile"/>

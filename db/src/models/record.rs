@@ -1,11 +1,9 @@
-use std::rc::Weak;
-use std::io::*;
 use serde::{Serialize, Deserialize};
 use sqlx::{
     types::{chrono::{Utc, DateTime, NaiveDate, NaiveDateTime}, Json, uuid::Uuid},
     FromRow, Type, postgres::{Postgres, PgRow}, Decode, prelude::*,
 };
-use crate::{Db, 
+use crate::{Db,
     models::{Model, User, Status, Visibility, Priority, Item, Group,
         link::{LinkedTo, Link},
     },
@@ -29,15 +27,15 @@ pub struct Record {
 
 impl Record {
 
-    pub fn new<U>(uid: Uuid, name: U) -> Self 
+    pub fn new<U>(uid: Uuid, name: U) -> Self
     where U: Into<String> {
         Self { name: name.into(), uid, ..Self::default() }
     }
 
     pub fn create<U, V, W>
-        (uid: Uuid, name: U, status: V, visibility: W) -> Self    
+        (uid: Uuid, name: U, status: V, visibility: W) -> Self
         where  U: Into<String>, V: Into<Status>, W: Into<Visibility> {
-        Self { 
+        Self {
             name: name.into(), uid,
             status: status.into(),
             visibility: visibility.into(),
@@ -105,11 +103,11 @@ impl Record {
         Ok(res)
     }
 
-    pub async fn get_by_username_and_name(db: &Db, username: String, name: String) 
+    pub async fn get_by_username_and_name(db: &Db, username: String, name: String)
         -> sqlx::Result<Option<Self>>
     {
         let res: Option<Self> = sqlx::query_as::<Postgres, Record>(
-            "SELECT r.id, r.name, r.uid, r.status, r.visibility, r.created_at, 
+            "SELECT r.id, r.name, r.uid, r.status, r.visibility, r.created_at,
              FROM Records r, Users u
              WHERE r.name = $1 AND r.uid = u.id AND u.username = $1")
             .bind(name)
@@ -146,14 +144,14 @@ impl Record {
     }
 
     pub async fn add_new_item<T: Into<String>>
-        (db: &Db, rid: Uuid, item_name: T) -> sqlx::Result<Item> 
+        (db: &Db, rid: Uuid, item_name: T) -> sqlx::Result<Item>
     {
         let item = Item::new(rid, item_name.into()).insert(db).await?;
         let link = Link::new(rid, item.id).insert::<Record, Item>(db).await?;
         Ok(item)
     }
 
-    pub async fn add_existing_item(db: &Db, rid: Uuid, iid: Uuid) -> sqlx::Result<Uuid> 
+    pub async fn add_existing_item(db: &Db, rid: Uuid, iid: Uuid) -> sqlx::Result<Uuid>
     {
         let link = Link::new(rid, iid).insert::<Record, Item>(db).await?;
         Ok(link)
@@ -178,14 +176,14 @@ impl Record {
 
 impl Default for Record {
     fn default() -> Self {
-        Self { 
-            id: Uuid::new_v4(), 
+        Self {
+            id: Uuid::new_v4(),
             uid: Uuid::new_v4(),
-            name: String::new(), 
+            name: String::new(),
             status: Status::Active.into(),
             visibility: Visibility::Private.into(),
             created_at: Utc::now(),
-        } 
+        }
     }
 }
 
@@ -212,7 +210,7 @@ impl Model for Record {
     fn table() -> String { String::from("Records") }
     fn foreign_id() -> String { String::from("rid") }
     fn id(self) -> Uuid { self.id }
-    fn fields() ->  Vec<String> { 
+    fn fields() ->  Vec<String> {
         let fields = vec!["id", "uid", "name", "status", "visibility", "created_at"];
         fields.into_iter()
             .map(|field| field.to_string())

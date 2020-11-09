@@ -12,10 +12,19 @@ services:
       - postgres
   redis:
     image: bitnami/redis:latest-alpine
+
   postgres:
     image: postgre/postgresql:latest-alpine
     depends_on: redis
 
-volumes:
+  traefik:
+    image: traefik/traefik:latest
+    volumes:
+      - ./data:./data
+    depends_on: api
 
+volumes:
+  - postgres_volume:
+      path:
+        -
 

@@ -61,6 +61,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-broker"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e075eaa04b5a9a1b36ce801fa338f7d477f6b5f28d5f8339a8c2baba5beec33"
+dependencies = [
+ "actix 0.10.0",
+ "fnv",
+ "log",
+]
+
+[[package]]
 name = "actix-codec"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1650,6 +1661,7 @@ name = "divapi"
 version = "0.1.0"
 dependencies = [
  "actix 0.10.0",
+ "actix-broker",
  "actix-cors",
  "actix-files",
  "actix-identity",
@@ -1672,6 +1684,7 @@ dependencies = [
  "env_logger",
  "futures 0.3.5",
  "log",
+ "oauth2",
  "oxide-auth",
  "oxide-auth-actix",
  "reqwest 0.10.8",
@@ -2796,9 +2809,11 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d21857941367fdd2514553ff1578254267afd9c1e69d2d8592ba98223560a0"
 dependencies = [
+ "async-trait",
  "base64 0.12.3",
  "failure",
  "failure_derive",
+ "futures 0.3.5",
  "http 0.1.21",
  "rand 0.7.3",
  "reqwest 0.9.24",

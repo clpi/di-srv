@@ -1,11 +1,11 @@
 use actix_web::client::Client;
-use div_cloud::cognito::{types::*, self};
-use actix_session::{Session, SessionStatus};
+use div_cloud::cognito::types::*;
+use actix_session::Session;
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
 use actix_identity::Identity;
 use actix_web::{ Error, cookie::Cookie,
-    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
+    web::{self, delete, get, post, put, resource, scope},
     HttpRequest, HttpResponse, Scope,
 };
 use divdb::models::user::*;
@@ -69,7 +69,7 @@ pub(crate) fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpRespon
 pub async fn logout_session(id: Identity, session: Session) -> Result<HttpResponse, HttpResponse> {
     let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
-        Ok(Some(user)) => {
+        Ok(Some(_user)) => {
             id.forget();
             session.purge();
             Ok(HttpResponse::Ok()
@@ -83,7 +83,7 @@ pub async fn logout_session(id: Identity, session: Session) -> Result<HttpRespon
 }
 
 pub async fn refresh_login(
-    (id,  data): (Identity, web::Data<State>)) -> HttpResponse
+    (id,  _data): (Identity, web::Data<State>)) -> HttpResponse
 {
     match id.identity() {
         Some(id) => {
@@ -103,7 +103,7 @@ pub async fn refresh_login(
 pub async fn check_auth() {}
 
 pub async fn check_id(
-    (id, req, user, data): (
+    (id, _req, user, data): (
         Identity,
         HttpRequest,
         web::Json<UserLogin>,

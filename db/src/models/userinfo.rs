@@ -12,7 +12,7 @@ use crate::{ Db,
 
 #[serde(rename_all="camelCase")]
 #[derive(Serialize, Deserialize, FromRow, Clone, PartialEq)]
-pub struct UserInfo { 
+pub struct UserInfo {
     // #[dynomite(default)]
     #[serde(default="Uuid::new_v4")]
     pub id: Uuid,
@@ -53,7 +53,7 @@ impl UserInfo {
             "mid_initial" => (),
             "phone_number" => (),
             "occupation" => (),
-            "bio" => (), 
+            "bio" => (),
             "img_path" => (),
             "gender" => (),
             "birth_date" => (),
@@ -66,12 +66,12 @@ impl UserInfo {
             _ => (),
         }
         self.updated_at = Utc::now();
-        self.to_owned()  
+        self.to_owned()
     }
 
     pub async fn get_all(db: &Db) -> sqlx::Result<Vec<Self>> {
         let res: Vec<UserInfo> = sqlx::query_as::<Postgres, UserInfo>
-            ("SELECT * FROM UserInfo") 
+            ("SELECT * FROM UserInfo")
             .fetch_all(&db.pool)
             .await?;
         Ok(res)
@@ -109,7 +109,7 @@ impl UserInfo {
 
 impl Default for UserInfo {
     fn default() -> Self {
-        Self { 
+        Self {
             id: Uuid::new_v4(),
             user_type: UserType::default(),
             updated_at: Utc::now(),
@@ -179,21 +179,6 @@ impl Default for UserType {
     fn default() -> Self { UserType::User }
 }
 
-/*
-impl Attribute for UserType {
-
-    fn from_attr(value: AttributeValue) -> Result<Self, AttributeError> {
-        Ok(UserType::default())
-    }
-
-    fn into_attr(self: Self) -> AttributeValue {
-        AttributeValue {
-            s: Some(self.into()), ..Default::default()
-        }    
-    }
-}
-
-*/
 impl Model for UserInfo {
     fn table() -> String { "UserInfo".to_string() }
     fn foreign_id() -> String {

@@ -4,6 +4,9 @@ use actix::{Actor, Addr, Context, Handler};
 use std::collections::HashMap;
 use divdb::db::Db;
 use actix_web::{self, web, HttpRequest, HttpResponse};
+use actix_session::{Session, UserSession};
+use actix_redis::{RedisActor, RedisSession};
+use actix_web::{Either, client::Client };
 
 pub fn state() -> State {
     let db = Db::new_blocking().unwrap();
@@ -12,6 +15,9 @@ pub fn state() -> State {
 }
 
 pub struct LoggedInUsers {}
+
+pub struct DBConfig {
+}
 
 pub struct Config {
     db_url: String,

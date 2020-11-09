@@ -1,10 +1,5 @@
 use crate::state::State;
-use actix_web::{
-    client::{Client, ClientResponse},
-    http,
-    web::{Data, Json, Path},
-    HttpRequest, HttpResponse,
-};
+use actix_web::client::Client;
 
 
 pub async fn req_get(url: &str) {

@@ -72,3 +72,4 @@ mod tests {
         let _app = init_service(App::new().data(crate::state::state()).configure(routes)).await;
     }
 }
+

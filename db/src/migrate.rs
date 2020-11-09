@@ -1,4 +1,8 @@
 use crate::db::Db;
-use refinery::{Migration, Migrate, AsyncMigrate, Runner, Target,
-    error, config::Config
+use refinery::{
+    embed_migrations, Migrate,
 };
+pub async fn migrate_db() {
+
+}
+
