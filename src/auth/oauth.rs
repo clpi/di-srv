@@ -22,6 +22,7 @@ pub struct OAuthClient {
 }
 
 
+/*
 impl OAuthClient {
 
     pub async fn sample_auth() -> Self {
@@ -52,3 +53,4 @@ impl OAuthClient {
     }
 
 }
+*/

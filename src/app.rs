@@ -3,7 +3,6 @@ use actix_service::ServiceFactory;
 use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
-use std::{io};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
