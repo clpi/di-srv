@@ -13,11 +13,12 @@ use div_db::models::User;
 pub fn public_routes() -> Scope {
     scope("")
         .route("", get().to(index))
-        .service(resource("dashboard").route(get().to(dashboard)))
-        .service(resource("users").route(get().to(users)))
-        .service(resource("user").route(get().to(user)))
-        .service(resource("login").route(get().to(login)))
-        .service(resource("contact").route(get().to(contact)))
+        .route("/", get().to(index))
+        .service(resource("/dashboard").route(get().to(dashboard)))
+        .service(resource("/users").route(get().to(users)))
+        .service(resource("/user").route(get().to(user)))
+        .service(resource("/login").route(get().to(login)))
+        .service(resource("/contact").route(get().to(contact)))
 }
 
 pub async fn index(
@@ -32,7 +33,7 @@ pub async fn index(
             hm
         });
     let mut context = tera::Context::new();
-    context.insert("headers", &h.to_owned());
+    // context.insert("headers", &h.to_owned());
     let s = data.tera.render("index.html", &context)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))
         .unwrap_or_default();

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     std::env::set_var("RUST_LOG", "actix_web=debug");
     let st = state::State::new().await;
     let srv = HttpServer::new(move || {
@@ -24,7 +25,9 @@ pub fn spawn_api(
     tx: mpsc::Sender<dev::Server>,
     ) -> std::io::Result<()>
 {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     log::info!("Spawning DI server...");
+
     let mut sys = actix_rt::System::new("api");
     let _db = sys.block_on(div_db::Db::new()).unwrap();
     let srv = HttpServer::new(move || create_app())

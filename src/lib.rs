@@ -1,5 +1,7 @@
+pub mod schema;
 pub mod app;
 pub mod error;
+pub mod session;
 pub mod handlers;
 pub mod middleware;
 pub mod models;
@@ -11,3 +13,4 @@ pub mod auth;
 
 
 pub use handlers::*;
+pub use app::*;

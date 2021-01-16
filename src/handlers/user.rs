@@ -1,3 +1,6 @@
+use actix_multipart::Multipart;
+use tokio::io::AsyncWriteExt;
+use futures::{StreamExt, TryStreamExt};
 use uuid::Uuid;
 use crate::state::State;
 use actix_web::{Scope,
@@ -168,4 +171,22 @@ pub async fn update_user_info(data: web::Data<State>, rid: web::Path<Uuid>) -> H
 
 pub async fn get_user_feed(data: web::Data<State>, rid: web::Path<Uuid>) -> HttpResponse {
     HttpResponse::Ok().body("delete_record")
+}
+
+async fn upload_profile_picture(mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
+    while let Ok(Some(mut field)) = payload.try_next().await {
+        let content_type = field
+            .content_disposition()
+            .ok_or_else(|| actix_web::error::ParseError::Incomplete)?;
+        let filename = content_type
+            .get_filename()
+            .ok_or_else(|| actix_web::error::ParseError::Incomplete)?;
+        let filepath = format!("./tmp/{}", &filename);
+        let mut f = tokio::fs::File::create(&filepath).await?;
+        while let Some(chunk) = field.next().await {
+            let data = chunk.unwrap();
+            f.write_all(&data).await?;
+        }
+    }
+    Ok(HttpResponse::Ok().into())
 }

@@ -1,4 +1,5 @@
 pub mod admin;
+pub mod graphql;
 pub mod auth;
 pub mod record;
 pub mod user;
@@ -36,18 +37,5 @@ pub(crate) fn test_service() ->  actix_web::Resource {
 
 pub async fn route_404(_req: HttpRequest) -> impl Responder {
     HttpResponse::NotFound().body("No route here")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use actix_web::test::init_service;
-
-    #[actix_rt::test]
-    async fn test_route_can_echo() {
-        let _app =
-            init_service(App::new().service(web::resource("/").route(web::post().to(index))));
-    }
-
 }
 

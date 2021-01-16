@@ -12,6 +12,7 @@ use actix_session::CookieSession;
 
 pub fn logger() -> Logger {
     let _log = Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#);
+        // .custom_request_replace("JWT_ID", |req| parse_jwt_id(req.headers().get("Authorization")));
     Logger::default()
 }
 
