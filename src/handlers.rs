@@ -34,16 +34,6 @@ pub(crate) fn test_service() ->  actix_web::Resource {
         .route(web::post().to(|| HttpResponse::Ok().body("")))
 }
 
-pub(crate) async fn index(id: Session) -> impl Responder {
-    let res = match id.get::<String>("id") {
-        Ok(Some(id)) => format!("Hello, {}", &id),
-        Ok(None) => "Welcome!".to_string(),
-        Err(_) => "Error".to_string(),
-    };
-    HttpResponse::Ok().body(res)
-}
-
-
 pub async fn route_404(_req: HttpRequest) -> impl Responder {
     HttpResponse::NotFound().body("No route here")
 }
