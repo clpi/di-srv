@@ -1,23 +1,12 @@
-use crate::state::State;
 use actix_identity::RequestIdentity;
 use actix_service::{Service, Transform};
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
-    error::ErrorUnauthorized,
     http,
-    middleware::Condition,
-    web, Error, HttpResponse,
+    Error, HttpResponse,
 };
-use futures::{
-    future::PollFn,
-    future::{ok, Either, Ready},
-    Future,
-};
-use std::{
-    boxed::Box,
-    pin::Pin,
-    task::{Context, Poll},
-};
+use futures::future::{ok, Either, Ready};
+use std::task::{Context, Poll};
 
 pub(crate) async fn _validator_fn(req: ServiceRequest,)
     -> Result<ServiceRequest, Error>
