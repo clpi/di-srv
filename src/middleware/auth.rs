@@ -18,10 +18,9 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use actix_web_httpauth::extractors::basic::BasicAuth;
 
-pub(crate) async fn validator_fn(req: ServiceRequest, cred: BasicAuth,) 
-    -> Result<ServiceRequest, Error> 
+pub(crate) async fn _validator_fn(req: ServiceRequest,)
+    -> Result<ServiceRequest, Error>
 {
     Ok(req)
 }

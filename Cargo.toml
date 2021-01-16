@@ -12,7 +12,6 @@ path = "src/lib.rs"
 name = "main"
 path = "src/bin/main.rs"
 
-
 [[bin]]
 name = "gql"
 path = "src/bin/gql.rs"
@@ -23,7 +22,6 @@ tokio = { version = "*", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
 chrono = { version = "*", features= [ "serde" ] }
 uuid = { version = "*", features= [ "v4", "serde" ] }
-validator = { version = "*", features = [ "derive" ] }
 url = "2"
 futures = "0.3"
 serde_json = "*"
@@ -33,78 +31,24 @@ actix-rt = "*"
 actix-web = "*"
 actix-cors = "*"
 actix-broker = "*"
-#actix-broker = "*"
-#actix-tls = "*"
 actix-files = "*"
 actix-identity = "*"
 actix-session="*"
 actix-web-actors = "3.0.0"
 actix-multipart = "*"
-derive_more = "*"
 actix-redis = "*"
-actix-web-httpauth="*"
-actix-protobuf="*"
-# oauth2="*"
-# futures-=
-# oauth2-rs = { version = '*' }
-oxide-auth="*"
-oxide-auth-actix="*"
-#yup-oauth="*"
-#tame-oauth = "*"
-#actix_ws = "*"
-#actix-web-prom = "*"
-#actix-web-opentelemetry="*"
-#actix-form-data="*"
-#actix-ratelimit="*"
-#actix-web-middleware-redirect-scheme="*"
-#strsim="*"
-#tracing-actix-web = "*"
-#actix-web-requestid="*"
-#background-jobs-actix="*"
-#actix-web-validator="*"
-#openid="*"
-#actix-tls = "*"
-#openssl="*"
-#redis-async="*"
-#oxide-auth="*"
-oauth2 = { version = "3.0", features = ["futures-03"], default-features = false }
-#oxide-auth-actix="*"
-#jsonwebtokens="*"
-#jsonwebtokens-cognito="*"
 reqwest = { version="*", features = ["json"] }
-#jsonwebtoken = "*"
-#actix-casbin-auth="*"
-#tinyvec="*"
-#smolstr="*"
-#rustls="*"
-
 async-graphql = { version = "*", optional= true }
 async-graphql-actix-web = { version = "*", optional = true }
-
 rusoto_core = { version = "*", optional = true }
 rusoto_cognito_idp = { version = "*", optional = true }
 rusoto_cognito_identity = { version = "*", optional = true }
-# rusoto_credentials = { version = "*", optional = true }
-# rusoto_ses = { version = "*", optional=true }
-# rusoto_s3 = { version = "*", optional = true }
-# rusoto_sts = { version = "*", optional = true }
-# rusoto_dynamodb = { version = "*", optional=true }
-# rusoto_s3 = { version = "*", optional = true }
-# rusoto_cognito_sync = { version = "*", optional = trure }
-
-# refinery = { version = "*" }
-
 divdb = { path = "./db/" }
 com = { path = "./com/" }
 div_cloud = { path = "./cloud/" }
-
 log = "*"
 env_logger="*"
-# refinery = "*"
 
-[dev-dependencies]
-#listenfd = "*"
-#dotenv="*"
 
 [features]
 default=[]

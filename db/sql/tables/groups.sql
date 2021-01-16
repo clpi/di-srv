@@ -1,0 +1,8 @@
+
+CREATE TABLE IF NOT EXISTS Groups (
+    id UUID PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
+    permission TEXT NOT NULL DEFAULT 'private',
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

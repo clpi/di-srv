@@ -1,5 +1,4 @@
 pub mod support;
-pub mod oauth;
 pub mod jwt;
 
 #[derive(Debug, Default)]

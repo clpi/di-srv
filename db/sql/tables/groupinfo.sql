@@ -1,0 +1,8 @@
+
+CREATE TABLE IF NOT EXISTS GroupInfo (
+    id SERIAL PRIMARY KEY NOT NULL,
+    description TEXT NOT NULL,
+    permission BOOLEAN NOT NULL DEFAULT 'private',
+    status TEXT NOT NULL DEFAULT 'active',
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

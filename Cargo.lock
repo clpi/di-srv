@@ -311,20 +311,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-protobuf"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af362615b2f93a278580d218b6485cb2afa4e7a22cbc9ab36e44ba3d79c66967"
-dependencies = [
- "actix-rt",
- "actix-web 3.0.2",
- "bytes 0.5.6",
- "derive_more",
- "futures-util",
- "prost",
-]
-
-[[package]]
 name = "actix-redis"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -648,19 +634,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-web-httpauth"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "536a75d767c5c2b3e64d3f569621f38ed7609359a0c82d149c88290a6ba41b22"
-dependencies = [
- "actix-service",
- "actix-web 3.0.2",
- "base64 0.12.3",
- "bytes 0.5.6",
- "futures-util",
-]
-
-[[package]]
 name = "actix_derive"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -767,12 +740,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b602bfe940d21c130f3895acd65221e8a61270debe89d628b9cb4e3ccb8569b"
-
-[[package]]
 name = "arc-swap"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -857,7 +824,7 @@ dependencies = [
  "http 0.2.1",
  "httparse",
  "indexmap",
- "itertools 0.9.0",
+ "itertools",
  "log",
  "multer",
  "once_cell",
@@ -898,7 +865,7 @@ checksum = "1a5abf43fe40a9620458abd93178499aa336445abbd48fba8e25a1a8a7fd5415"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
- "itertools 0.9.0",
+ "itertools",
  "proc-macro-crate",
  "proc-macro2",
  "quote",
@@ -1666,27 +1633,21 @@ dependencies = [
  "actix-files",
  "actix-identity",
  "actix-multipart",
- "actix-protobuf",
  "actix-redis",
  "actix-rt",
  "actix-service",
  "actix-session",
  "actix-web 3.0.2",
  "actix-web-actors 3.0.0",
- "actix-web-httpauth",
  "async-graphql",
  "async-graphql-actix-web",
  "chrono",
  "com",
- "derive_more",
  "div_cloud",
  "divdb",
  "env_logger",
  "futures 0.3.5",
  "log",
- "oauth2",
- "oxide-auth",
- "oxide-auth-actix",
  "reqwest 0.10.8",
  "rusoto_cognito_identity",
  "rusoto_cognito_idp",
@@ -1696,7 +1657,6 @@ dependencies = [
  "tokio 0.2.22",
  "url 2.1.1",
  "uuid 0.8.1",
- "validator",
 ]
 
 [[package]]
@@ -1888,16 +1848,6 @@ name = "foreign-types-shared"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
-
-[[package]]
-name = "form_urlencoded"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ece68d15c92e84fa4f19d3780f1294e5ca82a78a6d515f1efaabcc144688be00"
-dependencies = [
- "matches",
- "percent-encoding 2.1.0",
-]
 
 [[package]]
 name = "fuchsia-cprng"
@@ -2397,12 +2347,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "if_chain"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f7280c75fb2e2fc47080ec80ccc481376923acb04501957fc38f935c3de5088"
-
-[[package]]
 name = "indexmap"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2447,15 +2391,6 @@ name = "ipnet"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47be2f14c678be2fdcab04ab1171db51b2762ce6f0a8ee87c8dd4a04ed216135"
-
-[[package]]
-name = "itertools"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
-dependencies = [
- "either",
-]
 
 [[package]]
 name = "itertools"
@@ -2809,11 +2744,9 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d21857941367fdd2514553ff1578254267afd9c1e69d2d8592ba98223560a0"
 dependencies = [
- "async-trait",
  "base64 0.12.3",
  "failure",
  "failure_derive",
- "futures 0.3.5",
  "http 0.1.21",
  "rand 0.7.3",
  "reqwest 0.9.24",
@@ -2879,41 +2812,6 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
-]
-
-[[package]]
-name = "oxide-auth"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fbb16adb660789c7c2d1181e2f7637174e6b956acade1d688641f28d4f18f06"
-dependencies = [
- "base64 0.12.3",
- "chrono",
- "hmac 0.9.0",
- "once_cell",
- "rand 0.7.3",
- "rmp-serde",
- "rust-argon2",
- "serde",
- "serde_derive",
- "serde_json",
- "sha2 0.9.1",
- "subtle",
- "url 2.1.1",
-]
-
-[[package]]
-name = "oxide-auth-actix"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fa64bc96edf044d90bbf07aae27fe5ec1ccc0ddc6fe9049ae61652030d41dc7"
-dependencies = [
- "actix 0.10.0",
- "actix-web 3.0.2",
- "futures 0.3.5",
- "oxide-auth",
- "serde_urlencoded 0.7.0",
- "url 2.1.1",
 ]
 
 [[package]]
@@ -3242,29 +3140,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51ef7cd2518ead700af67bf9d1a658d90b6037d77110fd9c0445429d0ba1c6c9"
 dependencies = [
  "unicode-xid",
-]
-
-[[package]]
-name = "prost"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce49aefe0a6144a45de32927c77bd2859a5f7677b55f220ae5b744e87389c212"
-dependencies = [
- "bytes 0.5.6",
- "prost-derive",
-]
-
-[[package]]
-name = "prost-derive"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "537aa19b95acde10a12fec4301466386f757403de4cd4e5b4fa78fb5ecb18f72"
-dependencies = [
- "anyhow",
- "itertools 0.8.2",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -3635,27 +3510,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rmp"
-version = "0.8.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f10b46df14cf1ee1ac7baa4d2fbc2c52c0622a4b82fa8740e37bc452ac0184f"
-dependencies = [
- "byteorder",
- "num-traits",
-]
-
-[[package]]
-name = "rmp-serde"
-version = "0.14.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ce7d70c926fe472aed493b902010bccc17fa9f7284145cb8772fd22fdb052d8"
-dependencies = [
- "byteorder",
- "rmp",
- "serde",
-]
-
-[[package]]
 name = "rusoto_cognito_identity"
 version = "0.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3936,18 +3790,6 @@ dependencies = [
  "itoa",
  "serde",
  "url 2.1.1",
-]
-
-[[package]]
-name = "serde_urlencoded"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edfa57a7f8d9c1d260a549e7224100f6c43d43f9103e06dd8b4095a9b2b43ce9"
-dependencies = [
- "form_urlencoded",
- "itoa",
- "ryu",
- "serde",
 ]
 
 [[package]]
@@ -4907,45 +4749,6 @@ dependencies = [
  "cfg-if",
  "v_escape",
 ]
-
-[[package]]
-name = "validator"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4effc922f18d14f3daf201b1d13c61e5ef62f5975e7d18df381f67badd76cfcd"
-dependencies = [
- "idna 0.2.0",
- "lazy_static",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "url 2.1.1",
- "validator_derive",
- "validator_types",
-]
-
-[[package]]
-name = "validator_derive"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15529099583e8ce2b070ab6a637454a1b42c7146e6daee4a6817a82bee33bd41"
-dependencies = [
- "if_chain",
- "lazy_static",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "regex",
- "syn",
- "validator_types",
-]
-
-[[package]]
-name = "validator_types"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "add324da7950ac1f76b1c16ce8b5406147953d5d6a2ac1c5da93785f2cfc738b"
 
 [[package]]
 name = "vcpkg"
