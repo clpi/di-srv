@@ -1,4 +1,4 @@
-
+use actix_web_middleware_cognito::CognitoValidator;
 use actix_redis::RedisSession;
 use actix_cors::Cors;
 use actix_web::{
@@ -14,6 +14,12 @@ pub fn logger() -> Logger {
     let _log = Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#);
         // .custom_request_replace("JWT_ID", |req| parse_jwt_id(req.headers().get("Authorization")));
     Logger::default()
+}
+
+pub fn cognito() -> std::sync::Arc<CognitoValidator> {
+    let cognito_validator =
+        std::sync::Arc::new(CognitoValidator::create().expect("Cognito configuration error"));
+    cognito_validator
 }
 
 pub fn oauth_middleware() {

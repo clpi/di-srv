@@ -45,5 +45,15 @@ struct NewHuman {
     pub created_at: DateTime<Utc>,
 }
 
+/*
 pub struct QueryRoot;
 
+#[juniper::graphql_object]
+impl QueryRoot {
+
+    pub async fn users(db: &div_db::Db) -> Vec<User> {
+        div_db::models::User::get_all(&db.pool).await.unwrap()
+    }
+}
+
+*/

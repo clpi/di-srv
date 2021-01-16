@@ -75,7 +75,7 @@ h1, h2, h3, h4 {
   </div>
     <ul>
       {% for user in users %}
-      <li><a href="/{{ user.username }}/page">{{ user.username }} (created at: {{user.created_at}})</a></li>
+      <li><a href="/users/{{ user.username }}">{{ user.username }} (created at: {{user.created_at}})</a></li>
       {% endfor %}
     </ul>
 

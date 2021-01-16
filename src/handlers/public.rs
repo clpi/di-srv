@@ -1,3 +1,4 @@
+use actix_web_middleware_cognito::CognitoInfo;
 use uuid::Uuid;
 use std::collections::HashMap;
 use actix_session::Session;
@@ -11,21 +12,26 @@ use actix_web::{FromRequest, Scope,
 use div_db::models::User;
 
 pub fn public_routes() -> Scope {
-    scope("")
+    scope("/")
         .route("", get().to(index))
         .route("/", get().to(index))
         .service(resource("/dashboard").route(get().to(dashboard)))
         .service(resource("/users").route(get().to(users)))
-        .service(resource("/user").route(get().to(user)))
+        .service(resource("/users/{username}").route(get().to(user)))
         .service(resource("/login").route(get().to(login)))
         .service(resource("/contact").route(get().to(contact)))
 }
 
 pub async fn index(
     id: actix_session::Session,
+    cog: CognitoInfo,
     req: actix_web::HttpRequest,
     data: web::Data<State>,) -> HttpResponse
 {
+    let msg = match (cog.user, cog.token) {
+        (Some(u), Some(t)) => format!("User with id {} made this call with token {}", u, t),
+        _ => String::new(),
+    };
     let db = data.db.lock().unwrap();
     let h = req.headers().into_iter()
         .fold(HashMap::new(), |mut hm, (h, v)| {
@@ -33,7 +39,13 @@ pub async fn index(
             hm
         });
     let mut context = tera::Context::new();
-    // context.insert("headers", &h.to_owned());
+    context.insert("msg", &msg);
+    context.insert("host", req.connection_info().host());
+    context.insert("remote", &req.connection_info().remote_addr());
+    context.insert("peer", &req.peer_addr().unwrap());
+    context.insert("scheme", req.connection_info().scheme());
+    let uid = crate::session::id(&id).unwrap_or(Uuid::nil());
+    context.insert("uid", &uid.to_string());
     let s = data.tera.render("index.html", &context)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))
         .unwrap_or_default();

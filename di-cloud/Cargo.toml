@@ -8,7 +8,8 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "0.2", features = ["rt-core"] }
-uuid = { version = "*", features = ["serde", "v5"] }
+rust-s3 = "*"
+uuid = { version = "*", features = ["serde", "v4"] }
 serde = { version = "*", features = ["derive"] }
 chrono = { version = "*", features = ["serde"] }
 serde_json = "*"

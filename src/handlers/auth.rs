@@ -128,9 +128,12 @@ pub async fn get_user(
     (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
-        Ok(res) => HttpResponse::Ok()
-            .content_type("application/json")
-            .json(res),
+        Ok(res) => {
+            log::info!("user: {}", res.username);
+            HttpResponse::Ok()
+                .content_type("application/json")
+                .json(res)
+        },
         Err(_) => HttpResponse::NotFound().finish()
     }
 }
