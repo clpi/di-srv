@@ -1,11 +1,7 @@
-pub use divdb::models::{Record, User, Item};
+pub use div_db::models::{Record, User, Item};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
-use actix_identity::{Identity, RequestIdentity};
-use actix_web::dev::Payload;
-use actix_web::{web, Error, FromRequest, HttpRequest, HttpResponse};
-use futures::future::ready;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserIn {
@@ -15,7 +11,7 @@ pub struct UserIn {
 }
 
 impl From<User> for UserIn {
-    fn from(user: User) -> Self { 
+    fn from(user: User) -> Self {
         UserIn { id: user.id, email: user.email, username: user.username }
     }
 }

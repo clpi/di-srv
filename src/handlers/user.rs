@@ -1,11 +1,10 @@
 use uuid::Uuid;
-use crate::{state::State, models::request::AuthRequest};
-use actix_identity::Identity;
-use actix_web::{FromRequest, Scope,
-    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
+use crate::state::State;
+use actix_web::{Scope,
+    web::{self, delete, get, post, put, resource, scope},
     HttpResponse, HttpRequest
 };
-use divdb::models::{Record, User, UserInfo,};
+use div_db::models::User;
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
@@ -67,7 +66,7 @@ pub fn username_routes() -> Scope {
 //TODO programmatically handle requests by matching operation to user model function
 
 pub async fn get_all(
-    id: Identity,
+    id: actix_session::Session,
     data: web::Data<State>,) -> HttpResponse
 {
     //println!("GET ALL: FROM {:?}", id.identity());
@@ -130,11 +129,11 @@ pub async fn get_by_username(
 }
 
 pub async fn delete_by_username(
-    id: Identity,
+    id: actix_session::Session,
     data: web::Data<State>,
     username: web::Path<String>,
 ) -> HttpResponse {
-    println!("DELETE USER BY USERNAME: From {:?}", id.identity());
+    println!("DELETE USER BY USERNAME: From {:?}", id.get::<usize>("id"));
     match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")
@@ -143,12 +142,13 @@ pub async fn delete_by_username(
     }
 }
 
+
 pub async fn update_by_username(
-    id: Identity,
+    id: actix_session::Session,
     data: web::Data<State>,
     username: web::Path<String>
 ) -> HttpResponse {
-    println!("UPDATE USER BY USERNAME: From {:?}", id.identity());
+    println!("UPDATE USER BY USERNAME: From {:?}", id.get::<usize>("id"));
     match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
         Ok(id) => HttpResponse::Ok()
             .content_type("application/json")

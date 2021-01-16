@@ -1,13 +1,12 @@
 use serde::{Serialize, Deserialize};
 use crate::state::State;
-use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{
     HttpRequest, HttpResponse, web
 };
-use divdb::models::{Model, user::*};
+use div_db::models::{Model, user::*};
 
 pub struct AuthRequest<T: Serialize> {
-    id: Identity,
+    id: actix_session::Session,
     req: HttpRequest,
     data: web::Data<State>,
     body: web::Json<T>,

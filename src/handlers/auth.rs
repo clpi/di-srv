@@ -3,12 +3,11 @@ use div_cloud::cognito::types::*;
 use actix_session::Session;
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
-use actix_identity::Identity;
 use actix_web::{ Error, cookie::Cookie,
     web::{self, delete, get, post, put, resource, scope},
     HttpRequest, HttpResponse, Scope,
 };
-use divdb::models::user::*;
+use div_db::models::user::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct CognitoIn {}
@@ -58,19 +57,10 @@ pub(crate) fn validate(session: &Session) -> Result<UserIn, actix_web::HttpRespo
     }
 }
 
-pub(crate) fn validate_id(id: &Identity) -> Result<UserIn, actix_web::HttpResponse> {
-    let user: Option<String> = id.identity();
-    match user {
-        Some(user) => { Ok(serde_json::from_str(&user).unwrap()) },
-        None => Err(HttpResponse::Unauthorized().json("Unauthorized"))
-    }
-}
-
-pub async fn logout_session(id: Identity, session: Session) -> Result<HttpResponse, HttpResponse> {
+pub async fn logout_session(id: Session, session: Session) -> Result<HttpResponse, HttpResponse> {
     let sess: Result<Option<UserIn>, Error> = session.get("uid");
     match sess {
         Ok(Some(_user)) => {
-            id.forget();
             session.purge();
             Ok(HttpResponse::Ok()
                 .set_header("authorization", "false")
@@ -83,17 +73,15 @@ pub async fn logout_session(id: Identity, session: Session) -> Result<HttpRespon
 }
 
 pub async fn refresh_login(
-    (id,  _data): (Identity, web::Data<State>)) -> HttpResponse
+    (id,  _data): (Session, web::Data<State>)) -> HttpResponse
 {
-    match id.identity() {
-        Some(id) => {
-            println!("REFRESH: {}", id);
-            let user: UserIn = serde_json::from_str(&id).unwrap();
+    match id.get::<usize>("id") {
+        Ok(id) => {
             HttpResponse::Ok()
                 .set_header("authorization", "true")
-                .json(&user)
+                .json(true)
         },
-        None => HttpResponse::Gone()
+        Err(_) => HttpResponse::Gone()
             .set_header("authorization", "false")
             .json(false)
 
@@ -102,26 +90,6 @@ pub async fn refresh_login(
 
 pub async fn check_auth() {}
 
-pub async fn check_id(
-    (id, _req, user, data): (
-        Identity,
-        HttpRequest,
-        web::Json<UserLogin>,
-        web::Data<State>,
-    ),
-) -> HttpResponse {
-    match id.identity() {
-        Some(id) => {
-            let user: UserIn = serde_json::from_str(&id).unwrap();
-            HttpResponse::Ok()
-                .set_header("authorization", "true")
-                .json(&user)
-        }
-        None => HttpResponse::NotFound()
-            .set_header("authorization", "false")
-            .json(false)
-    }
-}
 
 pub async fn check_session(
     (session, req, user, data): (

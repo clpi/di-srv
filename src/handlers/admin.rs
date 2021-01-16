@@ -1,9 +1,6 @@
-use divdb::{Db, models::User};
-use crate::{models::{Response, UserIn}, state::State, handlers::{user::*, auth::{validate, validate_id}}};
+use crate::{models::{Response, UserIn}, state::State, handlers::{user::*, auth::validate}};
 use actix_session::Session;
-use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
-use actix_web::{ Error, 
-    http::{Cookie, HeaderName, HeaderValue},
+use actix_web::{ Error,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse,
 };
@@ -15,9 +12,6 @@ pub fn routes() -> actix_web::Scope {
         // ----------------- /admin/db --------------//
         .service(resource("")
             .route(get().to(check_auth))
-        )
-        .service(resource("/id")
-            .route(get().to(check_id))
         )
         .service(scope("/db")
             .service(resource("/up").route(get().to(db_up)))
@@ -38,8 +32,8 @@ pub fn routes() -> actix_web::Scope {
         .service(scope("/user")
             .service(scope("/{uid}")
                 .service(resource("")
-                    .route(delete().to(delete_user_by_id))     
-                    .route(post().to(|| HttpResponse::Ok().finish()))     
+                    .route(delete().to(delete_user_by_id))
+                    .route(post().to(|| HttpResponse::Ok().finish()))
                 )
             )
         )
@@ -47,11 +41,6 @@ pub fn routes() -> actix_web::Scope {
 
 pub async fn check_auth(session: Session, data: web::Data<State>) -> Result<HttpResponse, Error> {
     let user = validate(&session)?;
-    Ok(HttpResponse::Ok().json(user))
-}
-
-pub async fn check_id(id: Identity, data: web::Data<State>) -> Result<HttpResponse, Error> {
-    let user = validate_id(&id)?;
     Ok(HttpResponse::Ok().json(user))
 }
 
@@ -72,7 +61,7 @@ pub async fn db_down(data: web::Data<State>) -> HttpResponse {
 
 pub async fn db_reset(data: web::Data<State>) -> HttpResponse {
     match &data.db.lock().unwrap().clone().down().await {
-        Ok(db) => { 
+        Ok(db) => {
             match db.clone().init().await {
                 Ok(_db) => HttpResponse::Ok().body(""),
                 Err(_) => HttpResponse::InternalServerError().body(""),

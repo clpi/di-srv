@@ -1,12 +1,12 @@
 use uuid::Uuid;
+use actix_session::Session;
 use crate::{models::Response, state::State};
-use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_web::{
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
-use divdb::{
+use div_db::{
     models::{Item, Record, User},
     Db,
 };
@@ -51,7 +51,7 @@ pub fn user_item_routes() -> Scope {
         )
 }
 
-pub async fn get_by_id(id: Identity, iid: web::Path<String>, data: web::Data<State>) -> HttpResponse {
+pub async fn get_by_id(id: Session, iid: web::Path<String>, data: web::Data<State>) -> HttpResponse {
     let id: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::get_by_id(&data.db.lock().unwrap(), id).await {
         Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
@@ -60,7 +60,7 @@ pub async fn get_by_id(id: Identity, iid: web::Path<String>, data: web::Data<Sta
 }
 
 pub async fn delete_by_id(
-    id: Identity, iid: web::Path<String>, data: web::Data<State>,
+    id: Session, iid: web::Path<String>, data: web::Data<State>,
 ) -> HttpResponse {
     let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::delete_by_id(&data.db.lock().unwrap(), iid).await {
@@ -70,7 +70,7 @@ pub async fn delete_by_id(
 }
 
 pub async fn update_by_id(
-    id: Identity, iid: web::Path<String>, data: web::Data<State>, item: web::Json<Item>,
+    id: Session, iid: web::Path<String>, data: web::Data<State>, item: web::Json<Item>,
 ) -> HttpResponse {
     let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::update_by_id(&data.db.lock().unwrap(), iid, item.into_inner()).await {
@@ -80,7 +80,7 @@ pub async fn update_by_id(
 }
 
 pub async fn get_user_item(
-    id: Identity, path: web::Path<(String, String)>, data: web::Data<State>,
+    id: Session, path: web::Path<(String, String)>, data: web::Data<State>,
 ) -> HttpResponse {
     let (mut uid, item_name) = path.into_inner();
     let uid = Uuid::parse_str(uid.as_mut_str()).unwrap();
@@ -91,7 +91,7 @@ pub async fn get_user_item(
 }
 
 pub async fn delete_user_item(
-    id: Identity, path: web::Path<(String, String)>, data: web::Data<State>,
+    id: Session, path: web::Path<(String, String)>, data: web::Data<State>,
 ) -> HttpResponse {
     let (mut uid, item_name) = path.into_inner();
     let uid = Uuid::parse_str(uid.as_mut_str()).unwrap();
@@ -102,7 +102,7 @@ pub async fn delete_user_item(
 }
 
 pub async fn get_user_items(
-    id: Identity, uid: web::Path<String>, data: web::Data<State>,
+    id: Session, uid: web::Path<String>, data: web::Data<State>,
 ) -> HttpResponse {
     let uid = Uuid::parse_str(uid.into_inner().as_mut_str()).unwrap();
     match User::get_all_items(&data.db.lock().unwrap(), uid).await {
@@ -112,7 +112,7 @@ pub async fn get_user_items(
 }
 
 pub async fn add_item_to_user(
-    id: Identity, uid: web::Path<Uuid>, data: web::Data<State>, item: web::Json<Item>,
+    id: Session, uid: web::Path<Uuid>, data: web::Data<State>, item: web::Json<Item>,
 ) -> HttpResponse {
     match User::add_existing_item(&data.db.lock().unwrap(), uid.into_inner(), item.into_inner()).await {
         Ok(item) => HttpResponse::Ok()
@@ -123,7 +123,7 @@ pub async fn add_item_to_user(
 }
 
 pub async fn add_new_item_to_user(
-    id: Identity,
+    id: Session,
     path: web::Path<(Uuid, String)>,
     data: web::Data<State>,
 ) -> HttpResponse {

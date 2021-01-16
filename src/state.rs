@@ -1,18 +1,7 @@
 use std::sync::{Arc, Mutex};
 use div_cloud::cognito::{types::*, CognitoClient};
 use actix::{Actor, Addr, Context, Handler};
-use std::collections::HashMap;
-use divdb::db::Db;
-use actix_web::{self, web, HttpRequest, HttpResponse};
-use actix_session::{Session, UserSession};
-use actix_redis::{RedisActor, RedisSession};
-use actix_web::{Either, client::Client };
-
-pub fn state() -> State {
-    let db = Db::new_blocking().unwrap();
-    let state = State { db: Arc::new(Mutex::new(db)), cognito: CognitoClient::new() };
-    state
-}
+use div_db::db::Db;
 
 pub struct LoggedInUsers {}
 
@@ -39,6 +28,7 @@ impl Config {
 pub struct State {
     pub cognito: CognitoClient,
     pub db: Arc<Mutex<Db>>,
+    pub tera: tera::Tera,
 }
 
 impl State {
@@ -46,7 +36,17 @@ impl State {
     pub async fn new() -> Self {
         let db = Db::new().await.expect("Could not get DB");
         let idp = CognitoClient::new();
-        Self { db: Arc::new(Mutex::new(db)), cognito: idp, }
+        let mut tera = tera::Tera::new("assets/static/templates/**/*").expect("Could not load tera");
+        tera.autoescape_on(vec!["html"]);
+        Self { db: Arc::new(Mutex::new(db)), cognito: idp, tera}
+    }
+
+    pub async fn new_blocking() -> Self {
+        let db = Db::new_blocking().unwrap();
+        let idp = CognitoClient::new();
+        let mut tera = tera::Tera::new("assets/static/templates/**/*").expect("Could not load tera");
+        tera.autoescape_on(vec!["html"]);
+        Self { db: Arc::new(Mutex::new(db)), cognito: idp, tera}
     }
 }
 

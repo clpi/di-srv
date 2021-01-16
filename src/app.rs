@@ -18,7 +18,7 @@ pub fn spawn_api(
 {
     log::info!("Spawning DI server...");
     let mut sys = actix_rt::System::new("api");
-    let _db = sys.block_on(divdb::Db::new()).unwrap();
+    let _db = sys.block_on(div_db::Db::new()).unwrap();
     let srv = HttpServer::new(move || create_app())
         .listen(listener)?
         .run();
@@ -38,9 +38,8 @@ pub fn create_app() -> App<
     body::Body,
 > {
     App::new()
-        .data(state::state().clone())
+        .data(state::State::new_blocking())
         .wrap(middleware::cors().finish())
-        .wrap(middleware::identity_service())
         //.wrap(middleware::session())
         .wrap(middleware::redis_session())
         .configure(handlers::routes)

@@ -1,8 +1,6 @@
-pub mod auth;
 
 use actix_redis::RedisSession;
 use actix_cors::Cors;
-use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
     cookie::SameSite,
     client::Client,
@@ -29,14 +27,6 @@ pub fn cors() -> Cors {
 
 pub fn trim_trailing_slash() -> NormalizePath {
     NormalizePath::new(TrailingSlash::Trim)
-}
-
-pub fn identity_service() -> IdentityService<CookieIdentityPolicy> {
-    IdentityService::new(
-        CookieIdentityPolicy::new(&[0; 32])
-            .name("auth-cookie")
-            .secure(false),
-    )
 }
 
 pub struct RsSession {}

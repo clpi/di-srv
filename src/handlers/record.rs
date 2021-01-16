@@ -1,13 +1,12 @@
 use uuid::Uuid;
 use crate::state::State;
-use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::{
     http::{Cookie, HeaderName, HeaderValue},
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
-use divdb::models::{Item, Model, Record, User};
+use div_db::models::{Item, Model, Record, User};
 
 pub fn base_routes() -> Scope {
     scope("/record")
@@ -98,7 +97,7 @@ pub async fn get_by_id(id: web::Path<Uuid>, data: web::Data<State>) -> HttpRespo
 }
 
 pub async fn create_user_record(
-    id: Identity,
+    id: Session,
     path: web::Path<Uuid>,
     data: web::Data<State>,
     record: web::Json<Record>,
@@ -168,7 +167,7 @@ pub async fn get_records_with_relation(
 }
 
 pub async fn get_user_record_by_name(
-    id: Identity,
+    id: Session,
     path: web::Path<(Uuid, String)>,
     data: web::Data<State>,
 ) -> HttpResponse {
@@ -182,7 +181,7 @@ pub async fn get_user_record_by_name(
 }
 
 pub async fn add_user_record_by_name(
-    id: Identity,
+    id: Session,
     path: web::Path<(Uuid, String)>,
     data: web::Data<State>,
 ) -> HttpResponse {
