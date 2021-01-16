@@ -1,12 +1,11 @@
 pub mod admin;
 pub mod auth;
 pub mod record;
-pub mod sse;
-pub mod stat;
 pub mod user;
 pub mod item;
 pub mod group;
 pub mod upload;
+pub mod public;
 
 use actix_session::Session;
 use actix_web::{ App,
@@ -14,9 +13,9 @@ use actix_web::{ App,
 };
 
 pub fn routes(cfg: &mut ServiceConfig) {
-    cfg.route("/", web::get().to(static_ind))
-        .route("/index", web::get().to(index))
+    cfg
         .service(test_service())
+        .service(public::public_routes())
         .service(user::uid_routes())
         .service(user::username_routes())
         .service(auth::routes())

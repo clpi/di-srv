@@ -6,7 +6,15 @@ use std::{net::TcpListener, sync::mpsc};
 
 pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
-    let srv = HttpServer::new(move || create_app());
+    let st = state::State::new().await;
+    let srv = HttpServer::new(move || {
+        App::new()
+            .data(st.clone())
+            .wrap(middleware::cors().finish())
+            // .wrap(middleware::session())
+            .wrap(middleware::redis_session())
+            .configure(handlers::routes)
+        });
     srv.listen(listener)?.run().await?;
     Ok(())
 }
