@@ -1,3 +1,4 @@
+use sqlx::postgres::types::PgInterval;
 use serde::{Serialize, Deserialize};
 use std::str::FromStr;
 use div_com::DError;

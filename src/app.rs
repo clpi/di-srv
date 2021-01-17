@@ -7,7 +7,7 @@ use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, Htt
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
-pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
+pub async fn run_api(listener: TcpListener) -> div_com::DResult<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     std::env::set_var("RUST_LOG", "actix_web=debug");
 

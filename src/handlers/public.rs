@@ -20,6 +20,7 @@ pub fn public_routes() -> Scope {
         .service(resource("/users/{username}").route(get().to(user)))
         .service(resource("/login").route(get().to(login)))
         .service(resource("/contact").route(get().to(contact)))
+        .service(resource("/cover").route(get().to(cover)))
 }
 
 pub async fn index(
@@ -88,6 +89,19 @@ pub async fn contact(
     let _db = data.db.lock().unwrap();
     let mut ctx = tera::Context::new();
     let s = data.tera.render("contact.html", &ctx)
+            .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))?;
+    Ok(HttpResponse::Ok().content_type("text/html").body(s))
+}
+
+pub async fn cover(
+    _id: actix_session::Session,
+    _req: actix_web::HttpRequest,
+    _query: web::Query<HashMap<String, String>>,
+    data: web::Data<State>,) -> Result<HttpResponse, actix_web::Error>
+{
+    let _db = data.db.lock().unwrap();
+    let mut ctx = tera::Context::new();
+    let s = data.tera.render("cover.html", &ctx)
             .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))?;
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
