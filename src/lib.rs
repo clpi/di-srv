@@ -13,5 +13,6 @@ pub mod config;
 // pub mod gql;
 
 
+pub use error::{ApiError, AResult};
 pub use handlers::*;
 pub use app::*;

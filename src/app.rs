@@ -19,8 +19,8 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
             .data(st.clone())
             .wrap(middleware::cors().finish())
             .wrap(prometheus.clone())
-            .wrap(middleware::session())
-            // .wrap(middleware::redis_session())
+            // .wrap(middleware::session())
+            .wrap(middleware::redis_session())
             .configure(handlers::routes)
         });
     srv.listen(listener)?.run().await?;

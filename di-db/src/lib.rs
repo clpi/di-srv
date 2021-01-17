@@ -16,6 +16,8 @@ pub use migrate::*;
 pub use types::*;
 
 pub use sqlx::{
+    self,
+    error::{Error, DatabaseError, UnexpectedNullError},
     prelude::*,
     postgres::{
         PgRow, PgListener, PgColumn,
@@ -26,4 +28,5 @@ pub use sqlx::{
     query_unchecked, query_as_unchecked,
     types::{Uuid, chrono::{DateTime, Local, NaiveDateTime, NaiveDate, NaiveTime}, Json},
 };
+
 

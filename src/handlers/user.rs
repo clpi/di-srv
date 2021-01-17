@@ -29,7 +29,7 @@ pub fn uid_routes() -> Scope {
                 .route(get().to(get_user_info))
                 .route(put().to(update_user_info))
             )
-            .service(scope("/facts")
+            .service(resource("/facts")
                 .route(get().to(get_uid_facts))
                 .route(put().to(new_uid_fact))
             )
@@ -203,6 +203,3 @@ async fn upload_profile_picture(mut payload: Multipart) -> Result<HttpResponse, 
     Ok(HttpResponse::Ok().into())
 }
 
-pub async fn get_user_feed(data: web::Data<State>, rid: web::Path<Uuid>) -> HttpResponse {
-    HttpResponse::Ok().body("delete_record")
-}

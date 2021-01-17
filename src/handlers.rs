@@ -16,16 +16,19 @@ use actix_web::{ App,
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        .service(test_service())
-        .service(public::public_routes())
-        .service(user::uid_routes())
-        .service(user::username_routes())
-        .service(auth::routes())
-        .service(record::base_routes())
-        .service(record::user_record_routes())
-        .service(item::base_routes())
-        .service(item::user_item_routes())
-        .service(admin::routes());
+        // .service(test_service())
+        // .service(public::public_routes())
+        // .service(web::scope("/api")
+            .service(user::uid_routes())
+            .service(user::username_routes())
+            .service(auth::routes())
+            .service(record::base_routes())
+            .service(record::user_record_routes())
+            .service(item::base_routes())
+            .service(item::user_item_routes())
+            .service(admin::routes())
+            .service(fact::routes());
+        // );
 }
 
 pub(crate) fn test_service() ->  actix_web::Resource {

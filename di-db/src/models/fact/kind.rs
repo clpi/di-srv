@@ -15,7 +15,7 @@ pub struct FactType {
     pub uid: uuid::Uuid,
     pub name: String,
     pub description: Option<String>,
-    pub value_type: String,
+    pub value_type: ValueType,
     pub units: Vec<String>,
     pub attributes: Vec<String>,
     pub notes: Vec<String>,
@@ -33,13 +33,13 @@ impl Default for FactType {
             id: uuid::Uuid::new_v4(),
             uid: uuid::Uuid::new_v4(),
             name: String::new(),
-            value_type: "text".to_string(),
+            description: None,
+            value_type: ValueType::default(),
             visibility: Visibility::default(),
             status: Status::default(),
             attributes: Vec::new(),
             notes: Vec::new(),
             units: Vec::new(),
-            description: None,
             created_at: Utc::now(),
         }
     }
@@ -55,12 +55,29 @@ impl Default for FactType {
 //
 //
 //
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum ValueType {
     Text,
     Integer,
     Double,
+}
+
+impl From<String> for ValueType {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "text" => Self::Text,
+            "integer" => Self::Integer,
+            "double" => Self::Double,
+            &_ => Self::Text,
+        }
+    }
+}
+
+impl Default for ValueType {
+    fn default() -> Self {
+        Self::Text
+    }
 }
 
 impl FactType {
@@ -71,11 +88,13 @@ impl FactType {
 
     pub async fn insert(&self, db: &crate::db::Db) -> sqlx::Result<()> {
         sqlx::query(
-            "INSERT INTO FactTypes (id, name, value_type, visibility, attributes, notes, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id")
+            "INSERT INTO FactTypes (id, uid, name, value_type, units, visibility, attributes, notes, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id")
             .bind(&self.id)
+            .bind(&self.uid)
             .bind(&self.name)
             .bind(&self.value_type)
+            .bind(&self.units)
             .bind(&self.visibility)
             .bind(&self.attributes)
             .bind(&self.notes)
@@ -175,7 +194,7 @@ impl FactTypeBuilder {
             id: self.id,
             uid: self.uid,
             name: self.name,
-            description: self.description.unwrap_or(None),
+            description: self.description,
             value_type: self.value_type.unwrap_or(ValueType::Text),
             attributes: self.attributes.unwrap_or_default(),
             units: self.units.unwrap_or_default(),
