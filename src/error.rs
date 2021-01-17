@@ -7,7 +7,8 @@ pub enum ApiError {
     PathError(actix_web::error::PathError),
     DbError(div_com::error::DError),
     AwsReqError(div_com::error::DError),
-    IoError(div_com::error::DError)
+    IoError(div_com::error::DError),
+    Inf(Infallible),
 }
 
 impl fmt::Display for ApiError {
@@ -17,7 +18,8 @@ impl fmt::Display for ApiError {
             Self::PathError(e) => write!(f, "path error: {}", e),
             Self::DbError(e) => write!(f, "Db error: {}", e),
             Self::AwsReqError(e) => write!(f, "AWS error: {}", e),
-            Self::IoError(e) => write!(f, "IO Error: {}", e)
+            Self::IoError(e) => write!(f, "IO Error: {}", e),
+            Self::Inf(e) => write!(f, "Error"),
         }
     }
 }
@@ -42,22 +44,4 @@ impl From<actix_web::error::PathError> for ApiError {
 }
 
 
-
-#[derive(Debug)]
-enum AuthError {
-    Invalid,
-    DoesNotExist,
-    Internal,
-}
-
-#[derive(Debug)]
-pub enum OAuthError {
-    AccessFailed,
-    NoToken,
-    AuthorizationFailed,
-    RefreshFailed,
-    Invalid(serde_json::Error),
-    MissingToken,
-    Response(String),
-}
 

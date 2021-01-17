@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use crate::{handlers, middleware, state};
 use actix_web_prom::PrometheusMetrics;
-// use sentry::{Level, Hub, protocol::User};
 use actix_service::ServiceFactory;
 use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
-pub async fn run_api(listener: TcpListener) -> div_com::DResult<()> {
+pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     std::env::set_var("RUST_LOG", "actix_web=debug");
 
@@ -20,9 +19,8 @@ pub async fn run_api(listener: TcpListener) -> div_com::DResult<()> {
             .data(st.clone())
             .wrap(middleware::cors().finish())
             .wrap(prometheus.clone())
-            .wrap(actix_web_middleware_cognito::Cognito::new(middleware::cognito()))
-            // .wrap(middleware::session())
-            .wrap(middleware::redis_session())
+            .wrap(middleware::session())
+            // .wrap(middleware::redis_session())
             .configure(handlers::routes)
         });
     srv.listen(listener)?.run().await?;

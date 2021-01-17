@@ -1,4 +1,3 @@
-use actix_web_middleware_cognito::CognitoInfo;
 use uuid::Uuid;
 use std::collections::HashMap;
 use actix_session::Session;
@@ -25,14 +24,9 @@ pub fn public_routes() -> Scope {
 
 pub async fn index(
     id: actix_session::Session,
-    cog: CognitoInfo,
     req: actix_web::HttpRequest,
     data: web::Data<State>,) -> HttpResponse
 {
-    let msg = match (cog.user, cog.token) {
-        (Some(u), Some(t)) => format!("User with id {} made this call with token {}", u, t),
-        _ => String::new(),
-    };
     let db = data.db.lock().unwrap();
     let h = req.headers().into_iter()
         .fold(HashMap::new(), |mut hm, (h, v)| {
@@ -40,7 +34,6 @@ pub async fn index(
             hm
         });
     let mut context = tera::Context::new();
-    context.insert("msg", &msg);
     context.insert("host", req.connection_info().host());
     context.insert("remote", &req.connection_info().remote_addr());
     context.insert("peer", &req.peer_addr().unwrap());

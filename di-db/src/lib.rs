@@ -15,5 +15,15 @@ pub use models::*;
 pub use migrate::*;
 pub use types::*;
 
-pub use sqlx::postgres::PgPool;
+pub use sqlx::{
+    prelude::*,
+    postgres::{
+        PgRow, PgListener, PgColumn,
+        PgConnection, PgConnectOptions,
+        types::{PgRange, PgMoney, PgInterval}
+    },
+    query_as, query_file, query_file_as,
+    query_unchecked, query_as_unchecked,
+    types::{Uuid, chrono::{DateTime, Local, NaiveDateTime, NaiveDate, NaiveTime}, Json},
+};
 

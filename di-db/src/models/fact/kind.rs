@@ -53,19 +53,20 @@ impl Default for FactType {
 
 // }
 //
+//
+//
+#[derive(Serialize, Deserialize, sqlx::Type)]
+#[serde(rename_all = "snake_case")]
+pub enum ValueType {
+    Text,
+    Integer,
+    Double,
+}
+
 impl FactType {
 
-    pub fn new(uid: uuid::Uuid, name: String) -> Self {
-        Self {
-            id: uuid::Uuid::new_v4(),
-            uid,
-            name,
-            value_type: "text".to_string(),
-            visibility: Visibility::default(),
-            status: Status::default(),
-            created_at: Utc::now(),
-            ..Self::default()
-        }
+    pub fn build(uid: uuid::Uuid, name: String) -> FactTypeBuilder {
+        FactTypeBuilder::new(uuid::Uuid::new_v4(), uid, name)
     }
 
     pub async fn insert(&self, db: &crate::db::Db) -> sqlx::Result<()> {
@@ -81,5 +82,107 @@ impl FactType {
             .bind(&self.created_at)
             .fetch_one(&db.pool).await?;
         Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct FactTypeBuilder {
+    id: uuid::Uuid,
+    uid: uuid::Uuid,
+    name: String,
+    description: Option<String>,
+    value_type: Option<ValueType>,
+    units: Option<Vec<String>>,
+    attributes: Option<Vec<String>>,
+    status: Option<Status>,
+    notes: Option<Vec<String>>,
+    visibility: Option<Visibility>,
+}
+impl FactTypeBuilder {
+
+    pub fn new(id: uuid::Uuid, uid: uuid::Uuid, name: String) -> Self {
+        Self { name, id, uid, ..Default::default() }
+    }
+
+    pub fn visibility<V: Into<Visibility>>(mut self, visibility: V) -> Self {
+        self.visibility = Some(visibility.into());
+        return self;
+    }
+
+    pub fn status<S: Into<Status>>(mut self, status: S) -> Self {
+        self.status = Some(status.into());
+        return self;
+    }
+
+    pub fn attribute<S: Into<String>>(mut self, attribute: S) -> Self {
+        if let Some(mut attrib) = self.attributes {
+            attrib.push(attribute.into());
+            self.attributes = Some(attrib);
+        } else {
+            self.attributes = Some(vec![attribute.into()]);
+        }
+        return self;
+    }
+
+    pub fn attributes(mut self, attributes: Vec<String>) -> Self {
+        self.attributes = Some(attributes);
+        return self;
+    }
+
+    pub fn unit<S: Into<String>>(mut self, unit: S) -> Self {
+        if let Some(mut units) = self.units {
+            units.push(unit.into());
+            self.units = Some(units);
+        } else {
+            self.units = Some(vec![unit.into()]);
+        }
+        return self;
+    }
+
+    pub fn units(mut self, units: Vec<String>) -> Self {
+        self.units = Some(units);
+        return self;
+    }
+
+    pub fn note<S: Into<String>>(mut self, note: S) -> Self {
+        if let Some(mut notes) = self.notes {
+            notes.push(note.into());
+            self.notes = Some(notes);
+        } else {
+            self.notes = Some(vec![note.into()]);
+        }
+        return self;
+    }
+
+    pub fn notes(mut self, notes: Vec<String>) -> Self {
+        self.notes = Some(notes);
+        return self;
+    }
+
+    pub fn description<S: Into<String>>(mut self, desc: S) -> Self {
+        self.description = Some(desc.into());
+        return self;
+    }
+
+
+    pub fn value_type<V: Into<ValueType>>(mut self, kind: V) -> Self {
+        self.value_type = Some(kind.into());
+        return self;
+    }
+
+    pub fn buld(self) -> FactType {
+        FactType {
+            id: self.id,
+            uid: self.uid,
+            name: self.name,
+            description: self.description.unwrap_or(None),
+            value_type: self.value_type.unwrap_or(ValueType::Text),
+            attributes: self.attributes.unwrap_or_default(),
+            units: self.units.unwrap_or_default(),
+            status: self.status.unwrap_or_default(),
+            visibility: self.visibility.unwrap_or_default(),
+            notes: self.notes.unwrap_or_default(),
+            created_at: Utc::now(),
+        }
     }
 }

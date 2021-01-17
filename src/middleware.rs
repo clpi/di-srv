@@ -1,4 +1,3 @@
-use actix_web_middleware_cognito::CognitoValidator;
 use actix_redis::RedisSession;
 use actix_cors::Cors;
 use actix_web::{
@@ -9,6 +8,15 @@ use actix_web::{
     },
 };
 use actix_session::CookieSession;
+// use actix_web_httpauth::{
+//     middleware::HttpAuthentication,
+//     extractors::bearer::BearerAuth
+// };
+
+// pub fn auth() -> HttpAuthentication {
+//     HttpAuthentication::bearer
+
+// }
 
 pub fn logger() -> Logger {
     let _log = Logger::new(r#"%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#);
@@ -16,11 +24,11 @@ pub fn logger() -> Logger {
     Logger::default()
 }
 
-pub fn cognito() -> std::sync::Arc<CognitoValidator> {
-    let cognito_validator =
-        std::sync::Arc::new(CognitoValidator::create().expect("Cognito configuration error"));
-    cognito_validator
-}
+// pub fn cognito() -> std::sync::Arc<CognitoValidator> {
+//     let cognito_validator =
+//         std::sync::Arc::new(CognitoValidator::create().expect("Cognito configuration error"));
+//     cognito_validator
+// }
 
 pub fn oauth_middleware() {
 }

@@ -606,20 +606,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-web-middleware-cognito"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "180934f97917c0db5741fd17fbac587fcf0b929eb84130fa96c19d0c460c1f12"
-dependencies = [
- "actix-web 3.3.2",
- "actix-web-httpauth",
- "futures 0.3.5",
- "jsonwebtokens",
- "jsonwebtokens-cognito",
- "log",
-]
-
-[[package]]
 name = "actix-web-prom"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1828,7 +1814,7 @@ dependencies = [
  "actix-service",
  "actix-session",
  "actix-web 3.3.2",
- "actix-web-middleware-cognito",
+ "actix-web-httpauth",
  "actix-web-prom",
  "actix-web-validator",
  "async-graphql",
@@ -2717,38 +2703,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afabcc15e437a6484fc4f12d0fd63068fe457bf93f1c148d3d9649c60b103f32"
 dependencies = [
  "base64 0.12.3",
- "pem 0.8.2",
+ "pem",
  "ring",
  "serde",
  "serde_json",
  "simple_asn1",
-]
-
-[[package]]
-name = "jsonwebtokens"
-version = "1.0.0-alpha.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "454b5b99a0c14d6fc1cb7b5ca031adfe2935c922b0232be9a8143c8b542daa94"
-dependencies = [
- "base64 0.11.0",
- "pem 0.7.0",
- "regex",
- "ring",
- "serde",
- "serde_json",
- "simple_asn1",
-]
-
-[[package]]
-name = "jsonwebtokens-cognito"
-version = "0.1.0-alpha.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64013ecab44eed3f97be4dc2d7b9a14bf1eb636bfe45bd4133a337ec0abe46ae"
-dependencies = [
- "jsonwebtokens",
- "reqwest 0.10.8",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -3313,17 +3272,6 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c705f256449c60da65e11ff6626e0c16a0a0b96aaa348de61376b249bc340f41"
 dependencies = [
- "regex",
-]
-
-[[package]]
-name = "pem"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1581760c757a756a41f0ee3ff01256227bdf64cb752839779b95ffb01c59793"
-dependencies = [
- "base64 0.11.0",
- "lazy_static",
  "regex",
 ]
 

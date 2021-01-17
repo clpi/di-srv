@@ -7,6 +7,7 @@ pub mod item;
 pub mod group;
 pub mod upload;
 pub mod public;
+pub mod fact;
 
 use actix_session::Session;
 use actix_web::{ App,

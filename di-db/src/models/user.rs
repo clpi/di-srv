@@ -187,6 +187,14 @@ impl User {
         Ok(Record::default())
     }
 
+    pub async fn _signup(db: &Db, user: Self) -> sqlx::Result<()> {
+        Ok(())
+    }
+
+    pub async fn _login(db: &Db, user: Self) -> sqlx::Result<()> {
+        Ok(())
+    }
+
     pub async fn get_named_item(db: &Db, uid: Uuid, item_name: String,
         ) -> sqlx::Result<Item>
     {
