@@ -23,23 +23,3 @@ pub struct UserQuery {
     email: Option<String>
 }
 
-pub struct UserData {
-    id: Uuid,
-    username: String,
-    email: String,
-    records: Vec<Record>,
-    items: Vec<Item>,
-    created_at: DateTime<Utc>,
-}
-
-/*
-impl FromRequest for UserIn {
-    type Error = Error;
-    type Config = ();
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
-        let id = RequestIdentity::get_identity(req);
-    }
-}
-*/

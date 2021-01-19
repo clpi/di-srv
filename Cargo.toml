@@ -1,5 +1,5 @@
 [package]
-name = "divapi"
+name = "div_api"
 version = "0.1.0"
 authors = ["Chris P <chrisp1877@gmail.com>"]
 edition = "2018"
@@ -18,10 +18,10 @@ path = "src/bin/gql.rs"
 required-features= ["gql"]
 
 [dependencies]
-tokio = { version = "*", features = [ "full" ] }
+tokio = { version = "1.0.2", features = [ "full" ] }
 serde = { version = "*", features = [ "derive" ] }
 chrono = { version = "*", features= [ "serde" ] }
-uuid = { version = "*", features= [ "v4", "serde" ] }
+uuid = { version = "0.8", features= [ "v4", "serde" ] }
 toml = "*"
 url = "2"
 futures = "0.3"
@@ -29,16 +29,15 @@ serde_json = "*"
 actix-service = "*"
 actix = "*"
 actix-rt = "*"
-actix-web = "*"
+actix-web = "3"
 actix-cors = "*"
 actix-files = "*"
 actix-session="*"
 actix-multipart = "*"
 actix-redis = "*"
 actix-web-validator = "2.0.3"
-
+derive_more = "*"
 # reqwest = { version="*", features = ["json"] }
-
 async-graphql = { version = "*", optional= true }
 async-graphql-actix-web = { version = "*", optional = true }
 rusoto_core = { version = "*", optional = true }

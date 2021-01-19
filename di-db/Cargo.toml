@@ -19,13 +19,14 @@ path = "src/bin/main.rs"
 div_com = { path = "../di-comm/" }
 async-std = { version = "1.6.0", features = ["attributes"] }
 async-trait = "*"
+# juniper = "*"
 #async-sqlx-session = { version = "*", features = ["pg"] }
 futures = "0.3.1"
 #tokio = { version = "*", features = ["full"] , optional=true}
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 chrono = { version = "*", features = ["serde"] }
-uuid = { version = "*", features = ["serde", "v4"] }
+uuid = { version = "0.8", features = ["serde", "v4"] }
 async-graphql= {version="*", optional=true}
 refinery = { version = "*", features = ["postgres"] }
 #barrel = { version = "*", features = ["pg"] }

@@ -46,15 +46,17 @@ pub fn trim_trailing_slash() -> NormalizePath {
 
 pub struct RsSession {}
 
-pub fn redis_session() -> RedisSession {
-    RedisSession::new("127.0.0.1:6379", &[0; 32])
+pub fn redis_session(key: &Option<String>) -> RedisSession {
+    let rk = if let Some(k) = key { k.as_bytes() } else { &[0; 32] };
+    RedisSession::new("127.0.0.1:6379", &rk)
         .cookie_http_only(false)
         .cookie_name("r-auth-cookie")
         .cookie_same_site(SameSite::Lax)
 }
 
-pub fn session() -> CookieSession {
-    CookieSession::signed(&[0; 32])
+pub fn session(key: &Option<String>) -> CookieSession {
+    let sk = if let Some(k) = key { k.as_bytes() } else { &[0; 32] };
+    CookieSession::signed(&sk)
         .name("auth-session")
         .secure(false)
 }

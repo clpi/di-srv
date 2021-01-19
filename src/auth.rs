@@ -1,4 +1,3 @@
-pub mod support;
 pub mod jwt;
 
 #[derive(Debug, Default)]

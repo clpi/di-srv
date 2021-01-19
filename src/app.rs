@@ -1,3 +1,4 @@
+use super::config::AppConfig;
 use std::collections::HashMap;
 use crate::{handlers, middleware, state};
 use actix_web_prom::PrometheusMetrics;
@@ -6,11 +7,11 @@ use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, Htt
 use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
-pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
+pub async fn run_api() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    std::env::set_var("RUST_LOG", "actix_web=debug");
-
-    let st = state::State::new().await;
+    std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
+    let config = AppConfig::default();
+    let st = state::State::new(&config).await;
     let mut labels = HashMap::new();
     labels.insert("label1".to_string(), "value1".to_string());
     let prometheus = PrometheusMetrics::new("", Some("/metrics"), Some(labels));
@@ -19,11 +20,11 @@ pub async fn run_api(listener: TcpListener) -> std::io::Result<()> {
             .data(st.clone())
             .wrap(middleware::cors().finish())
             .wrap(prometheus.clone())
-            // .wrap(middleware::session())
-            .wrap(middleware::redis_session())
+            // .wrap(middleware::session(&config.session_key))
+            .wrap(middleware::redis_session(&config.clone().session_key))
             .configure(handlers::routes)
         });
-    srv.listen(listener)?.run().await?;
+    srv.bind(&config.clone().address())?.run().await?;
     Ok(())
 }
 
@@ -34,6 +35,7 @@ pub fn spawn_api(
     ) -> std::io::Result<()>
 {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
     log::info!("Spawning DI server...");
 
     let mut sys = actix_rt::System::new("api");
@@ -56,11 +58,12 @@ pub fn create_app() -> App<
     >,
     body::Body,
 > {
+    let config = AppConfig::default();
     App::new()
         .data(state::State::new_blocking())
         .wrap(middleware::cors().finish())
         //.wrap(middleware::session())
-        .wrap(middleware::redis_session())
+        .wrap(middleware::redis_session(&config.session_key))
         .configure(handlers::routes)
 }
 

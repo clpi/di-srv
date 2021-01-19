@@ -1,27 +1,34 @@
+use tokio::io::AsyncWriteExt;
 use crate::{models::Response, state::State, handlers::user::*};
+use futures::{Stream, StreamExt, TryStreamExt};
+use actix_web::error::ParseError;
 use actix_multipart::Multipart;
-use actix_web::{Error,
-    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
+use actix_web::{Error, web::{self, scope},
     HttpRequest, HttpResponse,
 };
-use serde::{Deserialize, Serialize};
 
 pub fn routes() -> actix_web::Scope {
-    // -------------/ admin -----------------//
     scope("/upload")
-        // ----------------- /admin/db --------------//
-        .service(scope("/{uid}")
-            .service(
-                resource("").route(post().to(upload_user_img))
-            )
-        )
 }
 
 pub async fn upload_user_img(
     data: web::Data<State>,
     path: web::Path<String>,
-    mut payload: Multipart
+    mut pl: Multipart
     ) -> Result<HttpResponse, Error>
 {
+    while let Ok(Some(mut field)) = pl.try_next().await {
+        let content_type = field
+            .content_disposition()
+            .ok_or_else(|| ParseError::Incomplete)?;
+        let filename = content_type
+            .get_filename()
+            .ok_or_else(|| ParseError::Incomplete)?;
+        let filepath = format!("./tmp/{}", &filename);
+        let mut f = tokio::fs::File::create(filepath).await?;
+        while let Some(c) = field.next().await {
+            f.write_all(&c.unwrap()).await?;
+        }
+    }
     Ok(HttpResponse::Ok().into())
 }

@@ -1,27 +1,12 @@
 language: rust
-cache: cargo
 rust:
   - stable
-  - beta
-  - nightly
-addons:
-  apt:
-    packages:
-      - build-essential
-      - libcurl4-openssl-dev
-      - libssl-dev
-env:
-  global:
-    - PROD="true"
-    - APP_NAME="div.is"
-    - TARGET="release"
 matrix:
-  allow_failures:
-    - rust: nightly
-jobs:
-  include:
-    - name: test
-      script: 
-        - cargo build --target $TARGET --verbose
-        = cargo test --target $TARGET --verbose
-      
+  fast_finish: true
+cache: cargo
+before_script:
+  - sudo apt-get update
+script:
+  - cargo build --verbose --all
+  - SERVER=127.0.0.1:3000
+  - cargo test --verbose --all
