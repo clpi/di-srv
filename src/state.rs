@@ -21,14 +21,13 @@ impl State {
         let idp = CognitoClient::new();
         let mut tera = tera::Tera::new("assets/static/templates/**/*").expect("Could not load tera");
         tera.autoescape_on(vec!["html"]);
-        let config = AppConfig::default();
         Self { db: Arc::new(Mutex::new(db)), cognito: idp, tera }
     }
 
-    pub async fn new_blocking() -> Self {
+    pub fn new_blocking() -> Self {
         let db = Db::new_blocking().unwrap();
         let idp = CognitoClient::new();
-        let config = AppConfig::default();
+        let _config = AppConfig::default();
         let mut tera = tera::Tera::new("assets/static/templates/**/*").expect("Could not load tera");
         tera.autoescape_on(vec!["html"]);
         Self { db: Arc::new(Mutex::new(db)), cognito: idp, tera }

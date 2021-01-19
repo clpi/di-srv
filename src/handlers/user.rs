@@ -9,19 +9,29 @@ use actix_web::{Scope,
     HttpResponse, HttpRequest
 };
 use div_db::models::User;
+use actix_web::http::Method;
 
 pub fn routes() -> Scope {
     scope("/users")
-        .service(get_all)
-        .service(get_by_id)
-        .service(update_by_id)
-        .service(delete_by_id)
-        .service(get_by_username)
-        .service(delete_by_username)
-        .service(update_by_username)
+        .route("", web::get().to(get_all))
+        .service(by_username())
+        .service(by_uid())
 }
 
-#[get("/")]
+pub fn by_username() -> actix_web::Scope {
+    web::scope("/{username}")
+        .route("", web::get().to(get_by_username))
+        .route("", web::delete().to(delete_by_username))
+        .route("", web::put().to(update_by_username))
+}
+
+pub fn by_uid() -> actix_web::Scope {
+    web::scope("/{uid}")
+        .route("", web::get().to(get_by_id))
+        .route("", web::delete().to(delete_by_id))
+        .route("", web::put().to(update_by_id))
+}
+
 pub async fn get_all(
     id: actix_session::Session,
     data: web::Data<State>,) -> actix_web::Result<HttpResponse>
@@ -34,7 +44,6 @@ pub async fn get_all(
     }
 }
 
-#[get("/id/{uid}")]
 pub async fn get_by_id(
     data: web::Data<State>,
     id: web::Path<String>) -> actix_web::Result<HttpResponse>
@@ -48,7 +57,6 @@ pub async fn get_by_id(
     }
 }
 
-#[put("/id/{uid}")]
 pub async fn update_by_id(
     path: web::Path<Uuid>,
     req: HttpRequest,
@@ -62,7 +70,6 @@ pub async fn update_by_id(
     }
 }
 
-#[delete("/id/{uid}")]
 pub async fn delete_by_id(
     data: web::Data<State>,
     id: web::Path<Uuid>) -> actix_web::Result<HttpResponse>
@@ -75,22 +82,21 @@ pub async fn delete_by_id(
     }
 }
 
-#[get("/{username}")]
 pub async fn get_by_username(
     data: web::Data<State>,
     username: web::Path<String>) -> actix_web::Result<HttpResponse>
 {
     let db = data.db.lock().unwrap();
-    let u =  User::get_by_username(&db, username.to_string());
+    let u =  User::get_by_username(&db, username.into_inner());
     match u.await {
         Ok(Some(user)) => Ok(HttpResponse::Ok()
                 .content_type("application/json")
                 .json(&user)),
-        _ => Ok(HttpResponse::NotFound().json("")),
+        Ok(None) => Ok(HttpResponse::NotFound().json("Sorry")),
+        _ => Ok(HttpResponse::NotFound().json("ERRROR")),
     }
 }
 
-#[delete("/{username}")]
 pub async fn delete_by_username(
     id: actix_session::Session,
     data: web::Data<State>,
@@ -106,7 +112,6 @@ pub async fn delete_by_username(
     }
 }
 
-#[put("/{username}")]
 pub async fn update_by_username(
     id: actix_session::Session,
     data: web::Data<State>,

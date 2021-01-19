@@ -55,8 +55,8 @@ pub fn redis_session(key: &Option<String>) -> RedisSession {
 }
 
 pub fn session(key: &Option<String>) -> CookieSession {
-    let sk = if let Some(k) = key { k.as_bytes() } else { &[0; 32] };
-    CookieSession::signed(&sk)
+    let rk = if let Some(k) = key { k.as_bytes() } else { &[0; 32] };
+    CookieSession::signed(&rk)
         .name("auth-session")
         .secure(false)
 }

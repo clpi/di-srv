@@ -15,10 +15,10 @@ use actix_web::{
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        .service(test_service())
         .service(web::scope("")
             .service(public::public_routes()))
         .service(web::scope("/api")
+            .route("", web::get().to(|| HttpResponse::Ok().body("hello! from /api")))
             .service(user::routes())
             .service(auth::routes())
             .service(record::routes())

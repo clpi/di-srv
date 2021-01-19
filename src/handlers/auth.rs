@@ -4,6 +4,7 @@ use actix_session::Session;
 use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
 use actix_web::{ Error, cookie::Cookie,
+    get, post, put,
     web::{self, delete, get, post, put, resource, scope},
     HttpRequest, HttpResponse, Scope,
 };
@@ -14,6 +15,7 @@ pub struct CognitoIn {}
 
 pub fn routes() -> Scope {
     scope("/auth")
+        .service(check_session)
         //.wrap_fn(validate)
         .service(resource("/login").route(post().to(login_user)))
         .service(resource("/logout").route(post().to(logout_user)))
@@ -40,6 +42,41 @@ pub fn routes() -> Scope {
                 .route(put().to(set_attribute))
             )
         )
+}
+
+#[get("/session/check")]
+pub async fn check_session(
+    session: Session,
+    req: HttpRequest) -> actix_web::Result<HttpResponse>
+{
+    let sess: Result<Option<UserIn>, Error> = session.get("uid");
+    match sess {
+        Ok(Some(user)) => {
+            Ok(HttpResponse::Ok()
+                .json(user))
+        }
+        _ => Ok(HttpResponse::NotFound()
+                .json(false))
+    }
+}
+
+pub async fn check_session_with_user(
+    (session, req, user, data): (
+        Session,
+        HttpRequest,
+        web::Json<UserLogin>,
+        web::Data<State>,
+    ),
+) -> Result<HttpResponse, HttpResponse> {
+    let sess: Result<Option<UserIn>, Error> = session.get("uid");
+    match sess {
+        Ok(Some(user)) => {
+            Ok(HttpResponse::Ok()
+                .json(user))
+        }
+        _ => Err(HttpResponse::NotFound()
+                .json(false))
+    }
 }
 
 pub fn ext_cognito_routes() -> Scope {
@@ -91,24 +128,6 @@ pub async fn refresh_login(
 pub async fn check_auth() {}
 
 
-pub async fn check_session(
-    (session, req, user, data): (
-        Session,
-        HttpRequest,
-        web::Json<UserLogin>,
-        web::Data<State>,
-    ),
-) -> Result<HttpResponse, HttpResponse> {
-    let sess: Result<Option<UserIn>, Error> = session.get("uid");
-    match sess {
-        Ok(Some(user)) => {
-            Ok(HttpResponse::Ok()
-                .json(user))
-        }
-        _ => Err(HttpResponse::NotFound()
-                .json(false))
-    }
-}
 
 pub async fn authorize_user(
     (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>) ) -> HttpResponse
