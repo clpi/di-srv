@@ -1,6 +1,7 @@
 mod auth;
 mod public;
 mod session;
+mod user;
 
 use div_api::app::create_app;
 use actix_web::{

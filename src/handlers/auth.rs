@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use crate::{state::State, models::UserIn};
 use actix_web::{ Error, cookie::Cookie,
     get, post, put,
-    web::{self, delete, get, post, put, resource, scope},
+    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
 use div_db::models::user::*;
@@ -13,8 +13,8 @@ use div_db::models::user::*;
 #[derive(Serialize, Deserialize)]
 pub struct CognitoIn {}
 
-pub fn routes() -> Scope {
-    scope("/auth")
+pub fn routes(base: &str) -> Scope {
+    scope(base)
         .service(check_session)
         //.wrap_fn(validate)
         .service(resource("/login").route(post().to(login_user)))

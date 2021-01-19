@@ -34,7 +34,7 @@ pub fn oauth_middleware() {
 }
 
 pub fn cors() -> Cors {
-    Cors::new()
+    Cors::default()
         .send_wildcard()
         .max_age(3600)
         .allowed_methods(vec!["GET", "POST", "DELETE", "PUT", "OPTIONS"])

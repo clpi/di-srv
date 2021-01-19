@@ -3,7 +3,7 @@ use actix_session::Session;
 use crate::state::State;
 use actix_web::{
     get, post, delete, put,
-    web::{self, delete, get, post, put, resource, scope},
+    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope, Result,
 };
 use div_db::{
@@ -11,8 +11,8 @@ use div_db::{
     Db,
 };
 
-pub fn routes() -> Scope {
-    scope("/items")
+pub fn routes(base: &str) -> Scope {
+    scope(base)
         .service(get_by_id)
         .service(delete_by_id)
         .service(update_by_id)

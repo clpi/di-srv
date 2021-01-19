@@ -18,10 +18,11 @@ pub async fn run_api() -> std::io::Result<()> {
     let srv = HttpServer::new(move || {
         App::new()
             .data(st.clone())
-            .wrap(middleware::cors().finish())
+            .wrap(middleware::cors())
+            .wrap(middleware::logger())
             .wrap(prometheus.clone())
-            // .wrap(middleware::session(&config.session_key))
             .wrap(middleware::redis_session(&AppConfig::session_key()))
+            .configure(handlers::public::routes)
             .configure(handlers::routes)
         });
     srv.bind(&config.clone().address())?.run().await?;
@@ -62,9 +63,9 @@ pub fn create_app() -> App<
     let st = state::State::new_blocking();
     App::new()
         .data(st.clone())
-        .wrap(middleware::cors().finish())
-        // .wrap(middleware::session(&config.session_key))
+        .wrap(middleware::cors())
         .wrap(middleware::redis_session(&AppConfig::session_key()))
+        .configure(handlers::public::routes)
         .configure(handlers::routes)
 }
 

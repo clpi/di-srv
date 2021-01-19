@@ -7,8 +7,8 @@ use actix_web::{Error, web::{self, scope},
     HttpRequest, HttpResponse,
 };
 
-pub fn routes() -> actix_web::Scope {
-    scope("/upload")
+pub fn routes(base: &str) -> actix_web::Scope {
+    scope(base)
 }
 
 pub async fn upload_user_img(

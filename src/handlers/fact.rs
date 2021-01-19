@@ -4,20 +4,17 @@ use futures::{StreamExt, TryStreamExt};
 use uuid::Uuid;
 use crate::state::State;
 use actix_web::{Scope,
-    web::{self, delete, get, post, put, resource, scope},
+    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpResponse, HttpRequest
 };
 use div_db::models::{User, FactType, FactEntry};
 use div_db::sqlx::{self, Postgres, query_as};
-use serde::{Serialize, Deserialize};
 
-pub fn routes() -> Scope {
-    scope("/fact")
-    // -------------- /user ------------------------- ///
+pub fn routes(base: &str) -> actix_web::Scope {
+    scope(base)
         .service(resource("").route(get().to(get_all_types)))
         .service(resource("/entries").route(get().to(get_all_entries)))
         .service(scope("/{uid}")
-        // -------------- /user/{uid} --------------------///
             .service(resource("")
                 .route(get().to(get_by_uid))
             )

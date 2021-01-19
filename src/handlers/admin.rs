@@ -6,24 +6,20 @@ use actix_web::{ Error,
 };
 use serde::{Deserialize, Serialize};
 
-pub fn routes() -> actix_web::Scope {
-    // -------------/ admin -----------------//
-    scope("/admin")
-        // ----------------- /admin/db --------------//
+pub fn routes(base: &str) -> actix_web::Scope {
+    scope(base)
         .service(resource("")
             .route(get().to(check_auth))
         )
         .service(scope("/db")
             .service(resource("/up").route(get().to(db_up)))
             .service(resource("/down").route(get().to(db_down)))
-            // ------------/admin/db/{table} ---------//
             .service(scope("/{table}")
                 .service(resource("").route(get().to(get_all_table)))
                 .service(resource("/down").route(get().to(table_down)))
                 .service(resource("/up").route(get().to(table_up))),
             ),
         )
-        // ----------- /admin/server ------------------ //
         .service(scope("/server")
             .service(resource("").route(get().to(server_info)))
             .service(resource("/up").route(post().to(server_up)))

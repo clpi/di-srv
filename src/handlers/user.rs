@@ -5,14 +5,13 @@ use uuid::Uuid;
 use crate::state::State;
 use actix_web::{Scope,
     get, post, put, delete,
-    web::{self, scope},
-    HttpResponse, HttpRequest
+    web::{self, scope, ServiceConfig},
+    HttpResponse, HttpRequest,
 };
 use div_db::models::User;
-use actix_web::http::Method;
 
-pub fn routes() -> Scope {
-    scope("/users")
+pub fn routes(base: &str) -> actix_web::Scope {
+    scope(base)
         .route("", web::get().to(get_all))
         .service(by_username())
         .service(by_uid())

@@ -8,14 +8,19 @@ use actix_web::{
 };
 use div_db::models::{Item, Model, Record, User};
 
-pub fn routes() -> Scope {
-    scope("/records")
-        .service(get_by_id)
-        .service(delete_by_id)
-        .service(update_by_id)
+pub fn routes(base: &str) -> Scope {
+    scope(base)
+        .service(by_id("/{rid}"))
 }
 
-#[get("/{rid}")]
+pub fn by_id(base: &str) -> actix_web::Resource {
+    web::resource("/{rid}")
+        .route(get().to(get_by_id))
+        .route(delete().to(delete_by_id))
+        .route(put().to(update_by_id))
+
+}
+
 pub async fn get_by_id(
     rid: web::Path<Uuid>,
     data: web::Data<State>) -> actix_web::Result<HttpResponse> {
@@ -25,7 +30,6 @@ pub async fn get_by_id(
     }
 }
 
-#[delete("/{rid}")]
 pub async fn delete_by_id(
     rid: web::Path<Uuid>,
     data: web::Data<State>) -> actix_web::Result<HttpResponse> {
@@ -37,7 +41,6 @@ pub async fn delete_by_id(
     }
 }
 
-#[put("/{rid}")]
 pub async fn update_by_id(
     rid: web::Path<Uuid>,
     data: web::Data<State>,

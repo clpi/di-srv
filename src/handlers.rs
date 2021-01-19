@@ -10,23 +10,18 @@ pub mod public;
 pub mod fact;
 
 use actix_web::{
-    web, web::ServiceConfig, HttpRequest, HttpResponse, Responder,
+    web, web::ServiceConfig, HttpRequest, HttpResponse, Responder, Scope,
 };
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        .service(web::scope("")
-            .service(public::public_routes()))
         .service(web::scope("/api")
-            .route("", web::get().to(|| HttpResponse::Ok().body("hello! from /api")))
-            .service(user::routes())
-            .service(auth::routes())
-            .service(record::routes())
-            .service(record::user_record_routes())
-            .service(item::routes())
-            .service(item::user_item_routes())
-            .service(admin::routes())
-            .service(fact::routes())
+            .service(user::routes("/user"))
+            .service(record::routes("/record"))
+            .service(item::routes("/item"))
+            .service(fact::routes("/fact"))
+            .service(admin::routes("/admin"))
+            .service(auth::routes("/auth"))
         );
 }
 
