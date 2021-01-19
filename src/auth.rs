@@ -8,45 +8,55 @@ pub(crate) struct State {
     pub until: Option<i64>,
 }
 
-pub struct PwVerifier<'p> {
-    config: argon2::Config<'p>,
+pub struct PwVerifier {
 }
 
-impl<'p> PwVerifier<'p> {
+impl PwVerifier {
     pub fn new() -> Self {
-        let cf = argon2::Config {
+        let _cf = argon2::Config {
             variant: argon2::Variant::Argon2i,
             version: argon2::Version::Version13,
-            ad: Self::secret().unwrap_or(&[]), //NOTE as env var for prod
-            secret: Self::secret().unwrap_or(&[]), //NOTE as env var for prod,
+            secret: Self::sk().expect("HASH_SECRET_KEY not set").as_bytes(),
+            ad: Self::ad().expect("AD NOT SET").as_bytes(),
             time_cost: 10,
             mem_cost: 65536,
             lanes: 4,
             hash_length: 32,
             thread_mode: argon2::ThreadMode::Parallel,
         };
-        Self { config: cf }
+        Self {  }
     }
 
-    pub fn secret<'a>() -> Result<&'a[u8], dotenv::Error> {
-        let se = match option_env!("HASH_SECRET_KEY") {
-            Some(ev) => ev,
-            None => dotenv::var("HASH_SECRET_KEY")?.as_str(),
-        };
-        Ok(se.as_bytes())
+    pub fn ad() -> Result<String, dotenv::Error> {
+        match option_env!("HASH_SECRET_KEY") {
+            Some(ev) => Ok(ev.to_string()),
+            None => Ok(dotenv::var("HASH_SECRET_KEY")?),
+        }
     }
 
-    pub fn ad<'a>() -> Result<&'a[u8], dotenv::Error> {
-        let se = match option_env!("AD") {
-            Some(ev) => ev,
-            None => dotenv::var("AD")?.as_str(),
-        };
-        Ok(se.as_bytes())
+    pub fn sk() -> Result<String, dotenv::Error> {
+        match option_env!("HASH_SECRET_KEY") {
+            Some(ev) => Ok(ev.to_string()),
+            None => Ok(dotenv::var("HASH_SECRET_KEY")?),
+        }
     }
 
     pub fn hash(&self, pw: &str) -> argon2::Result<String> {
+        let sk = Self::sk().expect("HASH_SECRET_KEY not set");
+        let ad = Self::ad().expect("AD not set");
+        let cf = argon2::Config {
+            variant: argon2::Variant::Argon2i,
+            version: argon2::Version::Version13,
+            secret: sk.as_bytes(),
+            ad: ad.as_bytes(),
+            time_cost: 10,
+            mem_cost: 65536,
+            lanes: 4,
+            hash_length: 32,
+            thread_mode: argon2::ThreadMode::Parallel,
+        };
         let salt = &[];
-        let hash = argon2::hash_encoded(pw.as_bytes(), salt, &self.config)?;
+        let hash = argon2::hash_encoded(pw.as_bytes(), salt, &cf)?;
         return Ok(hash);
     }
 
@@ -54,8 +64,8 @@ impl<'p> PwVerifier<'p> {
         argon2::verify_encoded_ext(
             &hash,
             &pw.as_bytes(),
-            Self::secret().expect("HASH_SECET_KEY not set"),
-            Self::ad().expect("AD not set"),
+            Self::sk().unwrap().as_bytes(),
+            Self::ad().unwrap().as_bytes(),
         )
     }
 
