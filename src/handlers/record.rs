@@ -2,22 +2,53 @@ use uuid::Uuid;
 use crate::state::State;
 use actix_session::Session;
 use actix_web::{
-    http::{Cookie, HeaderName, HeaderValue},
+    get, delete, put, post,
     web::{self, delete, get, post, put, resource, scope, ServiceConfig},
     HttpRequest, HttpResponse, Scope,
 };
 use div_db::models::{Item, Model, Record, User};
 
-pub fn base_routes() -> Scope {
-    scope("/record")
-        .service(resource("").route(get().to(|| HttpResponse::Ok().body(""))))
-        .service(
-            scope("/{rid}").service(
-                resource("")
-                    .route(get().to(get_record_by_id))
-                    .route(delete().to(delete_record_by_id)),
-            ),
-        )
+pub fn routes() -> Scope {
+    scope("/records")
+        .service(get_by_id)
+        .service(delete_by_id)
+        .service(update_by_id)
+}
+
+#[get("/{rid}")]
+pub async fn get_by_id(
+    rid: web::Path<Uuid>,
+    data: web::Data<State>) -> actix_web::Result<HttpResponse> {
+    match Record::get_by_id(&data.db.lock().unwrap(), *rid).await {
+        Ok(rec) => Ok(HttpResponse::Ok().json(&rec)),
+        Err(_) => Ok(HttpResponse::NotFound().json("{}")),
+    }
+}
+
+#[delete("/{rid}")]
+pub async fn delete_by_id(
+    rid: web::Path<Uuid>,
+    data: web::Data<State>) -> actix_web::Result<HttpResponse> {
+    match Record::delete_by_id(&data.db.lock().unwrap(), *rid).await {
+        Ok(rec) => Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .json(&rec)), //PgRow -> JSon?
+        Err(_) => Ok(HttpResponse::NotFound().finish()),
+    }
+}
+
+#[put("/{rid}")]
+pub async fn update_by_id(
+    rid: web::Path<Uuid>,
+    data: web::Data<State>,
+    record: web::Json<Record>,) -> actix_web::Result<HttpResponse> {
+    let rec: Record = record.into_inner();
+    match Record::update_by_id(&data.db.lock().unwrap(), *rid, rec).await {
+        Ok(rec) => Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .json(&rec)), //PgRow -> JSon?
+        Err(_) => Ok(HttpResponse::NotFound().finish()),
+    }
 }
 
 pub fn user_record_routes() -> Scope {
@@ -39,12 +70,6 @@ pub fn user_record_routes() -> Scope {
         // ------------ /user/{uid}/{rid} -------- ///
         .service(
             scope("/{rid}")
-                .service(
-                    resource("")
-                        .route(get().to(get_by_id))
-                        .route(put().to(update_user_record))
-                        .route(delete().to(delete_by_id)),
-                )
                 // ------------ /user/{uid}/{rid}/items -------- ///
                 .service(
                     scope("/items")
@@ -89,12 +114,6 @@ pub async fn get_user_records(data: web::Data<State>, uid: web::Path<Uuid>) -> H
 
 pub async fn add_new_record_to_user_auth(id: web::Path<Uuid>, user: Session) {}
 
-pub async fn get_by_id(id: web::Path<Uuid>, data: web::Data<State>) -> HttpResponse {
-    match Record::get_by_id(&data.db.lock().unwrap(), *id).await {
-        Ok(rec) => HttpResponse::Ok().json(&rec), //PgRow -> JSon?
-        Err(_) => HttpResponse::NotFound().json("{}"),
-    }
-}
 
 pub async fn create_user_record(
     id: Session,
@@ -111,14 +130,6 @@ pub async fn create_user_record(
     }
 }
 
-pub async fn delete_by_id(id: web::Path<Uuid>, data: web::Data<State>) -> HttpResponse {
-    match Record::delete_by_id(&data.db.lock().unwrap(), *id).await {
-        Ok(rec) => HttpResponse::Ok()
-            .content_type("application/json")
-            .json(&rec), //PgRow -> JSon?
-        Err(_) => HttpResponse::NotFound().finish(),
-    }
-}
 
 /// TODO implement
 pub async fn update_user_record(path: web::Path<Uuid>, data: web::Data<State>) -> HttpResponse {
@@ -234,28 +245,3 @@ pub async fn get_record_item_by_id(
     HttpResponse::Ok().json("{}")
 }
 
-pub async fn get_record_by_id(
-    path: web::Path<(Uuid, String)>,
-    data: web::Data<State>,
-) -> HttpResponse {
-    HttpResponse::Ok().json("{}")
-}
-
-pub async fn delete_record_by_id(
-    path: web::Path<(Uuid, String)>,
-    data: web::Data<State>,
-) -> HttpResponse {
-    HttpResponse::Ok().json("{}")
-}
-
-// pub async fn delete_record_by_username_record_name(path: web::Path<(String, String))
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    async fn can_add_record_to_user() -> Result<(), String> {
-        Ok(())
-    }
-}

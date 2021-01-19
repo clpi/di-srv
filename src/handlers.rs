@@ -9,26 +9,25 @@ pub mod upload;
 pub mod public;
 pub mod fact;
 
-use actix_session::Session;
-use actix_web::{ App,
+use actix_web::{
     web, web::ServiceConfig, HttpRequest, HttpResponse, Responder,
 };
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        // .service(test_service())
-        // .service(public::public_routes())
-        // .service(web::scope("/api")
-            .service(user::uid_routes())
-            .service(user::username_routes())
+        .service(test_service())
+        .service(web::scope("")
+            .service(public::public_routes()))
+        .service(web::scope("/api")
+            .service(user::routes())
             .service(auth::routes())
-            .service(record::base_routes())
+            .service(record::routes())
             .service(record::user_record_routes())
-            .service(item::base_routes())
+            .service(item::routes())
             .service(item::user_item_routes())
             .service(admin::routes())
-            .service(fact::routes());
-        // );
+            .service(fact::routes())
+        );
 }
 
 pub(crate) fn test_service() ->  actix_web::Resource {

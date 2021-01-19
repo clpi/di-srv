@@ -1,38 +1,30 @@
 use uuid::Uuid;
 use actix_session::Session;
-use crate::{models::Response, state::State};
+use crate::state::State;
 use actix_web::{
-    http::{Cookie, HeaderName, HeaderValue},
-    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
-    HttpRequest, HttpResponse, Scope,
+    get, post, delete, put,
+    web::{self, delete, get, post, put, resource, scope},
+    HttpRequest, HttpResponse, Scope, Result,
 };
 use div_db::{
     models::{Item, Record, User},
     Db,
 };
-use serde::{Deserialize, Serialize};
 
-pub fn base_routes() -> Scope {
-    // ------------ /item -------- /// [ MAIN /src/handlers/items.rs ]
-    scope("/item")
-        .service(resource("").route(get().to(|| HttpResponse::Ok().body(""))))
-        .service(
-            resource("{iid}")
-                .route(get().to(get_by_id))
-                .route(put().to(update_by_id))
-                .route(delete().to(delete_by_id)),
-        )
+pub fn routes() -> Scope {
+    scope("/items")
+        .service(get_by_id)
+        .service(delete_by_id)
+        .service(update_by_id)
 }
 
 pub fn user_item_routes() -> Scope {
-    // ------------ /user/{uid}/item -------- /// [ MAIN /src/handlers/items.rs ]
     scope("/user/{uid}/item")
         .service(
             resource("")
                 .route(get().to(get_user_items))
                 .route(put().to(add_item_to_user)),
         )
-        // ------------ /user/{uid}/item/{iid} -------- ///
         .service(
             scope("/{name}")
                 .service(
@@ -51,31 +43,42 @@ pub fn user_item_routes() -> Scope {
         )
 }
 
-pub async fn get_by_id(id: Session, iid: web::Path<String>, data: web::Data<State>) -> HttpResponse {
+#[get("/{iid}")]
+pub async fn get_by_id(
+    id: Session,
+    iid: web::Path<String>,
+    data: web::Data<State>) -> actix_web::Result<HttpResponse>
+{
     let id: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::get_by_id(&data.db.lock().unwrap(), id).await {
-        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
-        Err(_) => HttpResponse::NotFound().json("{}"),
+        Ok(rec) => Ok(HttpResponse::Ok().json("{}")), //PgRow -> JSon?
+        Err(_) => Ok(HttpResponse::NotFound().json("{}")),
     }
 }
 
+#[delete("/{iid}")]
 pub async fn delete_by_id(
-    id: Session, iid: web::Path<String>, data: web::Data<State>,
-) -> HttpResponse {
+    id: Session,
+    iid: web::Path<String>,
+    data: web::Data<State>,) -> actix_web::Result<HttpResponse>
+{
     let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::delete_by_id(&data.db.lock().unwrap(), iid).await {
-        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
-        Err(_) => HttpResponse::NotFound().json("{}"),
+        Ok(rec) => Ok(HttpResponse::Ok().json("{}")), //PgRow -> JSon?
+        Err(_) => Ok(HttpResponse::NotFound().json("{}")),
     }
 }
 
+#[put("/{iid}")]
 pub async fn update_by_id(
-    id: Session, iid: web::Path<String>, data: web::Data<State>, item: web::Json<Item>,
-) -> HttpResponse {
+    id: Session,
+    iid: web::Path<String>,
+    data: web::Data<State>,
+    item: web::Json<Item>,) -> actix_web::Result<HttpResponse> {
     let iid: Uuid = Uuid::parse_str(iid.into_inner().as_mut_str()).unwrap();
     match Item::update_by_id(&data.db.lock().unwrap(), iid, item.into_inner()).await {
-        Ok(rec) => HttpResponse::Ok().json("{}"), //PgRow -> JSon?
-        Err(_) => HttpResponse::NotFound().json("{}"),
+        Ok(rec) => Ok(HttpResponse::Ok().json("{}")), //PgRow -> JSon?
+        Err(_) => Ok(HttpResponse::NotFound().json("{}")),
     }
 }
 

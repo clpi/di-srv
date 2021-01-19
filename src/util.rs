@@ -1,10 +1,9 @@
-use crate::state::State;
 use actix_web::client::Client;
 
 
 pub async fn req_get(url: &str) {
-    let mut client = Client::default();
-    let mut res = client.get(url).send().await.unwrap();
+    let mut _client = Client::default();
+    let mut _res = _client.get(url).send().await.unwrap();
 }
 
 #[macro_export]

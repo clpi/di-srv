@@ -12,7 +12,7 @@ pub struct DSession {
 pub struct Claim {
 }
 
-async fn login(uid: Uuid, session: &Session) -> HttpResponse {
+async fn _login(uid: Uuid, session: &Session) -> HttpResponse {
     if let Some(uid) = id(session) {
         format!("Already logged in: {}", uid.to_string()).into()
     } else {

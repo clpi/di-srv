@@ -11,17 +11,17 @@ use actix_web::{FromRequest, Scope,
 use div_db::models::User;
 
 pub fn public_routes() -> Scope {
-    scope("/")
-        .route("", get().to(index))
-        .route("/", get().to(index))
-        .service(resource("/dashboard").route(get().to(dashboard)))
-        .service(resource("/users").route(get().to(users)))
-        .service(resource("/users/{username}").route(get().to(user)))
-        .service(resource("/login").route(get().to(login)))
-        .service(resource("/contact").route(get().to(contact)))
-        .service(resource("/cover").route(get().to(cover)))
+    scope("")
+        .service(index)
+        .service(dashboard)
+        .service(users)
+        .service(user)
+        .service(cover)
+        .service(contact)
+        .service(login)
 }
 
+#[get("/")]
 pub async fn index(
     id: actix_session::Session,
     req: actix_web::HttpRequest,
@@ -33,19 +33,20 @@ pub async fn index(
             hm.insert(h.to_string(), v.to_str().unwrap_or_default().to_string());
             hm
         });
-    let mut context = tera::Context::new();
-    context.insert("host", req.connection_info().host());
-    context.insert("remote", &req.connection_info().remote_addr());
-    context.insert("peer", &req.peer_addr().unwrap());
-    context.insert("scheme", req.connection_info().scheme());
+    let mut ctx = tera::Context::new();
+    ctx.insert("host", req.connection_info().host());
+    ctx.insert("remote", &req.connection_info().remote_addr());
+    ctx.insert("peer", &req.peer_addr().unwrap());
+    ctx.insert("scheme", req.connection_info().scheme());
     let uid = crate::session::id(&id).unwrap_or(Uuid::nil());
-    context.insert("uid", &uid.to_string());
-    let s = data.tera.render("index.html", &context)
+    ctx.insert("uid", &uid.to_string());
+    let s = data.tera.render("index.html", &ctx)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))
         .unwrap_or_default();
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
+#[get("/dashboard")]
 pub async fn dashboard(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -60,6 +61,7 @@ pub async fn dashboard(
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
+#[get("/login")]
 pub async fn login(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -73,6 +75,7 @@ pub async fn login(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/contact")]
 pub async fn contact(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -86,6 +89,7 @@ pub async fn contact(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/cover")]
 pub async fn cover(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -99,6 +103,7 @@ pub async fn cover(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/users")]
 pub async fn users(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -114,6 +119,7 @@ pub async fn users(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/users/{username}")]
 pub async fn user(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,

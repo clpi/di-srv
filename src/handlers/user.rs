@@ -4,163 +4,118 @@ use futures::{StreamExt, TryStreamExt};
 use uuid::Uuid;
 use crate::state::State;
 use actix_web::{Scope,
-    web::{self, delete, get, post, put, resource, scope},
+    get, post, put, delete,
+    web::{self, scope},
     HttpResponse, HttpRequest
 };
 use div_db::models::User;
-use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct UserApi(User);
-
-
-pub fn uid_routes() -> Scope {
-    scope("/user")
-    // -------------- /user ------------------------- ///
-        .service(resource("").route(get().to(get_all)))
-        .service(scope("/{uid}")
-        // -------------- /user/{uid} --------------------///
-            .service(resource("")
-                .route(get().to(get_by_id))
-                .route(delete().to(delete_by_id))
-            )
-            // ------------ /user/{uid}/info/ -------- ///
-            .service(resource("/info")
-                .route(get().to(get_user_info))
-                .route(put().to(update_user_info))
-            )
-            .service(resource("/facts")
-                .route(get().to(get_uid_facts))
-                .route(put().to(new_uid_fact))
-            )
-        )
+pub fn routes() -> Scope {
+    scope("/users")
+        .service(get_all)
+        .service(get_by_id)
+        .service(update_by_id)
+        .service(delete_by_id)
+        .service(get_by_username)
+        .service(delete_by_username)
+        .service(update_by_username)
 }
 
-pub async fn test() {}
-
-pub fn username_routes() -> Scope {
-    // -------------- /u ------------------------- ///
-    scope("/u")
-        .service(resource("").route(get().to(|| HttpResponse::Ok().body("/u"))))
-        // -------------- /u/{username} --------------------///
-        .service(scope("/{username}")
-            .service(resource("")
-                .route(get().to(get_by_username))
-                .route(put().to(update_by_username))
-                .route(delete().to(delete_by_username)),
-            )
-            // ------------ /u/{username}/feed/ -------- ///
-            .service(scope("/feed")
-                .service(resource("")
-                    .route(get().to(get_user_feed))
-                )
-                // ------------ /u/{username}/feed/items -------- ///
-                .service(resource("/items")
-                    .route(get().to(|| HttpResponse::Ok().body("")))
-                )
-                // ------------ /u/{username}/feed/entities -------- ///
-                .service(resource("/entities")
-                    .route(get().to(|| HttpResponse::Ok().body("")))
-                )
-                // ------------ /u/{username}/feed/records -------- ///
-                .service(resource("/records")
-                    .route(get().to(|| HttpResponse::Ok().body("")))
-                )
-            )
-        )
-}
-
-//TODO programmatically handle requests by matching operation to user model function
-
+#[get("/")]
 pub async fn get_all(
     id: actix_session::Session,
-    data: web::Data<State>,) -> HttpResponse
+    data: web::Data<State>,) -> actix_web::Result<HttpResponse>
 {
-    //println!("GET ALL: FROM {:?}", id.identity());
-    let db = &data.db.lock().unwrap();
-    match User::get_all(&db).await {
-        Ok(users) => HttpResponse::Ok()
+    match User::get_all(&data.db.lock().unwrap()).await {
+        Ok(users) => Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .json(&users),
-        Err(_) => HttpResponse::NotFound().json("")
+            .json(&users)),
+        Err(_) => Ok(HttpResponse::NotFound().json(""))
     }
 }
 
-pub async fn get_by_id(data: web::Data<State>, id: web::Path<String>) -> HttpResponse {
+#[get("/id/{uid}")]
+pub async fn get_by_id(
+    data: web::Data<State>,
+    id: web::Path<String>) -> actix_web::Result<HttpResponse>
+{
     let id: Uuid = Uuid::parse_str(id.into_inner().as_mut_str()).unwrap();
     match User::get_by_id(&data.db.lock().unwrap(), id).await {
-        Ok(maybe_user) => match maybe_user {
-            Some(user) => HttpResponse::Ok()
+        Ok(Some(user)) => Ok(HttpResponse::Ok()
                 .content_type("application/json")
-                .json(&user),
-            None => HttpResponse::NotFound().json(""),
-        },
-        Err(_) => HttpResponse::NotFound().json(""),
+                .json(&user)),
+        _ => Ok(HttpResponse::NotFound().json(""))
     }
 }
 
+#[put("/id/{uid}")]
 pub async fn update_by_id(
-    path: web::Path<Uuid>, req: HttpRequest, data: web::Data<State>
-        ) -> HttpResponse
+    path: web::Path<Uuid>,
+    req: HttpRequest,
+    data: web::Data<State>) -> actix_web::Result<HttpResponse>
 {
     match User::delete_by_id(&data.db.lock().unwrap(), *path).await {
-        Ok(Some(id)) => HttpResponse::Ok()
+        Ok(Some(id)) => Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .body(format!("Deleted user with id {}", id)),
-        _ => HttpResponse::NotFound().body("Could not delete")
+            .body(format!("Deleted user with id {}", id))),
+        _ => Ok(HttpResponse::NotFound().body("Could not delete"))
     }
 }
 
+#[delete("/id/{uid}")]
 pub async fn delete_by_id(
     data: web::Data<State>,
-    id: web::Path<Uuid>
-) -> HttpResponse {
+    id: web::Path<Uuid>) -> actix_web::Result<HttpResponse>
+{
     match User::delete_by_id(&data.db.lock().unwrap(), *id).await {
-        Ok(Some(id)) => HttpResponse::Ok()
+        Ok(Some(id)) => Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .body(format!("Deleted user {:?}", id)),
-        _ => HttpResponse::NotFound().json("")
+            .body(format!("Deleted user {:?}", id))),
+        _ => Ok(HttpResponse::NotFound().json(""))
     }
 }
 
+#[get("/{username}")]
 pub async fn get_by_username(
     data: web::Data<State>,
-    username: web::Path<String>
-) -> HttpResponse {
-    match User::get_by_username(&data.db.lock().unwrap(), username.to_string()).await {
-        Ok(Some(user)) => HttpResponse::Ok()
+    username: web::Path<String>) -> actix_web::Result<HttpResponse>
+{
+    let db = data.db.lock().unwrap();
+    let u =  User::get_by_username(&db, username.to_string());
+    match u.await {
+        Ok(Some(user)) => Ok(HttpResponse::Ok()
                 .content_type("application/json")
-                .json(&user),
-        _ => HttpResponse::NotFound().json(""),
+                .json(&user)),
+        _ => Ok(HttpResponse::NotFound().json("")),
     }
 }
 
+#[delete("/{username}")]
 pub async fn delete_by_username(
     id: actix_session::Session,
     data: web::Data<State>,
-    username: web::Path<String>,
-) -> HttpResponse {
-    println!("DELETE USER BY USERNAME: From {:?}", id.get::<usize>("id"));
-    match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
-        Ok(id) => HttpResponse::Ok()
+    username: web::Path<String>,) -> actix_web::Result<HttpResponse>
+{
+    let db = data.db.lock().unwrap();
+    let u = User::delete_by_username(&db, username.to_string());
+    match u.await {
+        Ok(id) => Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .body(format!("Deleted user {}", id)),
-        Err(_) => HttpResponse::NotFound().json("")
+            .body(format!("Deleted user {}", id))),
+        Err(_) => Ok(HttpResponse::NotFound().json(""))
     }
 }
 
-
+#[put("/{username}")]
 pub async fn update_by_username(
     id: actix_session::Session,
     data: web::Data<State>,
-    username: web::Path<String>
-) -> HttpResponse {
-    println!("UPDATE USER BY USERNAME: From {:?}", id.get::<usize>("id"));
+    username: web::Path<String>) -> actix_web::Result<HttpResponse> {
     match User::delete_by_username(&data.db.lock().unwrap(), username.to_string()).await {
-        Ok(id) => HttpResponse::Ok()
+        Ok(id) => Ok(HttpResponse::Ok()
             .content_type("application/json")
-            .body(format!("Deleted user {}", id)),
-        Err(_) => HttpResponse::NotFound().json("")
+            .body(format!("Deleted user {}", id))),
+        Err(_) => Ok(HttpResponse::NotFound().json(""))
     }
 }
 
