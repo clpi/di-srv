@@ -2,25 +2,24 @@ use uuid::Uuid;
 use std::collections::HashMap;
 use actix_session::Session;
 use crate::state::State;
-use actix_web::{FromRequest, Scope,
-    Responder,
-    get, post, put, delete,
-    web::{self, delete, get, post, put, resource, scope, ServiceConfig},
-    HttpResponse, HttpRequest
+use actix_web::{ get,
+    web::{self, ServiceConfig},
+    HttpResponse,
 };
 use div_db::models::User;
 
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
-        .route("/", get().to(index))
-        .route("/dashboard", get().to(dashboard))
-        .route("/users", get().to(users))
-        .route("/users/{username}", get().to(user))
-        .route("/cover", get().to(cover))
-        .route("/contact", get().to(contact))
-        .route("/login", get().to(login));
+        .service(index)
+        .service(dashboard)
+        .service(users)
+        .service(user)
+        .service(cover)
+        .service(contact)
+        .service(login);
 }
 
+#[get("/")]
 pub async fn index(
     id: actix_session::Session,
     req: actix_web::HttpRequest,
@@ -45,6 +44,7 @@ pub async fn index(
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
+#[get("/dashboard")]
 pub async fn dashboard(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -59,6 +59,7 @@ pub async fn dashboard(
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
+#[get("/login")]
 pub async fn login(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -72,6 +73,7 @@ pub async fn login(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/contact")]
 pub async fn contact(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -85,6 +87,7 @@ pub async fn contact(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/cover")]
 pub async fn cover(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -98,6 +101,7 @@ pub async fn cover(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/users")]
 pub async fn users(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
@@ -113,6 +117,7 @@ pub async fn users(
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
 
+#[get("/users/{username}")]
 pub async fn user(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,

@@ -4,7 +4,6 @@ use crate::{handlers, middleware, state};
 use actix_web_prom::PrometheusMetrics;
 use actix_service::ServiceFactory;
 use actix_web::{body, dev, get,  web, App, Error, HttpRequest, HttpResponse, HttpServer};
-use serde::{Deserialize, Serialize};
 use std::{net::TcpListener, sync::mpsc};
 
 pub async fn run_api() -> std::io::Result<()> {
@@ -20,13 +19,13 @@ pub async fn run_api() -> std::io::Result<()> {
             .data(st.clone())
             .wrap(middleware::cors())
             .wrap(middleware::logger())
-            .wrap(actix_web::middleware::NormalizePath::default())
             .wrap(prometheus.clone())
             .wrap(middleware::redis_session(&AppConfig::session_key()))
             .configure(handlers::public::routes)
-            .service(handlers::routes("/api"))
+            .configure(handlers::routes)
         });
-    srv.bind(&config.clone().address())?.run().await?;
+    srv.bind(&config.clone().address())?
+        .run().await?;
     Ok(())
 }
 
@@ -67,5 +66,5 @@ pub fn create_app() -> App<
         .wrap(middleware::cors())
         .wrap(middleware::redis_session(&AppConfig::session_key()))
         .configure(handlers::public::routes)
-        .service(handlers::routes("/api"))
+        .configure(handlers::routes)
 }

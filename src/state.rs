@@ -19,8 +19,7 @@ impl State {
     pub async fn new(_cf: &AppConfig) -> Self {
         let db = Db::new().await.expect("Could not get DB");
         let idp = CognitoClient::new();
-        let mut tera = tera::Tera::new(
-            concat!(env!("CARGO_MANIFEST_DIR"), "assets/static/templates/**/*"))
+        let mut tera = tera::Tera::new("assets/static/templates/**/*")
             .expect("Could not load tera");
         tera.autoescape_on(vec!["html"]);
         Self { db: Arc::new(Mutex::new(db)), cognito: idp, tera }
