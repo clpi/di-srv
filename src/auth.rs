@@ -1,5 +1,16 @@
 pub mod jwt;
 
+use crate::config::AppConfig;
+use jsonwebtoken::{
+    Validation, encode, decode, Header, DecodingKey, EncodingKey, TokenData,
+};
+use div_db::models::User;
+use serde::{Serialize, Deserialize};
+use actix_web_httpauth::{
+    extractors::{AuthenticationError, bearer::{BearerAuth, Config}},
+    middleware::HttpAuthentication,
+};
+
 #[derive(Debug, Default)]
 pub(crate) struct State {
     pub token: Option<String>,
@@ -77,3 +88,49 @@ impl State {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub uid: uuid::Uuid,
+    pub email: String,
+    pub exp: i32,
+}
+
+
+impl Claims {
+    pub fn decode(tok: &str) -> jsonwebtoken::errors::Result<TokenData<Claims>> {
+        let v = Validation {
+            validate_exp: false,
+            ..Default::default()
+        };
+        decode::<Claims>(&tok,
+            &DecodingKey::from_secret(AppConfig::jwt_secret().unwrap_or([0_u8; 32].to_vec()).as_ref()),
+            &v)
+
+    }
+    pub fn encode(user: User) -> jsonwebtoken::errors::Result<String> {
+        let cl = Claims {
+            uid: user.id,
+            email: user.username,
+            exp: 3600,
+        };
+        encode(
+            &Header::default(),
+            &cl,
+            &EncodingKey::from_secret(AppConfig::jwt_secret().unwrap_or([0_u8; 32].to_vec()).as_ref())
+        )
+    }
+}
+
+
+// async fn validator(credentials: BearerAuth) -> Result<ServiceRequest, Error> {
+//     match auth::validate_token(credentials.token()) {
+//         Ok(res) => {
+//             if res == true {
+//                 Ok(req)
+//             } else {
+//                 Err(AuthenticationError::from(config).into())
+//             }
+//         }
+//         Err(_) => Err(AuthenticationError::from(config).into()),
+//     }
+// }

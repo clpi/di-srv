@@ -13,8 +13,8 @@ use actix_session::CookieSession;
 //     extractors::bearer::BearerAuth
 // };
 
-// pub fn auth() -> HttpAuthentication {
-//     HttpAuthentication::bearer
+// pub fn auth() -> HttpAuthentication< {
+//     HttpAuthentication::bearer(|| true)
 
 // }
 

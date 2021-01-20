@@ -15,9 +15,12 @@ pub struct CognitoIn {}
 
 pub fn routes(base: &str) -> Scope {
     scope(base)
-        .service(check_session)
         //.wrap_fn(validate)
-        .service(resource("/login").route(post().to(login_user)))
+        .route("/login", post().to(login_user))
+        .route("/logout", post().to(logout_user))
+        .route("/signup", post().to(signup_user))
+        .route("/authorize", post().to(authorize_user))
+        .route("/token", post().to(get_token))
         .service(resource("/logout").route(post().to(logout_user)))
         .service(resource("/signup").route(post().to(signup_user)))
         .service(resource("/authorize").route(post().to(authorize_user)))
@@ -44,7 +47,6 @@ pub fn routes(base: &str) -> Scope {
         )
 }
 
-#[get("/session/check")]
 pub async fn check_session(
     session: Session,
     req: HttpRequest) -> actix_web::Result<HttpResponse>

@@ -25,7 +25,7 @@ uuid = { version = "0.8", features= [ "v4", "serde" ] }
 toml = "*"
 url = "2"
 futures = "0.3"
-serde_json = "*"
+serde_json = { version = "*", features = ["preserve_order"] }
 actix-service = "*"
 actix = "*"
 actix-rt = "*"
@@ -60,6 +60,8 @@ actix-web-prom = "0.5.1"
 dotenv = "0.15.0"
 actix-web-httpauth = "0.5.0"
 rust-argon2 = "0.8.3"
+strum = "0.20.0"
+strum_macros = "0.20.1"
 
 
 [features]

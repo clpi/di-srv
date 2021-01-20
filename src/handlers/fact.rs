@@ -21,6 +21,11 @@ pub fn routes(base: &str) -> actix_web::Scope {
         )
 }
 
+pub fn with_name() -> actix_web::Scope {
+    scope("/{username}/{fact}")
+}
+
+
 pub async fn get_all_entries(
     id: actix_session::Session,
     data: web::Data<State>,) -> HttpResponse {
