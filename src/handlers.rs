@@ -13,16 +13,14 @@ use actix_web::{
     web, web::ServiceConfig, HttpRequest, HttpResponse, Responder, Scope,
 };
 
-pub fn routes(cfg: &mut ServiceConfig) {
-    cfg
-        .service(web::scope("/api")
-            .service(user::routes("/user"))
-            .service(record::routes("/record"))
-            .service(item::routes("/item"))
-            .service(fact::routes("/fact"))
-            .service(admin::routes("/admin"))
-            .service(auth::routes("/auth"))
-        );
+pub fn routes(base: &str) -> Scope {
+    web::scope(base)
+        .service(user::routes("/user"))
+        .service(record::routes("/record"))
+        .service(item::routes("/item"))
+        .service(fact::routes("/fact"))
+        .service(admin::routes("/admin"))
+        .service(auth::routes("/auth"))
 }
 
 pub(crate) fn test_service() ->  actix_web::Resource {

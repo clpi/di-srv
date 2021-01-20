@@ -21,10 +21,7 @@ pub fn routes(base: &str) -> Scope {
         .route("/signup", post().to(signup_user))
         .route("/authorize", post().to(authorize_user))
         .route("/token", post().to(get_token))
-        .service(resource("/logout").route(post().to(logout_user)))
-        .service(resource("/signup").route(post().to(signup_user)))
-        .service(resource("/authorize").route(post().to(authorize_user)))
-        .service(resource("/token").route(post().to(get_token)))
+        .route("/register", post().to(register_user))
         // ADMIN ROUTES -- wrap_fn(validate_admin)
         .service(resource("")
             .route(post().to(create_user))
@@ -60,6 +57,13 @@ pub async fn check_session(
         _ => Ok(HttpResponse::NotFound()
                 .json(false))
     }
+}
+
+pub async fn register_user(
+    user: web::Json<UserRegister>,
+    data: web::Data<State>,
+) -> actix_web::Result<HttpResponse> {
+    Ok(HttpResponse::Ok().body("D"))
 }
 
 pub async fn check_session_with_user(

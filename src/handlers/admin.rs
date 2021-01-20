@@ -5,6 +5,16 @@ use actix_web::{ Error,
     HttpRequest, HttpResponse,
 };
 use serde::{Deserialize, Serialize};
+use actix_web::{dev::RequestHead, guard::Guard};
+
+
+// pub struct AdminRouteGuard;
+
+// impl Guard for AdminRouteGuard {
+//     fn check(&self, request: &RequestHead, session: Session) -> bool {
+//         session.get::<usize>("uid").unwrap() == uuid::Uuid::new_v4()
+//     }
+// }
 
 pub fn routes(base: &str) -> actix_web::Scope {
     scope(base)

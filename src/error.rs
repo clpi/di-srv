@@ -1,5 +1,6 @@
 use std::{fmt, convert::Infallible};
 use derive_more::Display;
+use actix_web::http::StatusCode;
 use div_com::error::DError;
 use div_db::sqlx::error::Error as SqlxError;
 use actix_web::{ResponseError, HttpResponse};
@@ -22,8 +23,37 @@ pub enum ApiError {
     AwsReqError(div_com::error::DError),
     #[display(fmt = "IO error")]
     IoError(div_com::error::DError),
+    UserError(UserError),
     #[display(fmt = "Parsing error")]
     Inf(Infallible),
+}
+
+
+#[derive(Debug, Display)]
+pub enum UserError {
+    #[display(fmt = "Validation error on field: {}", field)]
+    ValidationError { field: String },
+    #[display(fmt = "No user with {} = {}", field, val)]
+    NoSuchUser { field: String, val: String },
+}
+
+impl actix_web::error::ResponseError for UserError {
+
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            Self::ValidationError { field } => HttpResponse::BadRequest()
+                .body(format!("No field {}", field)),
+            Self::NoSuchUser { field, val } => HttpResponse::NotFound()
+                .body(format!("No user with {} {}", field, val))
+        }
+    }
+
+    fn status_code(&self) -> StatusCode {
+        match self {
+            UserError::ValidationError { .. } => StatusCode::BAD_REQUEST,
+            UserError::NoSuchUser { .. } => StatusCode::BAD_REQUEST,
+        }
+    }
 }
 
 impl std::error::Error for ApiError {
@@ -32,6 +62,7 @@ impl std::error::Error for ApiError {
             Self::RequestError(e) => Some(e),
             Self::ResponseError(e) => Some(e),
             Self::DbError(DError::DbError(e)) => Some(e),
+            Self::UserError(e) => None,
             Self::SqlxError(sqlx_error) => match sqlx_error {
                 SqlxError::Io(e) => Some(e),
                 SqlxError::Database(e) => None,

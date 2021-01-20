@@ -31,6 +31,13 @@ pub fn by_uid() -> actix_web::Scope {
         .route("", web::put().to(update_by_id))
 }
 
+pub async fn query_user(
+    query: web::Query<UserQuery>,
+    data: web::Data<State>,) -> actix_web::Result<HttpResponse>
+{
+    Ok(HttpResponse::Ok().body("D"))
+}
+
 pub async fn get_all(
     id: actix_session::Session,
     data: web::Data<State>,) -> actix_web::Result<HttpResponse>
@@ -162,3 +169,9 @@ async fn upload_profile_picture(mut payload: Multipart) -> Result<HttpResponse, 
     Ok(HttpResponse::Ok().into())
 }
 
+
+pub struct UserQuery {
+    id: Option<Uuid>,
+    u: Option<String>,
+    e: Option<String>,
+}

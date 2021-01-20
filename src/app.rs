@@ -20,10 +20,11 @@ pub async fn run_api() -> std::io::Result<()> {
             .data(st.clone())
             .wrap(middleware::cors())
             .wrap(middleware::logger())
+            .wrap(actix_web::middleware::NormalizePath::default())
             .wrap(prometheus.clone())
             .wrap(middleware::redis_session(&AppConfig::session_key()))
             .configure(handlers::public::routes)
-            .configure(handlers::routes)
+            .service(handlers::routes("/api"))
         });
     srv.bind(&config.clone().address())?.run().await?;
     Ok(())
@@ -66,23 +67,5 @@ pub fn create_app() -> App<
         .wrap(middleware::cors())
         .wrap(middleware::redis_session(&AppConfig::session_key()))
         .configure(handlers::public::routes)
-        .configure(handlers::routes)
+        .service(handlers::routes("/api"))
 }
-
-
-#[derive(Serialize, Deserialize)]
-pub struct TestEcho {
-    num: i32,
-    string: String,
-}
-
-pub async fn test() {
-
-}
-
-#[get("/test")]
-pub async fn test_route(req: HttpRequest, test: web::Json<TestEcho>) -> HttpResponse {
-    println!("REQ: {:?}", req);
-    HttpResponse::Ok().body(&test.string)
-}
-
