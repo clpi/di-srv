@@ -11,6 +11,7 @@ pub mod fact;
 pub mod feed;
 
 use crate::state::State;
+use serde::{Deserialize, Serialize};
 use actix_web::{
     web, web::ServiceConfig, HttpRequest, HttpResponse, Responder, Scope,
     http::Method,
@@ -29,7 +30,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
         );
 }
 
-pub(crate) fn test_service() ->  actix_web::Resource {
+pub(crate) fn _test_srv() ->  actix_web::Resource {
     web::resource("/test/{test}")
         .route(web::get().to(|test: web::Path<String>| {
             HttpResponse::Ok().body(format!("GET /test/{}", test))
@@ -42,8 +43,15 @@ pub async fn route_404(_req: HttpRequest) -> impl Responder {
 }
 
 #[async_trait::async_trait]
-pub trait Crud {
-    async fn create(data: web::Data<State>) -> actix_web::Resource;
+pub trait Crud<'de>: Deserialize<'de>  {
+    async fn create(data: web::Data<State>, m: web::Json<Self>) -> actix_web::Result<HttpResponse>;
+
+    async fn get(data: web::Data<State>, id: web::Path<uuid::Uuid>) -> actix_web::Result<HttpResponse>;
+
+    async fn delete(data: web::Data<State>, id: web::Path<uuid::Uuid>) -> actix_web::Result<HttpResponse>;
+
+    async fn update(data: web::Data<State>, m: web::Json<Self>) -> actix_web::Result<HttpResponse>;
+
 }
 
 // pub async fn crud_id<M: div_db::models::Model>(path: &str) -> actix_web::Resource {
