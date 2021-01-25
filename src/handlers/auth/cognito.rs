@@ -110,7 +110,7 @@ pub async fn create_user(
 }
 
 pub async fn signup_user(
-    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
+    (data, user): (web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
 {
     match &data.cognito.signup_user(user.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -132,7 +132,7 @@ pub async fn login_user(
 }
 
 pub async fn logout_user(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<String>) ) -> HttpResponse
+    (data, body): (web::Data<State>, web::Json<String>) ) -> HttpResponse
 {
     match &data.cognito.signout_user(body.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -142,8 +142,7 @@ pub async fn logout_user(
     }
 }
 
-pub async fn get_token(
-    (req,  data, body): (HttpRequest,web::Data<State>, web::Json<CognitoIn>), ) -> HttpResponse
+pub async fn get_token(body: web::Json<CognitoIn>) -> HttpResponse
 {
     let payload = body.into_inner();
     let res = Client::new()
@@ -151,7 +150,7 @@ pub async fn get_token(
         .send_json(&payload)
         .await;
     match res {
-        Ok(res) => HttpResponse::Ok()
+        Ok(_res) => HttpResponse::Ok()
             .content_type("application/json")
             .json(true),
         Err(_) => HttpResponse::NotFound().finish()
@@ -159,7 +158,7 @@ pub async fn get_token(
 }
 
 pub async fn get_users(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
+    (data, username): (web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -170,7 +169,7 @@ pub async fn get_users(
 }
 
 pub async fn set_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
+    (data, username): (web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
@@ -181,7 +180,7 @@ pub async fn set_attribute(
 }
 
 pub async fn get_attribute(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
+    (data, username): (web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.get_user(username.into_inner().as_str()).await {
         Ok(res) => HttpResponse::Ok()
