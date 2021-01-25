@@ -21,6 +21,7 @@ pub fn routes(base: &str) -> Scope {
         .route("/signup", post().to(signup_user))
         .route("/authorize", post().to(authorize_user))
         .route("/token", post().to(get_token))
+        .service(self::jwt("/jwt"))
         // NOTE non-cognito routes
         .route("/signin", post().to(signin_user))
         .route("/register", post().to(register_user))
@@ -29,21 +30,33 @@ pub fn routes(base: &str) -> Scope {
             .route(post().to(create_user))
             .route(get().to(get_users))
         )
-        .service(scope("/{username}")
-            .service(resource("")
-                .route(get().to(get_user))
-                .route(delete().to(delete_user))
-            )
-            .service(resource("/confirm")
-                .route(post().to(confirm_signup))
-            )
-            .service(resource("/{attribute}")
-                .route(get().to(get_attribute))
-                .route(post().to(add_attribute))
-                .route(delete().to(delete_attribute))
-                .route(put().to(set_attribute))
-            )
+        .service(self::cognito_user("/{username}"))
+}
+
+pub fn cognito_user(base: &str) -> actix_web::Scope {
+    scope(base)
+        .service(resource("")
+            .route(get().to(get_user))
+            .route(delete().to(delete_user))
         )
+        .service(resource("/confirm")
+            .route(post().to(confirm_signup))
+        )
+        .service(self::cognito_user_attributes("/{attrib}"))
+}
+
+pub fn cognito_user_attributes(base: &str) -> actix_web::Resource {
+    web::resource(base)
+        .route(get().to(get_attribute))
+        .route(post().to(add_attribute))
+        .route(delete().to(delete_attribute))
+        .route(put().to(set_attribute))
+}
+
+pub fn jwt(base: &str) -> actix_web::Resource {
+    web::resource(base)
+        .route(get().to(get_jwt))
+        .route(post().to(refresh_jwt))
 }
 
 pub async fn check_session(
@@ -290,6 +303,22 @@ pub async fn get_users(
             .json(res),
         Err(_) => HttpResponse::NotFound().finish()
     }
+}
+
+pub async fn get_jwt(
+    req: HttpRequest,
+    data: web::Data<State>,
+) -> actix_web::Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .body("GET /api/auth/jwt"))
+}
+
+pub async fn refresh_jwt(
+    req: HttpRequest,
+    data: web::Data<State>,
+) -> actix_web::Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .body("GET /api/auth/jwt/refresh"))
 }
 
 
