@@ -63,7 +63,17 @@ pub async fn register_user(
     user: web::Json<UserRegister>,
     data: web::Data<State>,
 ) -> actix_web::Result<HttpResponse> {
-    Ok(HttpResponse::Ok().body("D"))
+    let db = data.db.lock().unwrap();
+    let user = user.into_inner();
+    let hash = crate::auth::PwVerifier::new()
+        .hash(user.password.as_str())
+        .expect("Could not hash password");
+    let user = User::new(user.email, user.username, Some(hash));
+    match user.insert_db(&db).await {
+        Ok(user) => Ok(HttpResponse::Created().json(&user)),
+        Err(e) =>Ok(HttpResponse::NotModified()
+            .body(format!("User already exists, or other error... {}", e)))
+    }
 }
 
 pub async fn check_session_with_user(

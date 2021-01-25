@@ -1,7 +1,7 @@
 use sqlx::{FromRow,
     types::{
         chrono::{DateTime, Utc},
-        uuid::{Uuid, Variant}
+        uuid::Uuid,
     },
     postgres::PgRow, prelude::*
 };
@@ -44,8 +44,8 @@ pub struct User {
 
 impl User {
 
-    pub fn new<T, U, V>(email: T, username: U, password: Option<String>) -> User
-        where T: Into<String>, U: Into<String>, V: Into<String> {
+    pub fn new<T, U>(email: T, username: U, password: Option<String>) -> User
+        where T: Into<String>, U: Into<String> {
         User {
             id: Uuid::new_v4(),
             email: email.into(),
