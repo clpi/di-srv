@@ -21,6 +21,8 @@ pub fn routes(base: &str) -> Scope {
         .route("/signup", post().to(signup_user))
         .route("/authorize", post().to(authorize_user))
         .route("/token", post().to(get_token))
+        // NOTE non-cognito routes
+        .route("/signin", post().to(signin_user))
         .route("/register", post().to(register_user))
         // ADMIN ROUTES -- wrap_fn(validate_admin)
         .service(resource("")
@@ -73,6 +75,30 @@ pub async fn register_user(
         Ok(user) => Ok(HttpResponse::Created().json(&user)),
         Err(e) =>Ok(HttpResponse::NotModified()
             .body(format!("User already exists, or other error... {}", e)))
+    }
+}
+
+pub async fn signin_user(
+    user: web::Json<UserLogin>,
+    data: web::Data<State>,
+) -> actix_web::Result<HttpResponse> {
+    let db = data.db.lock().unwrap();
+    let user = user.into_inner();
+    let ver = crate::auth::PwVerifier::new();
+    match User::get_by_username(&db, user.username).await {
+        Ok(Some(duser)) => match ver.verify(user.password.as_str(), &duser.clone().password.unwrap()) {
+            Ok(_) => return Ok(HttpResponse::Accepted()
+                .set_header("auth", "false")
+                .json(&duser)),
+            Err(e) => return Ok(HttpResponse::Unauthorized()
+                .set_header("auth", "false")
+                .body(format!("Username or password incorrect: {}", e)))
+        },
+        Ok(None) => return Ok(HttpResponse::NotFound()
+            .set_header("auth", "false")
+            .body("No user found")),
+        Err(e) => return Ok(HttpResponse::InternalServerError()
+            .body(format!("could not reach server: {}", e)))
     }
 }
 
