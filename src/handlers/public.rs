@@ -1,6 +1,9 @@
+pub mod admin;
+pub mod dashboard;
+pub mod auth;
+
 use uuid::Uuid;
 use std::collections::HashMap;
-use actix_session::Session;
 use crate::state::State;
 use actix_web::{ get,
     web::{self, ServiceConfig},
@@ -11,12 +14,13 @@ use div_db::models::User;
 pub fn routes(cfg: &mut ServiceConfig) {
     cfg
         .service(index)
-        .service(dashboard)
         .service(users)
         .service(user)
         .service(cover)
         .service(contact)
-        .service(login);
+        .service(self::auth::routes(""))
+        .service(self::dashboard::routes("/dashboard"))
+        .service(self::admin::routes("/admin"));
 }
 
 #[get("/")]
@@ -44,23 +48,9 @@ pub async fn index(
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
-#[get("/dashboard")]
-pub async fn dashboard(
-    _id: actix_session::Session,
-    _req: actix_web::HttpRequest,
-    _query: web::Query<HashMap<String, String>>,
-    data: web::Data<State>,) -> HttpResponse
-{
-    let _db = data.db.lock().unwrap();
-    let mut ctx = tera::Context::new();
-    let s = data.tera.render("dashboard.html", &ctx)
-            .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))
-            .unwrap_or_default();
-    HttpResponse::Ok().content_type("text/html").body(s)
-}
 
-#[get("/login")]
-pub async fn login(
+#[get("/about")]
+pub async fn about(
     _id: actix_session::Session,
     _req: actix_web::HttpRequest,
     _query: web::Query<HashMap<String, String>>,
@@ -68,7 +58,7 @@ pub async fn login(
 {
     let _db = data.db.lock().unwrap();
     let mut ctx = tera::Context::new();
-    let s = data.tera.render("login.html", &ctx)
+    let s = data.tera.render("contact.html", &ctx)
             .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))?;
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }

@@ -77,7 +77,7 @@ pub async fn get_user(
 }
 
 pub async fn confirm_signup(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
+    (data, username): (web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.confirm_signup(username.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -88,7 +88,7 @@ pub async fn confirm_signup(
 }
 
 pub async fn delete_user(
-    (req,  data, username): (HttpRequest,web::Data<State>, web::Path<String>) ) -> HttpResponse
+    (data, username): (web::Data<State>, web::Path<String>) ) -> HttpResponse
 {
     match &data.cognito.delete_user(username.into_inner()).await {
         Ok(res) => HttpResponse::Ok()
@@ -99,7 +99,7 @@ pub async fn delete_user(
 }
 
 pub async fn create_user(
-    (req,  data, user): (HttpRequest,web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
+    (data, user): (web::Data<State>, web::Json<CgUserSignup>) ) -> HttpResponse
 {
     match &data.cognito.create_user(user.into_inner(), true).await {
         Ok(res) => HttpResponse::Ok()
