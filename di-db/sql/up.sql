@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 CREATE TABLE IF NOT EXISTS public.user_info (
-    id           UUID NOT NULL UNIQUE PRIMARY KEY DEFAULT gen_random_uuid(),
-    uid          UUID NOT NULL REFERENCES Users(id),
+    id UUID NOT NULL UNIQUE PRIMARY KEY DEFAULT gen_random_uuid(),
+    uid UUID NOT NULL REFERENCES Users(id),
     first_name   TEXT CHECK (CHAR_LENGTH(first_name) < 80),
     mid_initial  CHAR,
     last_name    TEXT CHECK (CHAR_LENGTH(first_name) < 80),
@@ -57,12 +57,12 @@ CREATE TABLE IF NOT EXISTS public.user_info (
 );
 
 CREATE TABLE IF NOT EXISTS public.groups (
-    id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80) UNIQUE,
     description TEXT,
-    visibility TEXT,
-    status TEXT,
+    visibility visibility DEFAULT 'private'::public.visibility,
+    status status DEFAULT 'active'::public.status,
     attributes text[],
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS public.records (
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     description TEXT,
-    visibility TEXT,
-    status TEXT,
+    visibility visibility DEFAULT 'private'::public.visibility,
+    status status DEFAULT 'active'::public.status,
     notes text[],
     attributes text[],
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS public.items (
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     description TEXT,
-    visibility TEXT,
-    status TEXT,
+    visibility visibility DEFAULT 'private'::public.visibility,
+    status status DEFAULT 'active'::public.status,
     notes text[],
     attributes text[],
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS public.fact_types (
     description TEXT,
     value_type TEXT,
     units TEXT[],
-    visibility TEXT,
-    status TEXT,
+    visibility visibility DEFAULT 'private'::public.visibility,
+    status status DEFAULT 'active'::public.status,
     notes text[],
     attributes text[],
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS public.fact_entries (
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     value TEXT NOT NULL,
     units TEXT,
-    visibility TEXT,
+    visibility visibility DEFAULT 'private'::public.visibility,
     notes text[],
     attributes text[],
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

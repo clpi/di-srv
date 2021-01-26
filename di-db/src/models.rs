@@ -15,7 +15,6 @@ pub use group::Group;
 pub use link::Link;
 pub use fact::{FactType, FactEntry};
 
-
 pub use dynomite::{Attribute, Attributes, AttributeValue};
 
 use async_trait::async_trait;

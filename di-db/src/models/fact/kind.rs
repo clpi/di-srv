@@ -74,8 +74,8 @@ impl From<String> for ValueType {
     fn from(s: String) -> Self {
         match s.as_str() {
             "text" => Self::Text,
-            "integer" => Self::Integer,
-            "double" => Self::Double,
+            "integer" | "int" => Self::Integer,
+            "decimal" => Self::Decimal,
             &_ => Self::Text,
         }
     }

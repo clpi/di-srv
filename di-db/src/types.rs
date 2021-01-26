@@ -24,16 +24,6 @@ pub enum Status  {
 
 #[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
 #[sqlx(rename_all="snake_case")]
-pub enum Status  {
-    Active,
-    Archived,
-    Completed,
-    Deleted,
-    Paused,
-}
-
-#[derive(sqlx::Type, Serialize, Deserialize, Clone, PartialEq, Copy)]
-#[sqlx(rename_all="snake_case")]
 pub enum Visibility {
     Private,
     InviteOnly,
