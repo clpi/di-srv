@@ -1,23 +1,50 @@
-CREATE TABLE IF NOT EXISTS Users (
+-- use bigserial instead of uuid?
+create type if not exists public.status as enum (
+    'active', 'archived', 'completed',
+    'deleted', 'paused'
+)
+
+create type if not exists public.visibility as enum (
+    'private',
+    'invite_only',
+    'mutuals_only',
+    'public'
+)
+
+create type if not exists public.value_type (
+    'integer',
+    'decimal',
+    'text',
+    'date',
+    'datetime',
+    'duration',
+    'boolean',
+    'person',
+    'place',
+    'object',
+    'event'
+)
+
+CREATE TABLE IF NOT EXISTS public.users (
     id          UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     email       TEXT NOT NULL UNIQUE,
     username    TEXT NOT NULL UNIQUE CHECK (char_length(username) < 40),
     password    TEXT DEFAULT NULL,
-    created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 );
 
-CREATE TABLE IF NOT EXISTS UserInfo (
-    id           UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS public.user_info (
+    id           UUID NOT NULL UNIQUE PRIMARY KEY DEFAULT gen_random_uuid(),
     uid          UUID NOT NULL REFERENCES Users(id),
     first_name   TEXT CHECK (CHAR_LENGTH(first_name) < 80),
     mid_initial  CHAR,
     last_name    TEXT CHECK (CHAR_LENGTH(first_name) < 80),
     phone_number TEXT CHECK (CHAR_LENGTH(phone_number) < 10),
+    birth_date   DATE,
     occupation   TEXT,
     bio          TEXT,
     img_path     TEXT,
     gender       TEXT,
-    birth_date   DATE,
     city         TEXT,
     zip_code     TEXT,
     state        TEXT,
@@ -26,9 +53,10 @@ CREATE TABLE IF NOT EXISTS UserInfo (
     experience   INTEGER  NOT NULL,
     user_type    INTEGER  NOT NULL,
     updated_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    UNIQUE (uid)
 );
 
-CREATE TABLE IF NOT EXISTS Groups (
+CREATE TABLE IF NOT EXISTS public.groups (
     id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80) UNIQUE,
@@ -39,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Groups (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS Records (
+CREATE TABLE IF NOT EXISTS public.records (
     id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
@@ -52,7 +80,7 @@ CREATE TABLE IF NOT EXISTS Records (
     UNIQUE (name, uid)
 );
 
-CREATE TABLE IF NOT EXISTS Items (
+CREATE TABLE IF NOT EXISTS public.items (
     id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
@@ -65,8 +93,8 @@ CREATE TABLE IF NOT EXISTS Items (
     UNIQUE (name, uid)
 );
 
-CREATE TABLE IF NOT EXISTS FactTypes (
-    id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS public.fact_types (
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),
     description TEXT,
@@ -80,7 +108,7 @@ CREATE TABLE IF NOT EXISTS FactTypes (
     UNIQUE (uid, name)
 );
 
-CREATE TABLE IF NOT EXISTS FactEntries (
+CREATE TABLE IF NOT EXISTS public.fact_entries (
     id         UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     uid UUID NOT NULL REFERENCES Users(id),
     name TEXT NOT NULL CHECK (CHAR_LENGTH(name) < 80),

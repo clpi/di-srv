@@ -26,6 +26,8 @@ pub struct Record {
     pub notes: Vec<String>,
     #[serde(default="Utc::now")]
     pub created_at: DateTime<Utc>,
+    #[serde(default="Utc::now")]
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Record {
@@ -174,6 +176,7 @@ impl Default for Record {
             attributes: Vec::new(),
             notes: Vec::new(),
             created_at: Utc::now(),
+            updated_at: Utc::now(),
         }
     }
 }

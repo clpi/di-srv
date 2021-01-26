@@ -60,7 +60,14 @@ impl Default for FactType {
 pub enum ValueType {
     Text,
     Integer,
-    Double,
+    Decimal,
+    Date,
+    Datetime,
+    Duration,
+    Person,
+    Place,
+    Object,
+    Event,
 }
 
 impl From<String> for ValueType {
