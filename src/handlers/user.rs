@@ -17,6 +17,10 @@ pub fn routes(base: &str) -> actix_web::Scope {
         .service(by_uid())
 }
 
+pub async fn teste() ->HttpResponse {
+    HttpResponse::Ok().body("/api/user/test")
+}
+
 pub fn by_username() -> actix_web::Scope {
     web::scope("/{username}")
         .route("", web::get().to(get_by_username))

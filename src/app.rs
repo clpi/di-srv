@@ -22,7 +22,7 @@ pub async fn run_api() -> std::io::Result<()> {
             .wrap(prometheus.clone())
             .wrap(middleware::redis_session(&AppConfig::session_key()))
             .configure(handlers::public::routes)
-            .configure(handlers::routes)
+            .service(handlers::api::routes("/api"))
         });
     srv.bind(&config.clone().address())?
         .run().await?;
@@ -66,5 +66,5 @@ pub fn create_app() -> App<
         .wrap(middleware::cors())
         .wrap(middleware::redis_session(&AppConfig::session_key()))
         .configure(handlers::public::routes)
-        .configure(handlers::routes)
+        .service(handlers::api::routes("/api"))
 }

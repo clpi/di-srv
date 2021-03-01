@@ -13,13 +13,15 @@ pub mod feed;
 use crate::state::State;
 use serde::{Deserialize, Serialize};
 use actix_web::{
-    web, web::ServiceConfig, HttpRequest, HttpResponse, Responder, Scope,
-    http::Method,
+    web, web::ServiceConfig, HttpRequest, HttpResponse, Responder,
 };
 
-pub fn routes(cfg: &mut ServiceConfig) {
-    cfg
-        .service(web::scope("/api")
+pub mod api {
+
+    use super::*;
+
+    pub fn routes(base: &str) -> actix_web::Scope {
+        web::scope(base)
             .service(user::routes("/user"))
             .service(record::routes("/record"))
             .service(item::routes("/item"))
@@ -27,7 +29,7 @@ pub fn routes(cfg: &mut ServiceConfig) {
             .service(admin::routes("/admin"))
             .service(auth::routes("/auth"))
             .service(feed::routes("/feed"))
-        );
+    }
 }
 
 pub(crate) fn _test_srv() ->  actix_web::Resource {
